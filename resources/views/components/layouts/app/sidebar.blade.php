@@ -13,6 +13,7 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.group :heading="__('Platform')" class="grid">
+<<<<<<< HEAD
 
                     <!-- Dashboard -->
                     <flux:navlist.item
@@ -43,6 +44,9 @@
     {{ __('Quản lý Thông báo') }}
 </flux:navlist.item>
 
+=======
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>{{ __('Dashboard') }}</flux:navlist.item>
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
                 </flux:navlist.group>
             </flux:navlist>
 
@@ -50,11 +54,19 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+<<<<<<< HEAD
                     {{ __('Repository') }}
                 </flux:navlist.item>
 
                 <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
                     {{ __('Documentation') }}
+=======
+                {{ __('Repository') }}
+                </flux:navlist.item>
+
+                <flux:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
+                {{ __('Documentation') }}
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
                 </flux:navlist.item>
             </flux:navlist>
 

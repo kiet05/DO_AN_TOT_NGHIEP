@@ -6,8 +6,11 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+<<<<<<< HEAD
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\NotificationController;
+=======
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,6 +20,7 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+<<<<<<< HEAD
 /**
  * Khu vực quản trị /admin
  * Tên route sẽ là: admin.banners.* và admin.notifications.*
@@ -32,6 +36,8 @@ Route::prefix('admin')
 /**
  * Settings của user
  */
+=======
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -43,7 +49,11 @@ Route::middleware(['auth'])->group(function () {
         ->middleware(
             when(
                 Features::canManageTwoFactorAuthentication()
+<<<<<<< HEAD
                 && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+=======
+                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
                 ['password.confirm'],
                 [],
             ),
@@ -51,4 +61,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
+<<<<<<< HEAD
 require __DIR__ . '/auth.php';
+=======
+require __DIR__.'/auth.php';
+>>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
