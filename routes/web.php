@@ -6,6 +6,10 @@ use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\UserController;
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,5 +37,20 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
 });
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+});
+
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    // ... mấy route đơn hàng ở trên
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+});
+
 
 require __DIR__.'/auth.php';
