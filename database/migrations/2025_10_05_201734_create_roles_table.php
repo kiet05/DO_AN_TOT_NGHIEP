@@ -1,29 +1,24 @@
-    <?php
+<?php
 
-    use Illuminate\Database\Migrations\Migration;
-    use Illuminate\Database\Schema\Blueprint;
-    use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-    return new class extends Migration
+return new class extends Migration
+{
+    public function up(): void
     {
-        /**
-         * Run the migrations.
-         */
-        public function up(): void
-        {
-            Schema::create('roles', function (Blueprint $table) {
-                $table->id();
-                $table->string('name', 100);
-                $table->text('description')->nullable();
-                $table->timestamps();
-            });
-        }
+        Schema::create('roles', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 100);
+            $table->string('slug', 50)->unique(); // thêm slug để code dễ quản lý
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
+    }
 
-        /**
-         * Reverse the migrations.
-         */
-        public function down(): void
-        {
-            Schema::dropIfExists('roles');
-        }
-    };
+    public function down(): void
+    {
+        Schema::dropIfExists('roles');
+    }
+};

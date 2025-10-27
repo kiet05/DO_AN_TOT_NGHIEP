@@ -3,16 +3,18 @@
 namespace App\Livewire\Auth;
 
 use App\Models\User;
+use App\Models\UserOtp;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Laravel\Fortify\Features;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Carbon\Carbon;
 
 #[Layout('components.layouts.auth')]
 class Login extends Component
@@ -26,43 +28,51 @@ class Login extends Component
     public bool $remember = false;
 
     /**
-     * Handle an incoming authentication request.
+     * Xử lý đăng nhập bước 1 (kiểm tra tài khoản, gửi OTP qua email)
      */
     public function login(): void
     {
         $this->validate();
-
         $this->ensureIsNotRateLimited();
 
+        // Kiểm tra thông tin đăng nhập
         $user = $this->validateCredentials();
 
-        if (Features::canManageTwoFactorAuthentication() && $user->hasEnabledTwoFactorAuthentication()) {
-            Session::put([
-                'login.id' => $user->getKey(),
-                'login.remember' => $this->remember,
-            ]);
+        // ✅ Nếu đúng, tạo mã OTP và gửi email
+        $otp = rand(100000, 999999);
 
-            $this->redirect(route('two-factor.login'), navigate: true);
+        // Lưu vào bảng user_otps
+        UserOtp::create([
+            'user_id' => $user->id,
+            'otp_code' => $otp,
+            'expires_at' => Carbon::now()->addMinutes(5),
+        ]);
 
-            return;
-        }
+        // Gửi email chứa mã OTP
+        Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Mã xác thực đăng nhập (OTP)');
+        });
 
-        Auth::login($user, $this->remember);
+        // Lưu thông tin tạm thời để xác minh OTP sau
+        Session::put('2fa:user:id', $user->id);
+        Session::put('2fa:user:remember', $this->remember);
 
-        RateLimiter::clear($this->throttleKey());
-        Session::regenerate();
-
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        // Chuyển sang bước xác minh OTP
+        $this->redirect(route('verify-otp'), navigate: true);
     }
 
     /**
-     * Validate the user's credentials.
+     * Kiểm tra thông tin tài khoản hợp lệ.
      */
     protected function validateCredentials(): User
     {
-        $user = Auth::getProvider()->retrieveByCredentials(['email' => $this->email, 'password' => $this->password]);
+        $user = Auth::getProvider()->retrieveByCredentials([
+            'email' => $this->email,
+            'password' => $this->password,
+        ]);
 
-        if (! $user || ! Auth::getProvider()->validateCredentials($user, ['password' => $this->password])) {
+        if (!$user || !Auth::getProvider()->validateCredentials($user, ['password' => $this->password])) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -74,11 +84,11 @@ class Login extends Component
     }
 
     /**
-     * Ensure the authentication request is not rate limited.
+     * Giới hạn số lần thử đăng nhập sai.
      */
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -94,11 +104,13 @@ class Login extends Component
         ]);
     }
 
-    /**
-     * Get the authentication rate limiting throttle key.
-     */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
+        return Str::lower($this->email) . '|' . request()->ip();
+    }
+
+    public function render()
+    {
+        return view('livewire.auth.login');
     }
 }
