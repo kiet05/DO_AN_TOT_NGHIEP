@@ -4,11 +4,11 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
-<<<<<<< HEAD
+
 use Illuminate\Support\Str;
-=======
+
 use App\Models\Role;
->>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
+
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -16,14 +16,13 @@ use App\Models\Role;
 class UserFactory extends Factory
 {
     /**
-<<<<<<< HEAD
+
      * The current password being used by the factory.
      */
     protected static ?string $password;
 
     /**
-=======
->>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
+
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -31,7 +30,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-<<<<<<< HEAD
+
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -62,9 +61,8 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
-        ]);
-    }
-=======
+     
+
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
@@ -72,7 +70,7 @@ class UserFactory extends Factory
             'address' => $this->faker->address(),
             'role_id' => Role::inRandomOrder()->value('id') ?? 1,
             'status' => $this->faker->boolean(90),
-        ];
+        ]);
     }
->>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
+
 }

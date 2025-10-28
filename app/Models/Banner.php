@@ -4,19 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\SoftDeletes;
 class Banner extends Model
 {
-<<<<<<< HEAD
-    use HasFactory;
+use SoftDeletes;
 
-    protected $fillable = [
-        'title',
-        'image',
-        'status',
+    protected $fillable = ['title','image','status']; 
+   protected $casts = [
+        'status' => 'boolean',
     ];
-=======
-    /** @use HasFactory<\Database\Factories\BannerFactory> */
-    use HasFactory;
->>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
 }

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -59,18 +58,6 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
-=======
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
-{
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
-
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
->>>>>>> 6e27f9aa04493d2bfa9f40b2fca490bdbb0905cb
     }
 }
