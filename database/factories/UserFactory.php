@@ -4,18 +4,24 @@ namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
+<<<<<<< HEAD
 
 use Illuminate\Support\Str;
 
 use App\Models\Role;
 
 
+=======
+use App\Models\Role;
+
+>>>>>>> origin/feature/orders
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
     /**
+<<<<<<< HEAD
 
      * The current password being used by the factory.
      */
@@ -23,6 +29,8 @@ class UserFactory extends Factory
 
     /**
 
+=======
+>>>>>>> origin/feature/orders
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -30,6 +38,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+<<<<<<< HEAD
 
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
@@ -63,6 +72,8 @@ class UserFactory extends Factory
             'two_factor_confirmed_at' => null,
      
 
+=======
+>>>>>>> origin/feature/orders
             'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
@@ -70,7 +81,12 @@ class UserFactory extends Factory
             'address' => $this->faker->address(),
             'role_id' => Role::inRandomOrder()->value('id') ?? 1,
             'status' => $this->faker->boolean(90),
+<<<<<<< HEAD
         ]);
     }
 
+=======
+        ];
+    }
+>>>>>>> origin/feature/orders
 }

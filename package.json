@@ -7,7 +7,10 @@
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.1.11",
+<<<<<<< HEAD
         "admin-lte": "^4.0.0-rc3",
+=======
+>>>>>>> origin/feature/orders
         "autoprefixer": "^10.4.20",
         "axios": "^1.7.4",
         "concurrently": "^9.0.1",
@@ -19,8 +22,11 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
+<<<<<<< HEAD
     },
     "devDependencies": {
         "husky": "^9.1.7"
+=======
+>>>>>>> origin/feature/orders
     }
 }

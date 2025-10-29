@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\UserController;
 
 // Trang chủ
 Route::get('/', function () {
@@ -81,6 +83,16 @@ Route::prefix('admin')
             Route::put('/{id}/update', [CategoryController::class, 'update'])->name('update');
             Route::delete('/{id}/delete', [CategoryController::class, 'destroy'])->name('destroy');
         });
+
+        // Orders
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+
+        // Users
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
 /**

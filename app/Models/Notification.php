@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-
     use HasFactory;
 
     protected $fillable = [
@@ -17,4 +16,8 @@ class Notification extends Model
         'created_by',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

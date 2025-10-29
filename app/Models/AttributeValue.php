@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttributeValue extends Model
 {
-    /** @use HasFactory<\Database\Factories\AttributeValueFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'attribute_id',
@@ -22,7 +21,12 @@ class AttributeValue extends Model
     }
 
     public function variants()
-{
-    return $this->belongsToMany(ProductVariant::class, 'product_variant_attributes', 'attribute_value_id', 'variant_id');
-}
+    {
+        return $this->belongsToMany(
+            ProductVariant::class,
+            'product_variant_attributes',
+            'attribute_value_id',
+            'variant_id'
+        );
+    }
 }

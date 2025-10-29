@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Attribute extends Model
 {
-    /** @use HasFactory<\Database\Factories\AttributeFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',

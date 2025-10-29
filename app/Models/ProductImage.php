@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductImage extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductImageFactory> */
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'product_id',
