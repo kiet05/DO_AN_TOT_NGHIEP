@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-<<<<<<< HEAD
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -43,7 +42,7 @@ class User extends Authenticatable
     {
         return Str::of($this->name)
             ->explode(' ')
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('') ?: 'U';
     }
 
@@ -51,22 +50,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
-=======
-use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
-{
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
-
-    public function role()
-    {
-        return $this->belongsTo(Role::class);
-    }
     public function orders()
     {
         return $this->hasMany(Order::class, 'user_id');
     }
-
->>>>>>> origin/feature/orders
 }

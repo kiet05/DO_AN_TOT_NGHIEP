@@ -1,15 +1,11 @@
 <?php
 
-<<<<<<< HEAD
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\CategoryController;
-=======
->>>>>>> origin/feature/orders
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
-<<<<<<< HEAD
 use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
@@ -17,30 +13,19 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\PageController;
-
-// Trang chủ
-=======
-use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\UserController;
 
-
-
->>>>>>> origin/feature/orders
+// Trang chủ
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-<<<<<<< HEAD
 // Trang dashboard (yêu cầu đăng nhập và xác minh email)
-=======
->>>>>>> origin/feature/orders
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-<<<<<<< HEAD
 /**
  * Khu vực quản trị /admin
  * Ví dụ tên: admin.banners.index, admin.reports.index, admin.posts.index
@@ -98,6 +83,16 @@ Route::prefix('admin')
             Route::put('/{id}/update', [CategoryController::class, 'update'])->name('update');
             Route::delete('/{id}/delete', [CategoryController::class, 'destroy'])->name('destroy');
         });
+
+        // Orders
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
+
+        // Users
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
 /**
@@ -108,15 +103,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-=======
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Route::get('settings/profile', Profile::class)->name('settings.profile');
-    Route::get('settings/password', Password::class)->name('settings.password');
-    Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-
->>>>>>> origin/feature/orders
     Route::get('settings/two-factor', TwoFactor::class)
         ->middleware(
             when(
@@ -129,24 +115,5 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-<<<<<<< HEAD
 // Bao gồm các tuyến đường xác thực từ Fortify
 require __DIR__ . '/auth.php';
-=======
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::get('/orders/export', [OrderController::class, 'export'])->name('orders.export');
-});
-
-
-Route::prefix('admin')->name('admin.')->group(function () {
-    // ... mấy route đơn hàng ở trên
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{id}', [UserController::class, 'show'])->name('users.show');
-    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
-});
-
-
-require __DIR__.'/auth.php';
->>>>>>> origin/feature/orders

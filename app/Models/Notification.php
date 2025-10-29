@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-<<<<<<< HEAD
-
     use HasFactory;
 
     protected $fillable = [
@@ -18,13 +16,8 @@ class Notification extends Model
         'created_by',
     ];
 
-=======
-    /** @use HasFactory<\Database\Factories\NotificationFactory> */
-    use HasFactory;
-
     public function user()
     {
         return $this->belongsTo(User::class);
     }
->>>>>>> origin/feature/orders
 }

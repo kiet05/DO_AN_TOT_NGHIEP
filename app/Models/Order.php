@@ -7,11 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-<<<<<<< HEAD
-    /** @use HasFactory<\Database\Factories\OrderFactory> */
-    use HasFactory;
-    
-=======
     use HasFactory;
 
     protected $table = 'orders';
@@ -31,7 +26,6 @@ class Order extends Model
     ];
 
     // Mỗi đơn hàng thuộc về 1 user
->>>>>>> origin/feature/orders
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -46,16 +40,4 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-<<<<<<< HEAD
 }
-=======
-
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
-
-}
-
-
->>>>>>> origin/feature/orders

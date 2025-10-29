@@ -103,8 +103,8 @@ class BannerController extends Controller
 
         if ($request->hasFile('image')) {
             $new = $request->file('image')->store('banners', 'public');
-            if (!empty($banner->image) && \Storage::disk('public')->exists($banner->image)) {
-                \Storage::disk('public')->delete($banner->image);
+            if (!empty($banner->image) && Storage::disk('public')->exists($banner->image)) {
+                Storage::disk('public')->delete($banner->image);
             }
             $data['image'] = $new;
         }
@@ -139,8 +139,8 @@ class BannerController extends Controller
     public function forceDelete($id)
     {
         $banner = Banner::onlyTrashed()->findOrFail($id);
-        if (!empty($banner->image) && \Storage::disk('public')->exists($banner->image)) {
-            \Storage::disk('public')->delete($banner->image);
+        if (!empty($banner->image) && Storage::disk('public')->exists($banner->image)) {
+            Storage::disk('public')->delete($banner->image);
         }
         $banner->forceDelete();
         return back()->with('success', 'Đã xóa vĩnh viễn banner.');
