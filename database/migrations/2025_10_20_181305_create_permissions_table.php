@@ -10,12 +10,8 @@ return new class extends Migration
     {
         Schema::create('permissions', function (Blueprint $table) {
             $table->id();
-<<<<<<< HEAD
-            $table->string('name', 100);
+            $table->string('name', 100); // tên hiển thị
             $table->string('slug', 100)->unique(); // định danh quyền
-=======
-            $table->string('name', 100)->unique();
->>>>>>> origin/feature/orders
             $table->text('description')->nullable();
             $table->timestamps();
         });
@@ -25,8 +21,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('permissions');
     }
-<<<<<<< HEAD
 };
-=======
-};
->>>>>>> origin/feature/orders
