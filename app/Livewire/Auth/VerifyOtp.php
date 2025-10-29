@@ -56,6 +56,11 @@ class VerifyOtp extends Component
 
         session()->forget(['2fa:user:id', '2fa:user:remember']);
 
+        // ✅ Kiểm tra vai trò và điều hướng
+        if ($user->role && $user->role->slug === 'admin') {
+        return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công với tư cách Admin!');
+        }
+
         return redirect()->route('dashboard')->with('success', 'Đăng nhập thành công!');
 
         

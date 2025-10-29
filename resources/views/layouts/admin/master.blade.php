@@ -10,10 +10,7 @@
     <link href="{{ asset('assets/css/light-bootstrap-dashboard.css?v=1.4.0') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/demo.css') }}" rel="stylesheet">
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-<<<<<<< HEAD
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-=======
->>>>>>> origin/feature/orders
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet">
     <link href="{{ asset('assets/css/pe-icon-7-stroke.css') }}" rel="stylesheet">
 </head>

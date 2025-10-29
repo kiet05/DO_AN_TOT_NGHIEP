@@ -42,6 +42,9 @@
                     </a>
                 </li>
             </ul>
+            <a href="{{ route('dashboard') }}" class="btn btn-secondary mb-3">
+    ← Quay về Dashboard User
+</a>
 
             <ul class="nav navbar-nav navbar-right">
                 <li>
