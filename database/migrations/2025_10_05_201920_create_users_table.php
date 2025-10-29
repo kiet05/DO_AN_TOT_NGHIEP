@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('phone', 20)->nullable();
             $table->string('password', 255);
             $table->text('address')->nullable();
-            $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
+            $table->foreignId('role_id')->default(3)->constrained('roles')->onDelete('cascade');
             $table->tinyInteger('status')->default(1);
             $table->timestamps();
 
