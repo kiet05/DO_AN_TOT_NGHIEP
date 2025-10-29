@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\TwoFactor;
+use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\Admin\ReportController;
@@ -29,36 +32,55 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified'])
     ->group(function () {
-        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        // Dashboard admin
+        Route::get('/', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
 
         // Banners
         Route::resource('banners', BannerController::class)->except(['show']);
-        // Thùng rác
-        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])
-            ->name('banners.restore');     // POST
+        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
-        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])
-            ->name('banners.force');       // DELETE
-
-
-        // Posts (đặt tên đúng và KHÔNG lặp 'admin.')
+        // Posts
         Route::get('posts', [PostController::class, 'index'])->name('posts.index');
         Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
         Route::post('posts', [PostController::class, 'store'])->name('posts.store');
         Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
         Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
         Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-        // Hoặc dùng resource nếu cần CRUD:
-        // Route::resource('posts', PostController::class)->except(['show']);
-        Route::resource('pages', PageController::class);
 
+        // Pages
+        Route::resource('pages', PageController::class);
         Route::get('pages', [PageController::class, 'index'])->name('pages.index');
         Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
         Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
-        // Reports chi tiết
+
+        // Reports
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
         Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
         Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
+
+        // Products
+        Route::prefix('products')->name('products.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/store', [ProductController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [ProductController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{id}/delete', [ProductController::class, 'destroy'])->name('destroy');
+        });
+
+        // Categories
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/', [CategoryController::class, 'index'])->name('index');
+            Route::get('/create', [CategoryController::class, 'create'])->name('create');
+            Route::post('/store', [CategoryController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [CategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}/delete', [CategoryController::class, 'destroy'])->name('destroy');
+        });
     });
 
 /**
@@ -69,7 +91,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-
     Route::get('settings/two-factor', TwoFactor::class)
         ->middleware(
             when(
