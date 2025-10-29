@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable; // 🔥 Quan trọng
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-//use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use  HasFactory, Notifiable , TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     protected $fillable = [
         'name',
@@ -36,27 +35,19 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'two_factor_confirmed_at' => 'datetime',
+        'password' => 'hashed',
     ];
-    
-    public function initials()
+
+    public function initials(): string
     {
-    $name = $this->name ?? '';
-    $words = explode(' ', trim($name));
-    $initials = '';
-
-    foreach ($words as $w) {
-        $initials .= strtoupper(mb_substr($w, 0, 1));
+        return Str::of($this->name)
+            ->explode(' ')
+            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->implode('') ?: 'U';
     }
 
-    return $initials ?: 'U'; // U = default nếu không có tên
-    }
-
-
-    /**
-     * Liên kết ngược: User thuộc về Role.
-     */
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id');
     }
 }
