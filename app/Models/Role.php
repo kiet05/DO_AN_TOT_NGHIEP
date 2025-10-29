@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Role extends Model
 {
     use HasFactory;
+<<<<<<< HEAD
 
     protected $fillable = [
         'name',
@@ -21,4 +22,6 @@ class Role extends Model
     {
         return $this->hasMany(User::class);
     }
+=======
+>>>>>>> origin/feature/orders
 }

@@ -7,9 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+<<<<<<< HEAD
     /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
     
+=======
+    use HasFactory;
+
+    protected $table = 'orders';
+
+    protected $fillable = [
+        'user_id',
+        'receiver_name',
+        'receiver_phone',
+        'receiver_address',
+        'shipping_fee',
+        'total_price',
+        'final_amount',
+        'voucher_id',
+        'payment_method',
+        'payment_status',
+        'order_status',
+    ];
+
+    // Mỗi đơn hàng thuộc về 1 user
+>>>>>>> origin/feature/orders
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -24,4 +46,16 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+<<<<<<< HEAD
 }
+=======
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+}
+
+
+>>>>>>> origin/feature/orders

@@ -10,12 +10,15 @@ class Category extends Model
     /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
 
+<<<<<<< HEAD
     protected $fillable = [
         'name',
         'parent_id',
         'status',
     ];
 
+=======
+>>>>>>> origin/feature/orders
     public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
@@ -25,9 +28,12 @@ class Category extends Model
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
+<<<<<<< HEAD
 
     public function products()
     {
         return $this->hasMany(Product::class);
     }
+=======
+>>>>>>> origin/feature/orders
 }
