@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductVariantAttribute extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'product_variant_id',
