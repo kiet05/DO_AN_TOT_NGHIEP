@@ -60,29 +60,37 @@ Route::prefix('admin')
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
         // Banners
-        Route::resource('banners', BannerController::class)->except(['show']);
-        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        Route::prefix('banners')->name('banners.')->group(function () {
+            Route::resource('/', BannerController::class)->except(['show']);
+            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        });
 
         // Posts
-        Route::get('posts', [PostController::class, 'index'])->name('posts.index');
-        Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
-        Route::post('posts', [PostController::class, 'store'])->name('posts.store');
-        Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
-        Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
-        Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        Route::prefix('posts')->name('posts.')->group(function () {
+            Route::get('posts/', [PostController::class, 'index'])->name('posts.index');
+            Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
+            Route::post('posts', [PostController::class, 'store'])->name('posts.store');
+            Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+            Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
+            Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        });
 
         // Pages
-        Route::resource('pages', PageController::class);
-        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
-        Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
-        Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
+        Route::prefix('pages')->name('pages.')->group(function () {
+            Route::resource('pages', PageController::class);
+            Route::get('pages/', [PageController::class, 'index'])->name('pages.index');
+            Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
+            Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
+        });
 
         // Reports
-        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
-        Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
-        Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('reports/', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+            Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
+            Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
+        });
 
         // Products
         Route::prefix('products')->name('products.')->group(function () {
