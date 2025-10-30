@@ -19,7 +19,7 @@ class RolePermissionSeeder extends Seeder
         $admin = Role::where('slug', 'admin')->first();
         $permissions = Permission::pluck('id')->toArray();
         foreach ($permissions as $permissionId) {
-            DB::table('role_permission')->insert([
+            DB::table('role_permissions')->insert([
                 'role_id' => $admin->id,
                 'permission_id' => $permissionId,
             ]);
@@ -32,7 +32,7 @@ class RolePermissionSeeder extends Seeder
         ])->pluck('id')->toArray();
 
         foreach ($staffPermissions as $permissionId) {
-            DB::table('role_permission')->insert([
+            DB::table('role_permissions')->insert([
                 'role_id' => $staff->id,
                 'permission_id' => $permissionId,
             ]);
@@ -44,7 +44,7 @@ class RolePermissionSeeder extends Seeder
             ->pluck('id')->toArray();
 
         foreach ($customerPermissions as $permissionId) {
-            DB::table('role_permission')->insert([
+            DB::table('role_permissions')->insert([
                 'role_id' => $customer->id,
                 'permission_id' => $permissionId,
             ]);

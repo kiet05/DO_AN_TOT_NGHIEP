@@ -22,6 +22,11 @@
                     <p>Orders</p>
                 </a>
             </li>
+            <li>
+                 <a href="{{ route('admin.accounts.index') }}" class="btn btn-primary">
+        Quản lý tài khoản Admin
+    </a>
+            </li>
         </ul>
     </div>
 </div>
