@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminAccountController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -126,6 +127,12 @@ Route::prefix('admin')
         Route::resource('accounts', AdminAccountController::class);
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
         ->name('accounts.toggleStatus');
+
+        //Quản lý voucher
+        Route::resource('vouchers', VoucherController::class);
+        Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
+        ->name('vouchers.report');
+        
     });
 
 // Bao gồm các route xác thực (login, register, forgot password...)
