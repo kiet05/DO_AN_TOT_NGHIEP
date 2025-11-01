@@ -45,20 +45,26 @@ class VoucherController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'code'            => 'required|string|max:50|unique:vouchers,code',
-            'name'            => 'nullable|string|max:255',
-            'type'            => 'required|in:percent,fixed',
-            'value'           => 'required|numeric|min:0',
-            'max_discount'    => 'nullable|numeric|min:0',
+            'code'           => 'required|string|max:50|unique:vouchers,code',
+            'name'           => 'required|string|max:255',
+            'type'           => 'required|in:percent,fixed',
+            'value'          => 'required|numeric|min:0',
+            'max_discount'   => 'nullable|numeric|min:0',
             'min_order_value' => 'nullable|numeric|min:0',
-            'apply_type'      => 'required|in:all,products,categories',
-            'usage_limit'     => 'nullable|integer|min:1',
-            'start_at'        => 'nullable|date',
-            'end_at'          => 'nullable|date|after_or_equal:start_at',
-            'is_active'       => 'boolean',
-            'products'        => 'array',
-            'categories'      => 'array',
+            'apply_type'     => 'required|in:all,products,categories',
+            'usage_limit'    => 'nullable|integer|min:0',
+            'start_at'       => 'nullable|date',
+            'end_at'         => 'nullable|date|after_or_equal:start_at',
+            'is_active'      => 'boolean',
+            'products'       => 'array',
+            'categories'     => 'array',
         ]);
+
+        $data['discount_type']  = $data['type'];        // 'percent' hoặc 'fixed'
+        $data['discount_value'] = $data['value'];       // cùng giá trị
+
+        // ưu tiên end_at, không có thì +30 ngày
+        $data['expired_at'] = $data['end_at'] ?? now()->addDays(30);
 
         $voucher = Voucher::create($data);
 
