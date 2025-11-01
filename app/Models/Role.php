@@ -9,10 +9,8 @@ class Role extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'description',
-    ];
+   protected $fillable = ['name', 'slug', 'description'];
+
 
     /**
      * Liên kết 1-n: Role có nhiều User.

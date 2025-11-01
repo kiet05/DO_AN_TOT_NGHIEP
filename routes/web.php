@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
@@ -71,12 +70,6 @@ Route::prefix('admin')
         Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
         Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
         Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
-
-        // Pages
-        Route::resource('pages', PageController::class);
-        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
-        Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
-        Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
 
         // Reports
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

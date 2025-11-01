@@ -11,7 +11,6 @@ use Illuminate\View\View;
 
 class BannerController extends Controller
 {
-
     /**
      * Danh sách banner + lọc theo status: active | all | trash
      */
@@ -31,13 +30,14 @@ class BannerController extends Controller
             $query = $base;
         }
 
-        $banners      = $query->orderByDesc('id')->get();
+        // ⬇️ Sắp xếp ID tăng dần (nhỏ -> lớn)
+        $banners = $query->orderBy('id', 'asc')->get();
 
         // Đếm để hiển thị badge trên các nút
-        $countAll     = Banner::count();                 // không gồm rác
-        $countActive  = Banner::where('status', 1)->count();
+        $countAll      = Banner::count();                 // không gồm rác
+        $countActive   = Banner::where('status', 1)->count();
         $countInactive = Banner::where('status', 0)->count();
-        $countTrash   = Banner::onlyTrashed()->count();
+        $countTrash    = Banner::onlyTrashed()->count();
 
         return view('admin.banners.index', compact(
             'banners',
@@ -49,15 +49,11 @@ class BannerController extends Controller
         ));
     }
 
-
     public function create(): View
     {
         return view('admin.banners.create');
     }
 
-    /**
-     * Lưu banner mới
-     */
     // STORE
     public function store(Request $request)
     {
@@ -75,18 +71,15 @@ class BannerController extends Controller
 
         Banner::create($data);
 
-        // Sau khi thêm, đưa về tab “hoạt động” để thấy ngay
         return redirect()->route('admin.banners.index', ['status' => 'active'])
             ->with('success', 'Thêm banner thành công!');
     }
+
     public function edit(Banner $banner): View
     {
         return view('admin.banners.edit', compact('banner'));
     }
 
-    /**
-     * Cập nhật banner
-     */
     // UPDATE
     public function update(Request $request, Banner $banner)
     {

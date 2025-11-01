@@ -18,6 +18,7 @@ return new class extends Migration
         $table->string('link')->nullable();
         $table->enum('position', ['top', 'middle', 'bottom'])->default('top');
         $table->boolean('status')->default(1);
+        $table->softDeletes();
         $table->timestamps();
     });
 }
