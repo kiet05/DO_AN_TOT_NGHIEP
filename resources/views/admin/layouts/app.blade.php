@@ -56,7 +56,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('admin/vouchers*') ? 'active' : '' }}" href="#">
+                            <a class="nav-link {{ request()->is('admin/vouchers*') ? 'active' : '' }}" href="{{ route('admin.vouchers.index') }}">
                                 🎟 Quản lý voucher
                             </a>
                         </li>
