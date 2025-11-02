@@ -16,7 +16,6 @@
 <table class="table table-bordered table-sm align-middle">
     <thead>
         <tr>
-            <th>#</th>
             <th>Mã</th>
             <th>Tên</th>
             <th>Kiểu</th>
@@ -30,7 +29,6 @@
     <tbody>
         @foreach ($vouchers as $item)
         <tr>
-            <td>{{ $item->id }}</td>
             <td><strong>{{ $item->code }}</strong></td>
             <td>{{ $item->name }}</td>
             <td>{{ $item->type == 'percent' ? 'Giảm %' : 'Giảm tiền' }}</td>

@@ -32,12 +32,12 @@ class Voucher extends Model
     ];
     public function products(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'voucher_product');
+        return $this->belongsToMany(Product::class, 'voucher_product', 'voucher_id', 'product_id');
     }
 
     public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Category::class, 'voucher_category');
+        return $this->belongsToMany(Category::class, 'voucher_category', 'voucher_id', 'category_id');
     }
 
     public function usages(): HasMany

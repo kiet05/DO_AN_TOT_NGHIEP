@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('voucher_category', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('voucher_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-            $table->unique(['voucher_id', 'category_id']);
+            $table->unsignedBigInteger('voucher_id');
+            $table->unsignedBigInteger('category_id');
             $table->timestamps();
+
+            $table->foreign('voucher_id')->references('id')->on('vouchers')->onDelete('cascade');
+            $table->foreign('category_id')->references('id')->on('product_category')->onDelete('cascade');
         });
     }
 
