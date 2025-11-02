@@ -22,6 +22,15 @@ class VerifyOtp extends Component
         if (!session('2fa:user:id')) {
             return redirect()->route('login');
         }
+        $userId = session('2fa:user:id');
+        $user = User::find($userId);
+        // ADMIN BỎ QUA OTP → ĐĂNG NHẬP NGAY
+        if ($user && $user->role && $user->role->slug === 'admin') {
+            Auth::login($user, session('2fa:user:remember'));
+            session()->forget(['2fa:user:id', '2fa:user:remember']);
+            return redirect()->route('admin.dashboard')
+                     ->with('success', 'Đăng nhập thành công với tư cách Admin!');
+        }
     }
 
     public function verify()
