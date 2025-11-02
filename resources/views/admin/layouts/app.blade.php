@@ -83,7 +83,7 @@
 
   {{-- (Tuỳ chọn) tăng z-index để dropdown không bị che/cắt --}}
   <style>
-    .dropdown-menu{ z-index:1060; }
+    .dropdown-menu { z-index: 1060; }
   </style>
 </body>
 </html>

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Banner extends Model
 {
-    use HasFactory, SoftDeletes; // <-- thêm SoftDeletes ở đây
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['title', 'image', 'status'];
 
@@ -16,3 +16,4 @@ class Banner extends Model
         'status' => 'boolean',
     ];
 }
+

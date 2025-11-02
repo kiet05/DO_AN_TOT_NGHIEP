@@ -45,7 +45,7 @@
 
                         {{-- Dashboard --}}
                         <li class="nav-item">
-                            <a href="{{ route('admin.reports.index') }}"
+                            <a href=""
                                 class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                                 <i class="bi bi-speedometer2 nav-icon"></i>
                                 <p>Dashboard</p>
@@ -77,14 +77,14 @@
 
                                 {{-- Bài viết --}}
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.posts.index') }}"
+                                    <a href=""
                                         class="nav-link {{ request()->routeIs('admin.posts.*') ? 'active' : '' }}">
                                         <i class="bi bi-journal-text nav-icon"></i>
                                         <p>Post</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.pages.index') }}"
+                                    <a href=""
                                         class="nav-link {{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">
                                         <i class="bi bi-file-earmark-richtext nav-icon"></i>
                                         <p>Page</p>

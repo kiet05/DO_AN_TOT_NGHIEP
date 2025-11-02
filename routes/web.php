@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminAccountController;
+use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\PageController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -19,7 +21,7 @@ use Laravel\Fortify\Features;
 // Trang chủ
 Route::get('/', fn() => view('welcome'))->name('home');
 
-// Dashboard người dùng (yêu cầu đăng nhập + xác minh email)
+// Dashboard người dùng
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -48,7 +50,6 @@ Route::middleware(['auth'])->group(function () {
 
 /**
  * KHU VỰC QUẢN TRỊ /admin
- * Yêu cầu: đăng nhập + xác minh email + role = admin
  */
 Route::prefix('admin')
     ->name('admin.')
@@ -59,23 +60,37 @@ Route::prefix('admin')
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
         // Banners
-        Route::resource('banners', BannerController::class)->except(['show']);
-        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        Route::prefix('banners')->name('banners.')->group(function () {
+            Route::resource('/', BannerController::class)->except(['show']);
+            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        });
 
         // Posts
-        Route::get('posts', [PostController::class, 'index'])->name('posts.index');
-        Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
-        Route::post('posts', [PostController::class, 'store'])->name('posts.store');
-        Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
-        Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
-        Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        Route::prefix('posts')->name('posts.')->group(function () {
+            Route::get('posts/', [PostController::class, 'index'])->name('posts.index');
+            Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
+            Route::post('posts', [PostController::class, 'store'])->name('posts.store');
+            Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+            Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
+            Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+        });
+
+        // Page
+        Route::prefix('pages')->name('pages.')->group(function () {
+            Route::resource('pages', PageController::class);
+            Route::get('pages/', [PageController::class, 'index'])->name('pages.index');
+            Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
+            Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
+        });
 
         // Reports
-        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
-        Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
-        Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('reports/', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+            Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
+            Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
+        });
 
         // Products
         Route::prefix('products')->name('products.')->group(function () {
@@ -107,11 +122,15 @@ Route::prefix('admin')
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        // Quản lý tài khoản admin
+        // Admin accounts
         Route::resource('accounts', AdminAccountController::class);
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
-        ->name('accounts.toggleStatus');
+            ->name('accounts.toggleStatus');
+
+        // Vouchers
+        Route::resource('vouchers', VoucherController::class);
+        Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
+            ->name('vouchers.report');
     });
 
-// Bao gồm các route xác thực (login, register, forgot password...)
 require __DIR__ . '/auth.php';
