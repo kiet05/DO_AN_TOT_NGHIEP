@@ -46,14 +46,14 @@
                         Bài viết
                     </flux:navlist.item>
 
-                    <flux:navlist.item
+                    {{-- <flux:navlist.item
                         icon="file-text"
                         :href="route('admin.pages.index')"
                         :current="request()->routeIs('admin.pages.*')"
                         wire:navigate
                     >
                         Trang tĩnh
-                    </flux:navlist.item>
+                    </flux:navlist.item> --}}
                 </flux:navlist.group>
             </flux:navlist>
 
