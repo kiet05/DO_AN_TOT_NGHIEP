@@ -64,14 +64,7 @@
                         </a>
                     </li>
 
-                    {{-- Page 
-                    <li class="nav-item">
-                        <a href="{{ route('admin.pages.index') }}"
-                            class="nav-link {{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">
-                            <i class="bi bi-file-earmark-richtext nav-icon"></i>
-                            <p>Page</p>
-                        </a>
-                    </li>--}}
+                    
                 </ul>
             </li>
 
