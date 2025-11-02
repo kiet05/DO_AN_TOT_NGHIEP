@@ -9,25 +9,24 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
+ public function up(): void
 {
-    Schema::create('banners', function (Blueprint $table) {
-        $table->id();
-        $table->string('title');
-        $table->string('image');
-        $table->string('link')->nullable();
-        $table->enum('position', ['top', 'middle', 'bottom'])->default('top');
-        $table->boolean('status')->default(1);
-        $table->timestamps();
-    });
+    if (!Schema::hasTable('banners')) {
+        Schema::create('banners', function (Illuminate\Database\Schema\Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->string('image');
+            $table->string('link')->nullable();
+            $table->enum('position', ['top','middle','bottom'])->default('top');
+            $table->boolean('status')->default(1);
+            $table->timestamps();
+        });
+    }
 }
 
+public function down(): void
+{
+    Schema::dropIfExists('banners');
+}
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('banners');
-    }
 };

@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\User;
 use App\Models\UserOtp;
+use Carbon\Carbon;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -14,7 +15,6 @@ use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Carbon\Carbon;
 
 #[Layout('components.layouts.auth')]
 class Login extends Component
@@ -28,42 +28,63 @@ class Login extends Component
     public bool $remember = false;
 
     /**
-     * Xử lý đăng nhập bước 1 (kiểm tra tài khoản, gửi OTP qua email)
+     * Bước 1: kiểm tra tài khoản, tạo & gửi OTP
      */
     public function login(): void
     {
         $this->validate();
         $this->ensureIsNotRateLimited();
 
-        // Kiểm tra thông tin đăng nhập
+        // 1) Xác thực email + password
         $user = $this->validateCredentials();
 
-        // ✅ Nếu đúng, tạo mã OTP và gửi email
-        $otp = rand(100000, 999999);
+        // 2) Tạo OTP (6 số) + hạn dùng 5 phút
+        $otp = (string) random_int(100000, 999999);
 
-        // Lưu vào bảng user_otps
-        UserOtp::create([
-            'user_id' => $user->id,
-            'otp_code' => $otp,
-            'expires_at' => Carbon::now()->addMinutes(5),
-        ]);
+        // 3) Lưu/ghi đè OTP cho user (mỗi user giữ 1 bản ghi cho gọn)
+        UserOtp::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'otp_code'   => $otp,
+                'expires_at' => Carbon::now()->addMinutes(5),
+                'used_at'    => null,
+            ]
+        );
 
-        // Gửi email chứa mã OTP
-        Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Mã xác thực đăng nhập (OTP)');
-        });
+        // 4) Gửi email OTP (không làm app crash nếu mail chưa cấu hình)
+        try {
+            Mail::raw(
+                "Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.",
+                function ($message) use ($user) {
+                    $message->to($user->email)
+                        ->subject('Mã xác thực đăng nhập (OTP)');
+                }
+            );
+        } catch (\Throwable $e) {
+            // Ghi log và cung cấp OTP cho dev ở môi trường local
+            logger()->warning('Gửi OTP thất bại', [
+                'email' => $user->email,
+                'otp'   => $otp,
+                'error' => $e->getMessage(),
+            ]);
 
-        // Lưu thông tin tạm thời để xác minh OTP sau
+            if (app()->environment('local')) {
+                session()->flash('dev_otp', $otp);
+            }
+
+            report($e);
+        }
+
+        // 5) Lưu context cho bước nhập OTP
         Session::put('2fa:user:id', $user->id);
         Session::put('2fa:user:remember', $this->remember);
 
-        // Chuyển sang bước xác minh OTP
+        // 6) Điều hướng sang trang nhập OTP
         $this->redirect(route('verify-otp'), navigate: true);
     }
 
     /**
-     * Kiểm tra thông tin tài khoản hợp lệ.
+     * Lấy user & kiểm tra mật khẩu.
      */
     protected function validateCredentials(): User
     {
@@ -84,7 +105,7 @@ class Login extends Component
     }
 
     /**
-     * Giới hạn số lần thử đăng nhập sai.
+     * Chống brute force.
      */
     protected function ensureIsNotRateLimited(): void
     {

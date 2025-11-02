@@ -38,6 +38,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+
     public function initials(): string
     {
         return Str::of($this->name)
@@ -55,4 +56,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class, 'user_id');
     }
+
+    
+    
+        // ✅ Thêm mới – Hỗ trợ tìm kiếm khách hàng
+    public function scopeSearch($query, ?string $keyword)
+    {
+        $keyword = trim((string)$keyword);
+        if ($keyword === '') return $query;
+
+        return $query->where(function($q) use ($keyword) {
+            $q->where('name', 'like', "%{$keyword}%")
+              ->orWhere('email', 'like', "%{$keyword}%")
+              ->orWhere('phone', 'like', "%{$keyword}%");
+        });
+    }
+
+    // ✅ Thêm mới – Hỗ trợ toggle trạng thái nhanh (active/inactive)
+    public function toggleStatus(): void
+    {
+        if (!isset($this->attributes['status'])) return;
+        $this->status = $this->status ? 0 : 1;
+        $this->save();
+    }
+
 }

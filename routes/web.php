@@ -16,41 +16,11 @@ use App\Livewire\Settings\TwoFactor;
 use App\Http\Middleware\CheckRole;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Admin\CustomerController; // <— THÊM
+
 
 // Trang chủ
-Route::get('/', fn() => view('welcome'))->name('home');
-
-// Dashboard người dùng (yêu cầu đăng nhập + xác minh email)
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-/**
- * CÀI ĐẶT NGƯỜI DÙNG (settings)
- */
-Route::middleware(['auth'])->group(function () {
-    Route::redirect('settings', 'settings/profile');
-
-    Route::get('settings/profile', Profile::class)->name('settings.profile');
-    Route::get('settings/password', Password::class)->name('settings.password');
-    Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-
-    Route::get('settings/two-factor', TwoFactor::class)
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                []
-            )
-        )
-        ->name('two-factor.show');
-});
-
-/**
- * KHU VỰC QUẢN TRỊ /admin
- * Yêu cầu: đăng nhập + xác minh email + role = admin
- */
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', CheckRole::class . ':admin'])
@@ -117,16 +87,24 @@ Route::prefix('admin')
         Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
 
-        // Users
+        // Users (cũ – giữ nguyên)
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
+        // ✅ Customers (mới – chạy riêng, tránh trùng với users)
+        Route::prefix('customers')->name('customers.')->group(function () {
+            Route::get('/',        [CustomerController::class, 'index'])->name('index');       // DS + tìm kiếm
+            Route::get('/{id}',    [CustomerController::class, 'show'])->name('show');         // Lịch sử mua hàng
+            Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggleStatus'); // Khóa/Mở
+        });
+
         // Quản lý tài khoản admin
         Route::resource('accounts', AdminAccountController::class);
-        Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
-        ->name('accounts.toggleStatus');
-    });
+        Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])->name('accounts.toggleStatus');
+    }); // <-- KẾT THÚC NHÓM /admin CHỈ 1 LẦN
 
-// Bao gồm các route xác thực (login, register, forgot password...)
-require __DIR__ . '/auth.php';
+// Route debug — đặt NGOÀI nhóm /admin
+Route::get('/whoami', fn () =>
+    optional(Auth::user())->only(['id','email','role_id','email_verified_at']) ?? ['guest'=>true]
+);
