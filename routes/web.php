@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\VoucherController;
-use App\Http\Controllers\Admin\PageController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -68,21 +67,16 @@ Route::prefix('admin')
 
         // Posts
         Route::prefix('posts')->name('posts.')->group(function () {
-            Route::get('posts/', [PostController::class, 'index'])->name('posts.index');
-            Route::get('posts/create', [PostController::class, 'create'])->name('posts.create');
-            Route::post('posts', [PostController::class, 'store'])->name('posts.store');
-            Route::get('posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
-            Route::put('posts/{post}', [PostController::class, 'update'])->name('posts.update');
-            Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+            Route::get('/', [PostController::class, 'index'])->name('index');
+            Route::get('/create', [PostController::class, 'create'])->name('create');
+            Route::post('/', [PostController::class, 'store'])->name('store');
+            Route::get('/{post}/edit', [PostController::class, 'edit'])->name('edit');
+            Route::put('/{post}', [PostController::class, 'update'])->name('update');
+            Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
         });
 
-        // Page
-        Route::prefix('pages')->name('pages.')->group(function () {
-            Route::resource('pages', PageController::class);
-            Route::get('pages/', [PageController::class, 'index'])->name('pages.index');
-            Route::get('pages/{key}/edit', [PageController::class, 'edit'])->name('pages.edit');
-            Route::put('pages/{key}', [PageController::class, 'update'])->name('pages.update');
-        });
+
+
 
         // Reports
         Route::prefix('reports')->name('reports.')->group(function () {
