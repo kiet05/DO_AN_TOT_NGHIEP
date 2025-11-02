@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin.master')
 
 @section('content')
     <h1>Thêm banner mới</h1>

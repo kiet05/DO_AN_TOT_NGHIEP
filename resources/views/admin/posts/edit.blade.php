@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin.master')
 
 @section('title', 'Sửa bài viết')
 

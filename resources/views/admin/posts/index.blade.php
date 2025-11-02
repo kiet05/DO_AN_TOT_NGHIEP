@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin.master')
 
 @section('title', 'Quản lý Bài viết')
 
@@ -7,10 +7,11 @@
 
         {{-- Header + nút hành động (giống trang Banner) --}}
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">
-                <i class="bi bi-journal-text me-2"></i>
-                Danh sách bài viết
-            </h3>
+          <h3 class="mb-0">
+    <i class="bi bi-journal-text me-2"></i>
+    <strong>Danh sách bài viết</strong>
+</h3>
+
 
             <div class="d-flex gap-2">
                 <a href="{{ route('admin.posts.index') }}"
@@ -69,40 +70,62 @@
                                     {{ \Illuminate\Support\Str::limit(strip_tags($post->content), 80) }}
                                 </td>
                                 <td>
-                                    @if (!empty($post->published_at))
-                                        <span class="badge bg-success">Ấn</span>
+                                    @if (request('status') === 'trash')
+                                        <span class="badge bg-warning text-dark">Trong thùng rác</span>
                                     @else
-                                        <span class="badge bg-secondary">Nháp</span>
+                                        @if (!empty($post->published_at))
+                                            {{-- ĐÃ XUẤT BẢN --}}
+                                            <span
+                                                class="btn btn-success btn-sm px-3 rounded-pill d-inline-flex align-items-center">
+                                                <i class="bi bi-check2-circle me-1"></i> Xuất bản
+                                            </span>
+                                        @else
+                                            {{-- NHÁP --}}
+                                            <span
+                                                class="btn btn-secondary btn-sm px-3 rounded-pill d-inline-flex align-items-center">
+                                                <i class="bi bi-file-earmark-text me-1"></i> Nháp
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
+
                                 <td>
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            Hành động
+                                    <div class="btn-group dropdown">
+                                        <button type="button"
+                                            class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center"
+                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                            onclick="event.preventDefault(); event.stopPropagation();">
+                                            <i class="bi bi-gear-fill me-1 text-secondary"></i>
+                                            <span>Hành động</span>
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
+
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2"
+                                            style="min-width: 140px;" onclick="event.stopPropagation();">
+                                            {{-- Sửa --}}
                                             <li>
-                                                <a class="dropdown-item" href="{{ route('admin.posts.edit', $post->id) }}">
-                                                    <i class="bi bi-pencil-square me-2"></i>Sửa
+                                                <a href="{{ route('admin.posts.edit', $post->id) }}"
+                                                    class="dropdown-item py-2 d-flex align-items-center gap-2">
+                                                    <i class="bi bi-pencil-square text-primary"></i>Sửa
                                                 </a>
                                             </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
+
+                                            {{-- Xóa --}}
                                             <li>
                                                 <form method="POST" action="{{ route('admin.posts.destroy', $post->id) }}"
-                                                    onsubmit="return confirm('Xóa bài viết này?');">
+                                                    onsubmit="return confirm('Chuyển bài viết vào thùng rác?');"
+                                                    class="m-0">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="dropdown-item text-danger">
-                                                        <i class="bi bi-trash3 me-2"></i>Xóa
+                                                    <button type="submit"
+                                                        class="dropdown-item py-2 text-danger d-flex align-items-center gap-2">
+                                                        <i class="bi bi-trash3"></i>Xóa
                                                     </button>
                                                 </form>
                                             </li>
                                         </ul>
                                     </div>
                                 </td>
+
                             </tr>
                         @empty
                             <tr>
@@ -123,6 +146,21 @@
         .table td,
         .table th {
             vertical-align: middle;
+        }
+
+        /* Bỏ viền và nền cho nút Xóa trong dropdown */
+        .dropdown-menu form button.dropdown-item {
+            border: none !important;
+            background: transparent !important;
+            padding-left: 1.5rem;
+            /* căn ngang với icon */
+        }
+
+        /* Khi hover: chỉ đổi màu chữ, không có nền */
+        .dropdown-menu form button.dropdown-item:hover {
+            background: transparent !important;
+            color: #dc3545 !important;
+            text-decoration: underline;
         }
     </style>
 @endsection

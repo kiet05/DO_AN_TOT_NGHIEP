@@ -3,13 +3,13 @@
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\PageController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
@@ -21,7 +21,7 @@ use Laravel\Fortify\Features;
 // Trang chủ
 Route::get('/', fn() => view('welcome'))->name('home');
 
-// Dashboard người dùng (yêu cầu đăng nhập + xác minh email)
+// Dashboard người dùng
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -50,7 +50,6 @@ Route::middleware(['auth'])->group(function () {
 
 /**
  * KHU VỰC QUẢN TRỊ /admin
- * Yêu cầu: đăng nhập + xác minh email + role = admin
  */
 Route::prefix('admin')
     ->name('admin.')
@@ -77,7 +76,7 @@ Route::prefix('admin')
             Route::delete('posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
         });
 
-        // Pages
+        // Page
         Route::prefix('pages')->name('pages.')->group(function () {
             Route::resource('pages', PageController::class);
             Route::get('pages/', [PageController::class, 'index'])->name('pages.index');
@@ -123,17 +122,15 @@ Route::prefix('admin')
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        // Quản lý tài khoản admin
+        // Admin accounts
         Route::resource('accounts', AdminAccountController::class);
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
-        ->name('accounts.toggleStatus');
+            ->name('accounts.toggleStatus');
 
-        //Quản lý voucher
+        // Vouchers
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
-        ->name('vouchers.report');
-        
+            ->name('vouchers.report');
     });
 
-// Bao gồm các route xác thực (login, register, forgot password...)
 require __DIR__ . '/auth.php';
