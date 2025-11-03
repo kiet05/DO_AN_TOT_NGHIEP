@@ -1,45 +1,110 @@
 @extends('layouts.admin.master')
 
 @section('content')
-<div class="container mt-4">
-    <h3>Chỉnh sửa Admin</h3>
+    <section class="sherah-adashboard sherah-show">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="sherah-body">
+                        <!-- Dashboard Inner -->
+                        <div class="sherah-dsinner">
+                            <div class="row mg-top-30">
+                                <div class="col-12 sherah-flex-between">
+                                    <!-- Sherah Breadcrumb -->
+                                    <div class="sherah-breadcrumb">
+                                        <h2 class="sherah-breadcrumb__title">Chỉnh sửa tài khoản Admin</h2>
+                                        <ul class="sherah-breadcrumb__list">
+                                            <li><a href="#">Home</a></li>
+                                            <li><a href="{{ route('admin.accounts.index') }}">Tài khoản Admin</a></li>
+                                            <li class="active"><a href="#">Chỉnh sửa</a></li>
+                                        </ul>
+                                    </div>
+                                    <!-- End Sherah Breadcrumb -->
+                                    <a href="{{ route('admin.accounts.index') }}" class="sherah-btn sherah-btn--secondary">Quay lại</a>
+                                </div>
+                            </div>
 
-    <form action="{{ route('admin.accounts.update', $user->id) }}" method="POST">
-        @csrf @method('PUT')
-        <div class="mb-3">
-            <label>Tên</label>
-            <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}">
-            @error('name') <small class="text-danger">{{ $message }}</small> @enderror
+                            <!-- Form -->
+                            <div class="sherah-page-inner sherah-border sherah-default-bg mg-top-25">
+                                <form action="{{ route('admin.accounts.update', $user->id) }}" method="POST" class="sherah-form">
+                                    @csrf
+                                    @method('PUT')
+
+                                    <!-- Tên -->
+                                    <div class="row mg-top-20">
+                                        <div class="col-md-6">
+                                            <label class="sherah-form__label">Tên <span class="text-danger">*</span></label>
+                                            <input type="text" name="name" class="sherah-form__input" 
+                                                   value="{{ old('name', $user->name) }}" placeholder="Nhập tên admin">
+                                            @error('name')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Email -->
+                                    <div class="row mg-top-20">
+                                        <div class="col-md-6">
+                                            <label class="sherah-form__label">Email <span class="text-danger">*</span></label>
+                                            <input type="email" name="email" class="sherah-form__input" 
+                                                   value="{{ old('email', $user->email) }}" placeholder="example@gmail.com">
+                                            @error('email')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Vai trò -->
+                                    <div class="row mg-top-20">
+                                        <div class="col-md-6">
+                                            <label class="sherah-form__label">Vai trò <span class="text-danger">*</span></label>
+                                            <select name="role_id" class="sherah-form__input sherah-form__select">
+                                                <option value="">-- Chọn vai trò --</option>
+                                                @foreach($roles as $role)
+                                                    <option value="{{ $role->id }}" 
+                                                            {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>
+                                                        {{ $role->name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('role_id')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Trạng thái -->
+                                    <div class="row mg-top-20">
+                                        <div class="col-md-6">
+                                            <label class="sherah-form__label">Trạng thái</label>
+                                            <select name="status" class="sherah-form__input sherah-form__select">
+                                                <option value="1" {{ old('status', $user->status) ? 'selected' : '' }}>Hoạt động</option>
+                                                <option value="0" {{ !old('status', $user->status) ? 'selected' : '' }}>Khóa</option>
+                                            </select>
+                                            @error('status')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <!-- Nút hành động -->
+                                    <div class="row mg-top-30">
+                                        <div class="col-12">
+                                            <button type="submit" class="sherah-btn sherah-gbcolor">
+                                                Cập nhật thông tin
+                                            </button>
+                                            <a href="{{ route('admin.accounts.index') }}" class="sherah-btn sherah-btn--secondary mg-left-10">
+                                                Hủy
+                                            </a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- End Dashboard Inner -->
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label>Email</label>
-            <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}">
-            @error('email') <small class="text-danger">{{ $message }}</small> @enderror
-        </div>
-
-        <div class="mb-3">
-            <label>Vai trò</label>
-            <select name="role_id" class="form-select">
-                @foreach($roles as $role)
-                    <option value="{{ $role->id }}" {{ $role->id == $user->role_id ? 'selected' : '' }}>
-                        {{ $role->name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('role_id') <small class="text-danger">{{ $message }}</small> @enderror
-        </div>
-
-        <div class="mb-3">
-            <label>Trạng thái</label>
-            <select name="status" class="form-select">
-                <option value="1" {{ $user->status ? 'selected' : '' }}>Hoạt động</option>
-                <option value="0" {{ !$user->status ? 'selected' : '' }}>Khóa</option>
-            </select>
-        </div>
-
-        <button class="btn btn-primary">Cập nhật</button>
-        <a href="{{ route('admin.accounts.index') }}" class="btn btn-secondary">Hủy</a>
-    </form>
-</div>
+    </section>
 @endsection
