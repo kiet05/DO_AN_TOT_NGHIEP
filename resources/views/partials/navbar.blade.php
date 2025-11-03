@@ -227,8 +227,8 @@
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">History</span></span></a></span>
-                    </li> --}}
-                    {{-- <li><a class="collapsed" href="profile-info.html"><span class="menu-bar__text">
+                    </li>
+                    {{-- {{-- <li><a class="collapsed" href="profile-info.html"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="22.103"
                                         height="22.368" viewBox="0 0 22.103 22.368">
@@ -322,4 +322,4 @@
     </div>
     <!-- End Admin Menu -->
 </div>
-<!-- End sherah Admin Menu -->
+<!-- End sherah Admin Menu --> --}}

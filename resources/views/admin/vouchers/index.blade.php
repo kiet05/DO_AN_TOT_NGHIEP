@@ -116,14 +116,14 @@
                                                     <td
                                                         class="sherah-table__action d-flex justify-start items-center gap-2">
                                                         <a href="{{ route('admin.vouchers.edit', $item) }}"
-                                                            class="btn btn-sm btn-warning">Sửa</a>
+                                                            class="btn btn-sm btn-warning"><i class="fa-solid fa-wrench"></i></a>
                                                         <a href="{{ route('admin.vouchers.report', $item) }}"
-                                                            class="btn btn-sm btn-info">Báo cáo</a>
+                                                            class="btn btn-sm btn-info"><i class="fa-solid fa-eye"></i></a>
                                                         <form action="{{ route('admin.vouchers.destroy', $item) }}"
                                                             method="POST" class="d-inline"
                                                             onsubmit="return confirm('Xóa mã này?')">
                                                             @csrf @method('DELETE')
-                                                            <button class="btn btn-sm btn-danger">Xóa</button>
+                                                            <button class="btn btn-sm btn-danger"><i class="fa-solid fa-trash"></i></button>
                                                         </form>
                                                     </td>
                                                 </tr>
