@@ -23,10 +23,14 @@ class AttributeValueSeeder extends Seeder
         foreach ($values as $attributeName => $vals) {
             $attribute = Attribute::firstOrCreate(['name' => $attributeName]);
 
+            // Xác định type dựa vào tên attribute
+            $type = strtolower($attributeName); // 'Color' -> 'color', 'Size' -> 'size'
+
             foreach ($vals as $val) {
                 AttributeValue::create([
                     'attribute_id' => $attribute->id,
                     'value' => $val,
+                    'type' => $type, // ✅ thêm cột type ngay khi tạo
                 ]);
             }
         }

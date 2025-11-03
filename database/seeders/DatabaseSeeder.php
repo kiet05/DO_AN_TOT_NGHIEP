@@ -3,24 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
-use Database\Seeders\RoleSeeder;
-use Database\Seeders\UserSeeder;
-use Database\Seeders\BrandSeeder;
-use Database\Seeders\OrderSeeder;
-use Database\Seeders\BannerSeeder;
-use Database\Seeders\ReviewSeeder;
-use Database\Seeders\ProductSeeder;
-use Database\Seeders\CategorySeeder;
 use Illuminate\Support\Facades\Hash;
-use Database\Seeders\AttributeSeeder;
-use Database\Seeders\OrderItemSeeder;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\AttributeValueSeeder;
-use Database\Seeders\ProductVariantSeeder;
-use Database\Seeders\RolePermissionSeeder;
-use Database\Seeders\ProductVariantAttributeSeeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class DatabaseSeeder extends Seeder
 {
@@ -29,20 +14,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Tạo user Admin
-        User::create([
-            'name' => 'Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123456'),
-        ]);
-
-        // Gọi các seeder khác
+        // ✅ Gọi RoleSeeder trước để tạo roles
         $this->call([
             RoleSeeder::class,
+        ]);
+
+        // ✅ Tạo user Admin sau khi có roles
+        User::create([
+            'name' => 'Admin',
+            'slug' => Str::slug('Admin'),
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('123456'),
+            'role_id' => 1,
+        ]);
+
+        // ✅ Gọi các seeder khác
+        $this->call([
             PermissionSeeder::class,
             RolePermissionSeeder::class,
             UserSeeder::class,
-
             CategorySeeder::class,
             BrandSeeder::class,
             ProductSeeder::class,
@@ -50,11 +40,9 @@ class DatabaseSeeder extends Seeder
             AttributeValueSeeder::class,
             ProductVariantSeeder::class,
             ProductVariantAttributeSeeder::class,
-
             OrderSeeder::class,
             OrderItemSeeder::class,
             ReviewSeeder::class,
-
             BannerSeeder::class,
         ]);
     }

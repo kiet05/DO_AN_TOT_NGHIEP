@@ -1,0 +1,1 @@
+<footer class="mt-5 py-4 border-top"><div class="container">&copy; {{ date('Y') }} My Shop</div></footer>

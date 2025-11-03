@@ -12,6 +12,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('attribute_id')->constrained('attributes')->onDelete('cascade');
             $table->string('value', 100); // e.g., 'red', 'M', 'cotton'
+            
+            // ✅ Thêm cột type
+            $table->string('type', 50)->default('size'); // bạn có thể thay default nếu muốn
+            
             $table->timestamps();
         });
     }

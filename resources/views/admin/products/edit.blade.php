@@ -1,183 +1,351 @@
 @extends('layouts.admin.master')
 
-@section('title', 'Sửa sản phẩm')
+@section('title', 'Thêm sản phẩm')
 
 @section('content')
-    <div class="container py-4">
-        <h3 class="fw-bold mb-4 text-primary">
-            <i class="bi bi-pencil-square me-2"></i> Sửa sản phẩm
-        </h3>
-
-        <form action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data"
-            class="needs-validation" novalidate>
-            @csrf
-            @method('PUT')
-
-            {{-- ===== Thông tin cơ bản ===== --}}
-            <div class="card shadow-lg border-0 mb-4">
-                <div class="card-header bg-gradient text-white fw-semibold"
-                    style="background: linear-gradient(90deg, #007bff, #00a8ff);">
-                    <i class="bi bi-box-seam me-2"></i> Thông tin sản phẩm
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Tên sản phẩm</label>
-                            <input type="text" name="name" class="form-control shadow-sm"
-                                value="{{ old('name', $product->name) }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Giá gốc</label>
-                            <input type="number" name="base_price" class="form-control shadow-sm"
-                                value="{{ old('base_price', $product->base_price) }}" min="0">
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Mô tả</label>
-                            <textarea name="description" rows="3" class="form-control shadow-sm">{{ old('description', $product->description) }}</textarea>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mt-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Danh mục</label>
-                            <select name="category_id" class="form-select shadow-sm">
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ $cat->id == $product->category_id ? 'selected' : '' }}>
-                                        {{ $cat->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Thương hiệu</label>
-                            <select name="brand_id" class="form-select shadow-sm">
-                                @foreach ($brands as $brand)
-                                    <option value="{{ $brand->id }}"
-                                        {{ $brand->id == $product->brand_id ? 'selected' : '' }}>
-                                        {{ $brand->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Ảnh chính (URL)</label>
-                            <input type="text" name="image_main" class="form-control shadow-sm"
-                                value="{{ old('image_main', $product->image_main) }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ===== Ảnh phụ ===== --}}
-            <div class="card shadow-lg border-0 mb-4">
-                <div class="card-header bg-info text-white fw-semibold">
-                    <i class="bi bi-images me-2"></i> Ảnh phụ
-                </div>
-                <div class="card-body p-4">
-                    <div id="image-list">
-                        @foreach ($product->images as $image)
-                            <div class="d-flex align-items-center mb-2">
-                                <input type="text" name="images[]" class="form-control shadow-sm"
-                                    value="{{ $image->image_url }}">
-                                <button type="button" class="btn btn-outline-danger btn-sm ms-2 remove-image">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                    <button type="button" id="add-image" class="btn btn-outline-primary btn-sm mt-2">
-                        <i class="bi bi-plus-circle me-1"></i> Thêm ảnh
-                    </button>
-                </div>
-            </div>
-
-            {{-- ===== Biến thể ===== --}}
-            <div class="card shadow-lg border-0 mb-4">
-                <div class="card-header bg-success text-white fw-semibold">
-                    <i class="bi bi-diagram-3 me-2"></i> Biến thể sản phẩm
-                </div>
-                <div class="card-body p-4" id="variant-list">
-                    @foreach ($product->variants as $index => $variant)
-                        <div class="border rounded p-3 mb-3 variant-item bg-light shadow-sm">
-                            <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $variant->id }}">
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">SKU</label>
-                                    <input type="text" name="variants[{{ $index }}][sku]"
-                                        class="form-control shadow-sm" value="{{ $variant->sku }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Giá</label>
-                                    <input type="number" name="variants[{{ $index }}][price]"
-                                        class="form-control shadow-sm" value="{{ $variant->price }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Số lượng</label>
-                                    <input type="number" name="variants[{{ $index }}][quantity]"
-                                        class="form-control shadow-sm" value="{{ $variant->quantity }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Trạng thái</label>
-                                    <select name="variants[{{ $index }}][status]" class="form-select shadow-sm">
-                                        <option value="1" {{ $variant->status == 1 ? 'selected' : '' }}>Hiển thị
-                                        </option>
-                                        <option value="0" {{ $variant->status == 0 ? 'selected' : '' }}>Ẩn</option>
-                                    </select>
+    <section class="sherah-adashboard sherah-show">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="sherah-body">
+                        <!-- Dashboard Inner -->
+                        <div class="sherah-dsinner">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="sherah-breadcrumb mg-top-30">
+                                        <h2 class="sherah-breadcrumb__title">Upload Product</h2>
+                                        <ul class="sherah-breadcrumb__list">
+                                            <li><a href="#">Home</a></li>
+                                            <li class="active"><a href="profile-info.html">Upload Product</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="sherah-page-inner sherah-border sherah-basic-page sherah-default-bg mg-top-25 p-0">
+                                <form class="sherah-wc__form-main"
+                                    action="{{ route('admin.products.update', $product->id) }}" method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    @method('PUT')
 
-                            {{-- Thuộc tính --}}
-                            <div class="mt-3">
-                                <label class="form-label fw-semibold">Thuộc tính</label>
-                                <div class="d-flex flex-wrap gap-3">
-                                    @foreach ($attributes as $attribute)
-                                        <div>
-                                            <strong>{{ $attribute->name }}</strong>
-                                            <select name="variants[{{ $index }}][attribute_value_ids][]"
-                                                class="form-select shadow-sm">
-                                                <option value="">-- Chọn --</option>
-                                                @foreach ($attribute->values as $value)
-                                                    <option value="{{ $value->id }}"
-                                                        {{ $variant->attributes->contains($value->id) ? 'selected' : '' }}>
-                                                        {{ $value->value }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                    <div class="row">
+                                        <div class="col-lg-6 col-12">
+                                            <!-- Thông tin cơ bản sản phẩm -->
+                                            <div class="product-form-box sherah-border mg-top-30">
+                                                <h4 class="form-title m-0">Thông tin cơ bản</h4>
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Tên sản phẩm</label>
+                                                            <div class="form-group__input">
+                                                                <input class="sherah-wc__form-input"
+                                                                    placeholder="Nhập tên sản phẩm" type="text"
+                                                                    name="name" value="{{ old('name', $product->name) }}"
+                                                                    required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Giá gốc</label>
+                                                            <div class="form-group__input">
+                                                                <input class="sherah-wc__form-input"
+                                                                    placeholder="Nhập giá gốc" type="number" step="0.01"
+                                                                    name="base_price"
+                                                                    value="{{ old('base_price', $product->base_price) }}"
+                                                                    required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Mô tả sản phẩm</label>
+                                                            <div class="form-group__input">
+                                                                <textarea class="sherah-wc__form-input" placeholder="Nhập mô tả" name="description">{{ old('description', $product->description) }}</textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-6 col-md-6 col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Danh mục</label>
+                                                            <select class="form-group__input" name="category_id" required>
+                                                                <option value="">-- Chọn danh mục --</option>
+                                                                @foreach ($categories as $category)
+                                                                    <option value="{{ $category->id }}"
+                                                                        {{ $category->id == $product->category_id ? 'selected' : '' }}>
+                                                                        {{ $category->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-6 col-md-6 col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Thương hiệu</label>
+                                                            <select class="form-group__input" name="brand_id">
+                                                                <option value="">-- Chọn thương hiệu --</option>
+                                                                @foreach ($brands as $brand)
+                                                                    <option value="{{ $brand->id }}"
+                                                                        {{ $brand->id == $product->brand_id ? 'selected' : '' }}>
+                                                                        {{ $brand->name }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- <div class="col-lg-6 col-md-6 col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Giảm giá</label>
+                                                            <select class="form-group__input" name="is_on_sale">
+                                                                <option value="0">-- không --</option>
+                                                                <option value="1">-- giảm giá --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-6 col-md-6 col-12">
+                                                        <div class="form-group">
+                                                            <label class="sherah-wc__form-label">Mặt hàng mới</label>
+                                                            <select class="form-group__input" name="is_new">
+                                                                <option value="0">-- không --</option>
+                                                                <option value="1">-- Mặt hàng mới --</option>
+                                                            </select>
+                                                        </div>
+                                                    </div> --}}
+
+                                                </div>
+                                            </div>
+                                            <!-- End Thông tin cơ bản sản phẩm -->
                                         </div>
-                                    @endforeach
-                                </div>
+
+                                        <div class="col-lg-6 col-12">
+                                            <!-- Specification -->
+                                            <div class="product-form-box sherah-border mg-top-30">
+                                                <h4 class="form-title m-0">Biến thể sản phẩm</h4>
+
+                                                <div id="variants-wrapper">
+                                                    <!-- Biến thể mẫu -->
+                                                    @foreach ($product->variants as $index => $variant)
+                                                        <div class="variant row mb-3 g-3">
+                                                            <!-- Biến thể cũ: cần hidden id -->
+                                                            <input type="hidden" name="variants[{{ $index }}][id]"
+                                                                value="{{ $variant->id }}">
+
+                                                            <!-- SKU -->
+                                                            <div class="col-lg-6 col-md-6 col-12">
+                                                                <label>SKU</label>
+                                                                <input type="text"
+                                                                    name="variants[{{ $index }}][sku]"
+                                                                    class="form-control" value="{{ $variant->sku }}"
+                                                                    required>
+                                                            </div>
+
+                                                            <!-- Quantity -->
+                                                            <div class="col-lg-6 col-md-6 col-12">
+                                                                <label>Số lượng</label>
+                                                                <input type="number"
+                                                                    name="variants[{{ $index }}][quantity]"
+                                                                    class="form-control" value="{{ $variant->quantity }}"
+                                                                    required>
+                                                            </div>
+
+                                                            <!-- Price -->
+                                                            <div class="col-lg-6 col-md-6 col-12">
+                                                                <label>Giá</label>
+                                                                <input type="number"
+                                                                    name="variants[{{ $index }}][price]"
+                                                                    class="form-control" value="{{ $variant->price }}"
+                                                                    required>
+                                                            </div>
+
+                                                            <!-- Status -->
+                                                            <div class="col-lg-3 col-md-3 col-12">
+                                                                <label>Trạng thái</label>
+                                                                <select name="variants[{{ $index }}][status]"
+                                                                    class="form-control">
+                                                                    <option value="1"
+                                                                        {{ $variant->status == 1 ? 'selected' : '' }}>Hiện
+                                                                    </option>
+                                                                    <option value="0"
+                                                                        {{ $variant->status == 0 ? 'selected' : '' }}>Ẩn
+                                                                    </option>
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Sizes -->
+                                                            <div class="col-lg-3 col-md-3 col-12">
+                                                                <label>Kích thước</label>
+                                                                <select
+                                                                    name="variants[{{ $index }}][attribute_value_ids][]"
+                                                                    class="form-control">
+                                                                    @foreach ($sizes as $size)
+                                                                        <option value="{{ $size->id }}"
+                                                                            {{ $variant->sizes->contains('id', $size->id) ? 'selected' : '' }}>
+                                                                            {{ $size->value }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Colors -->
+                                                            <div class="col-lg-3 col-md-3 col-12">
+                                                                <label>Màu sắc</label>
+                                                                <select
+                                                                    name="variants[{{ $index }}][attribute_value_ids][]"
+                                                                    class="form-control">
+                                                                    @foreach ($colors as $color)
+                                                                        <option value="{{ $color->id }}"
+                                                                            {{ $variant->colors->contains('id', $color->id) ? 'selected' : '' }}>
+                                                                            {{ $color->value }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+
+                                                            <!-- Materials -->
+                                                            <div class="col-lg-3 col-md-3 col-12">
+                                                                <label>Chất liệu</label>
+                                                                <select
+                                                                    name="variants[{{ $index }}][attribute_value_ids][]"
+                                                                    class="form-control">
+                                                                    @foreach ($materials as $material)
+                                                                        <option value="{{ $material->id }}"
+                                                                            {{ $variant->materials->contains('id', $material->id) ? 'selected' : '' }}>
+                                                                            {{ $material->value }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+
+                                                    <button type="button" class="sherah-btn sherah-btn__secondary"
+                                                        id="add-variant">Thêm biến thể</button>
+                                                </div>
+                                                <!-- End Specification -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Ảnh chính -->
+                                    <div class="product-form-box sherah-border mg-top-30">
+                                        <div class="form-group">
+                                            <div class="image-upload-group">
+                                                <div class="image-upload-group__single image-upload-group__single--upload"
+                                                    style="width: 200px; height: 200px; display: inline-block; margin-right: 10px; overflow: hidden;">
+                                                    @if ($product->image_main)
+                                                        <img src="{{ asset('storage/' . $product->image_main) }}"
+                                                            alt="Ảnh chính"
+                                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                                    @endif
+                                                </div>
+
+                                                <div class="image-upload-group__single image-upload-group__single--upload"
+                                                    style="width: 200px; height: 200px; display: inline-block; overflow: hidden;">
+                                                    <input type="file" class="btn-check" name="image_main"
+                                                        id="input-img-main" autocomplete="off">
+                                                    <label class="image-upload-label" for="input-img-main"
+                                                        style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; border: 2px dashed #ccc; cursor: pointer;">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="40"
+                                                            height="40" viewBox="0 0 91.787 84.116">
+                                                            <!-- SVG content -->
+                                                        </svg>
+                                                        <span style="margin-left: 5px;">Upload ảnh</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ảnh phụ -->
+                                    <div class="product-form-box sherah-border mg-top-30">
+                                        <div class="form-group">
+                                            <div class="image-upload-group">
+                                                @foreach ($product->images as $img)
+                                                    <div class="image-upload-group__single"
+                                                        style="width: 200px; height: 200px; display: inline-block; margin-right: 10px; overflow: hidden;">
+                                                        <img src="{{ asset('storage/' . $img->image_url) }}"
+                                                            alt="Ảnh sản phẩm"
+                                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                                    </div>
+                                                @endforeach
+
+                                                <div class="image-upload-group__single image-upload-group__single--upload"
+                                                    style="width: 200px; height: 200px; display: inline-block; overflow: hidden;">
+                                                    <input type="file" class="btn-check" name="images[]"
+                                                        id="input-img-upload" autocomplete="off" multiple>
+                                                    <label class="image-upload-label" for="input-img-upload"
+                                                        style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; border: 2px dashed #ccc; cursor: pointer;">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="40"
+                                                            height="40" viewBox="0 0 91.787 84.116">
+                                                            <!-- SVG content -->
+                                                        </svg>
+                                                        <span style="margin-left: 5px;">Upload ảnh</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class=" mg-top-40 sherah-dflex sherah-dflex-gap-30 justify-content-end">
+                                        <button type="submit" class="sherah-btn sherah-btn__primary">Sửa sản phẩm
+                                        </button>
+                                        <button class="sherah-btn sherah-btn__third">Cancel</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                    @endforeach
+                        <!-- End Dashboard Inner -->
+                    </div>
                 </div>
-                <button type="button" id="add-variant" class="btn btn-outline-success btn-sm mt-2">
-                    <i class="bi bi-plus-circle me-1"></i> Thêm biến thể
-                </button>
-            </div>
 
-            <div class="text-end mt-4">
-                <button type="submit" class="btn btn-lg btn-primary px-4 shadow">
-                    <i class="bi bi-save me-2"></i> Lưu thay đổi
-                </button>
+
             </div>
-        </form>
-    </div>
+        </div>
+    </section>
 @endsection
 
 @push('scripts')
     <script>
+        let variantIndex = 1;
+        document.getElementById('add-variant').addEventListener('click', function() {
+            const wrapper = document.getElementById('variants-wrapper');
+            const newVariant = wrapper.querySelector('.variant').cloneNode(true);
+
+            // Reset input values
+            newVariant.querySelectorAll('input').forEach(input => input.value = '');
+            newVariant.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = -1;
+                // Update name index
+                const name = select.getAttribute('name');
+                select.setAttribute('name', name.replace(/\d+/, variantIndex));
+            });
+            newVariant.querySelectorAll('input').forEach(input => {
+                const name = input.getAttribute('name');
+                input.setAttribute('name', name.replace(/\d+/, variantIndex));
+            });
+
+            wrapper.appendChild(newVariant);
+            variantIndex++;
+        });
+
+        // Thêm ảnh phụ
         document.getElementById('add-image').addEventListener('click', () => {
             const div = document.createElement('div');
             div.classList.add('d-flex', 'align-items-center', 'mb-2');
             div.innerHTML = `
-        <input type="text" name="images[]" class="form-control shadow-sm" placeholder="URL ảnh">
-        <button type="button" class="btn btn-outline-danger btn-sm ms-2 remove-image">
-            <i class="bi bi-trash"></i>
-        </button>`;
+                <input type="text" name="images[]" class="form-control shadow-sm" placeholder="URL ảnh phụ">
+                <button type="button" class="btn btn-outline-danger btn-sm ms-2 remove-image">
+                    <i class="bi bi-trash"></i>
+                </button>`;
             document.getElementById('image-list').appendChild(div);
         });
 
+        // Xóa ảnh phụ
         document.addEventListener('click', (e) => {
             if (e.target.closest('.remove-image')) {
                 e.target.closest('.d-flex').remove();
