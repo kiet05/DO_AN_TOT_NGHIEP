@@ -21,8 +21,8 @@
             <!-- Nav Menu -->
             <div class="menu-bar">
                 <ul class="menu-bar__one sherah-dashboard-menu" id="sherahMenu">
-                    <li><a href="#!" data-bs-toggle="collapse" data-bs-target="#menu-item_home"><span
-                                class="menu-bar__text">
+                    <li><a href="{{ route('admin.dashboard') }}" data-bs-toggle="collapse"
+                            data-bs-target="#menu-item_home"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="18.075"
                                         height="18.075" viewBox="0 0 18.075 18.075">
@@ -261,7 +261,7 @@
                                 </span>
                                 <span class="menu-bar__name">Invoice</span></span></a></span>
                     </li> --}}
-                    <li><a href="history.html" class="collapsed"><span class="menu-bar__text">
+                    {{-- <li><a href="history.html" class="collapsed"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19.527"
                                         height="19.582" viewBox="0 0 19.527 19.582">
@@ -279,8 +279,8 @@
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">History</span></span></a></span>
-                    </li>
-                    <li><a class="collapsed" href="profile-info.html"><span class="menu-bar__text">
+                    </li> --}}
+                    {{-- <li><a class="collapsed" href="profile-info.html"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="22.103"
                                         height="22.368" viewBox="0 0 22.103 22.368">
@@ -297,7 +297,7 @@
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">Settings</span></span></a></span>
-                    </li>
+                    </li> --}}
                     {{-- <li><a href="chat-messages.html" class="collapsed"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="22.029"
@@ -339,17 +339,14 @@
                                         </g>
                                     </svg>
                                 </span>
-                                <span class="menu-bar__name">Pages</span></span><span
+                                <span class="menu-bar__name">Mã khuyến mãi</span></span><span
                                 class="sherah__toggle"></span></a></span>
                         <!-- Dropdown Menu -->
                         <div class="collapse sherah__dropdown" id="menu-item__9" data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
-                                <li><a href=""><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Notifications</span></span></a></li>
-                                <li><a href="terms-conditions.html"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Terms & Conditions</span></span></a></li>
-                                <li><a href="faq.html"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Faqs</span></span></a></li>
+                                <li><a href="{{ route('admin.vouchers.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Danh sách mã khuyến mãi</span></span></a></li>
+                                <li><a href="{{ route('admin.vouchers.create') }}"><span class="menu-bar__text"><span class="menu-bar__name">Thêm mã khuyến mãi mới</span></span></a></li>
                             </ul>
                         </div>
                     </li>

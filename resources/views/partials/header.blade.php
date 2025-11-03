@@ -525,8 +525,14 @@
                                                                         fill="#fff" />
                                                                 </svg>
                                                             </div>
-                                                            <h4 class="sherah-dropdown-card-name"><a
-                                                                    href="#">Logout</a></h4>
+                                                            <form method="POST" action="{{ route('logout') }}"
+                                                                class="w-full">
+                                                                @csrf
+                                                                <flux:menu.item as="button" type="submit"
+                                                                    class="w-full">
+                                                                    {{ __('Log Out') }}
+                                                                </flux:menu.item>
+                                                            </form>
                                                         </div>
                                                     </li>
                                                 </ul>
