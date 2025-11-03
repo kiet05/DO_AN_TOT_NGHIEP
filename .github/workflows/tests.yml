@@ -1,14 +1,16 @@
 name: tests
 
 on:
-  push:
-    branches:
-      - develop
-      - main
-  pull_request:
-    branches:
-      - develop
-      - main
+  # Tạm thời tắt workflow để push code
+  # push:
+  #   branches:
+  #     - develop
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - develop
+  #     - main
+  workflow_dispatch: # Chỉ chạy khi manual trigger
 
 jobs:
   ci:
