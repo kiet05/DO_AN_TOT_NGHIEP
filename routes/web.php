@@ -58,12 +58,13 @@ Route::prefix('admin')
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
-        // Banners
-        Route::prefix('banners')->name('banners.')->group(function () {
-            Route::resource('/', BannerController::class)->except(['show']);
-            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
-        });
+        // routes/web.php (bên trong group 'admin' nếu có)
+
+        Route::resource('banners', BannerController::class)->except(['show']);
+
+        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+
 
         // Posts
         Route::prefix('posts')->name('posts.')->group(function () {
