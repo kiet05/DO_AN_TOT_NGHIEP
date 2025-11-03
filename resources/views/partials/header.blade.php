@@ -525,14 +525,14 @@
                                                                         fill="#fff" />
                                                                 </svg>
                                                             </div>
-                                                            <form method="POST" action="{{ route('logout') }}"
-                                                                class="w-full">
-                                                                @csrf
-                                                                <flux:menu.item as="button" type="submit"
-                                                                    class="w-full">
-                                                                    {{ __('Log Out') }}
-                                                                </flux:menu.item>
-                                                            </form>
+                                                            <h4 class="sherah-dropdown-card-name">
+                                                                <form method="POST" action="{{ route('logout') }}" class="d-inline m-0" id="logout-form-header">
+                                                                    @csrf
+                                                                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form-header').submit();" class="text-decoration-none" style="cursor: pointer;">
+                                                                        Logout
+                                                                    </a>
+                                                                </form>
+                                                            </h4>
                                                         </div>
                                                     </li>
                                                 </ul>
