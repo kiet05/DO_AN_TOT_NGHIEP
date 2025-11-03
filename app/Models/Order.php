@@ -19,7 +19,7 @@ class Order extends Model
         'shipping_fee',
         'total_price',
         'final_amount',
-        'voucher_id',
+        'product_variant_id',
         'payment_method',
         'payment_status',
         'order_status',

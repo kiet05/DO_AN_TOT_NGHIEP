@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
 
             // Liên kết biến thể sản phẩm (nếu có)
-            $table->foreignId('variant_id')->nullable()->constrained('product_variants')->onDelete('set null');
+            $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->onDelete('set null');
 
             // Thông tin người nhận (nếu cần tách riêng từng sản phẩm)
             $table->string('receiver_name', 100)->nullable();

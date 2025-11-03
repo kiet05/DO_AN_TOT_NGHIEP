@@ -15,12 +15,13 @@ class CategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $keyword = $request->input('keyword');
+        $keyword = $request->input('s');
 
         $categories = Category::withCount('products')
             ->when($keyword, fn($q) => $q->where('name', 'LIKE', "%{$keyword}%"))
             ->orderBy('id', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.categories.index', compact('categories'));
     }
@@ -30,7 +31,8 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        return view('admin.categories.create');
+        $categories = Category::all();
+        return view('admin.categories.create', compact('categories'));
     }
 
     /**
@@ -38,9 +40,8 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|unique:categories,name']);
-        Category::create($request->only('name'));
-        return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thàng công!');
+        Category::create($request->only(['name', 'status', 'parent_id']));
+        return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thành công');
     }
 
     /**
@@ -57,7 +58,8 @@ class CategoryController extends Controller
     public function edit(string $id)
     {
         $category = Category::findOrFail($id);
-        return view('admin.categories.edit', compact('category'));
+        $categories = Category::where('id', '!=', $id)->get();
+        return view('admin.categories.edit', compact('category', 'categories'));
     }
 
     /**
@@ -66,24 +68,9 @@ class CategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $category = Category::findOrFail($id);
-
-        $request->validate([
-            'name' => 'required|unique:categories,name,' . $id,
-        ], [
-            'name.required' => 'Tên danh mục không được để trống.',
-            'name.unique' => 'Tên danh mục đã tồn tại.',
-        ]);
-
-        $slug = $request->slug ?: Str::slug($request->name);
-
-        $category->update([
-            'name' => $request->name,
-            'slug' => $slug,
-            'description' => $request->description,
-        ]);
-
+        $category->update($request->only(['name', 'status', 'parent_id']));
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Cập nhật danh mục thành công.');
+            ->with('success', 'Cập nhật danh mục thành công');
     }
 
     /**
@@ -93,22 +80,29 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
 
-        if ($category->slug == 'empty') {
+        // Không xóa danh mục "Trống"
+        if ($category->name == 'Trống') {
             return redirect()->route('admin.categories.index')
                 ->with('error', 'Không thể xóa danh mục trống!');
         }
 
+        // Lấy hoặc tạo danh "Trống"
         $emptyCategory = Category::firstOrCreate(
-            ['slug' => 'empty'],
-            ['name' => 'Trống']
+            ['name' => 'Trống'],
+            ['status' => 1, 'parent_id' => null]
         );
 
+        // Chuyển sản phẩm sang danh "Trống"
         Product::where('category_id', $category->id)
             ->update(['category_id' => $emptyCategory->id]);
+
+        // Nếu category có con, chuyển cha của danh mục con về "Trống"
+        Category::where('parent_id', $category->id)
+            ->update(['parent_id' => $emptyCategory->id]);
 
         $category->delete();
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Xóa danh mục thành công. Các sản phẩm đã được chuyển về danh mục "Trống".');
+            ->with('success', 'Xóa danh mục thành công. Các sản phẩm và danh mục con đã được chuyển về "Trống".');
     }
 }

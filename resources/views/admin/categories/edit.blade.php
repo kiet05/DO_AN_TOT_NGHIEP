@@ -1,57 +1,96 @@
 @extends('layouts.admin.master')
 
-@section('title', 'Sửa danh mục')
+@section('title', isset($category) ? 'Sửa danh mục' : 'Thêm danh mục')
 
 @section('content')
-    <div class="container py-4">
-        <h3 class="fw-bold mb-4 text-primary">
-            <i class="bi bi-pencil-square me-2"></i> Sửa danh mục
-        </h3>
+    <section class="sherah-adashboard sherah-show">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="sherah-body">
+                        <div class="sherah-dsinner">
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="sherah-breadcrumb mg-top-30">
+                                        <h2 class="sherah-breadcrumb__title">
+                                            {{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}</h2>
+                                        <ul class="sherah-breadcrumb__list">
+                                            <li><a href="{{ route('admin.dashboard') }}">Home</a></li>
+                                            <li class="active"><a
+                                                    href="#">{{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
 
-        <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" class="needs-validation"
-            novalidate>
-            @csrf
-            @method('PUT')
+                            <div class="sherah-page-inner sherah-border sherah-basic-page sherah-default-bg mg-top-25 p-0">
+                                <form class="sherah-wc__form-main"
+                                    action="{{ isset($category) ? route('admin.categories.update', $category->id) : route('admin.categories.store') }}"
+                                    method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    @if (isset($category))
+                                        @method('PUT')
+                                    @endif
 
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient text-white fw-semibold"
-                    style="background: linear-gradient(90deg, #007bff, #00a8ff);">
-                    <i class="bi bi-folder2-open me-2"></i> Thông tin danh mục
-                </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="product-form-box sherah-border mg-top-30">
+                                                <h4 class="form-title m-0">Thông tin danh mục</h4>
 
-                <div class="card-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Tên danh mục</label>
-                        <input type="text" name="name" class="form-control shadow-sm"
-                            value="{{ old('name', $category->name) }}" required>
-                        @error('name')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
+                                                <div class="form-group">
+                                                    <label class="sherah-wc__form-label">Tên danh mục</label>
+                                                    <div class="form-group__input">
+                                                        <input class="sherah-wc__form-input" placeholder="Nhập tên danh mục"
+                                                            type="text" name="name"
+                                                            value="{{ old('name', $category->name ?? '') }}" required>
+                                                    </div>
+                                                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Slug</label>
-                        <input type="text" name="slug" class="form-control shadow-sm"
-                            value="{{ old('slug', $category->slug) }}">
-                        <small class="text-muted">Tự động tạo nếu để trống.</small>
-                    </div>
+                                                <div class="form-group">
+                                                    <label class="sherah-wc__form-label">Danh mục cha</label>
+                                                    <select class="form-group__input" name="parent_id">
+                                                        <option value="">-- Không có --</option>
+                                                        @foreach ($categories as $parent)
+                                                            @if (!isset($category) || $parent->id != $category->id)
+                                                                <option value="{{ $parent->id }}"
+                                                                    {{ isset($category) && $category->parent_id == $parent->id ? 'selected' : '' }}>
+                                                                    {{ $parent->name }}
+                                                                </option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Mô tả</label>
-                        <textarea name="description" rows="3" class="form-control shadow-sm"
-                            placeholder="Nhập mô tả ngắn cho danh mục...">{{ old('description', $category->description) }}</textarea>
+                                                <div class="form-group">
+                                                    <label class="sherah-wc__form-label">Trạng thái</label>
+                                                    <select class="form-group__input" name="status" required>
+                                                        <option value="1"
+                                                            {{ isset($category) && $category->status == 1 ? 'selected' : '' }}>
+                                                            Hiển thị</option>
+                                                        <option value="0"
+                                                            {{ isset($category) && $category->status == 0 ? 'selected' : '' }}>
+                                                            Ẩn</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mg-top-40 sherah-dflex sherah-dflex-gap-30 justify-content-end">
+                                        <button type="submit" class="sherah-btn sherah-btn__primary">
+                                            {{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}
+                                        </button>
+                                        <a href="{{ route('admin.categories.index') }}"
+                                            class="sherah-btn sherah-btn__third">Hủy</a>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="text-end mt-4">
-                <button type="submit" class="btn btn-lg btn-primary px-4 shadow">
-                    <i class="bi bi-save me-2"></i> Lưu thay đổi
-                </button>
-                <a href="{{ route('admin.categories.index') }}" class="btn btn-lg btn-outline-secondary px-4">
-                    <i class="bi bi-arrow-left-circle me-1"></i> Quay lại
-                </a>
-            </div>
-        </form>
-    </div>
+        </div>
+    </section>
 @endsection

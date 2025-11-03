@@ -11,15 +11,18 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
+            $table->string('slug')->unique(); // ✅ thêm slug
             $table->string('email', 255)->unique();
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('phone', 20)->nullable();
             $table->string('password', 255);
             $table->text('address')->nullable();
             $table->foreignId('role_id')->default(3)->constrained('roles')->onDelete('cascade');
             $table->tinyInteger('status')->default(1);
+            $table->rememberToken();
             $table->timestamps();
 
-            // Cột cho 2FA
+            // 2FA
             $table->text('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
             $table->timestamp('two_factor_confirmed_at')->nullable();
