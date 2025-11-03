@@ -2,10 +2,12 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\OrderItem;
+use App\Models\User;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\OrderItem;
 use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\OrderItem>
@@ -21,19 +23,27 @@ class OrderItemFactory extends Factory
      */
     public function definition(): array
     {
-        $unitPrice = $this->faker->randomFloat(2, 100000, 1000000);
+        $price = $this->faker->randomFloat(2, 100000, 1000000);
         $quantity = $this->faker->numberBetween(1, 5);
+        $discount = $this->faker->randomFloat(2, 0, 50000);
+        $shipping_fee = $this->faker->randomFloat(2, 0, 30000);
 
         return [
             'order_id' => Order::factory(),
+            'user_id' => User::factory(),
+            'product_id' => Product::factory(),
             'product_variant_id' => ProductVariant::factory(),
-            'product_name' => $this->faker->words(3, true),
-            'color' => $this->faker->safeColorName(),
-            'size' => $this->faker->randomElement(['S', 'M', 'L', 'XL']),
-            'unit_price' => $unitPrice,
             'quantity' => $quantity,
-            'subtotal' => $unitPrice * $quantity,
-            'image' => $this->faker->imageUrl(300, 300, 'products'),
+            'price' => $price,
+            'discount' => $discount,
+            'subtotal' => $price * $quantity,
+            'shipping_fee' => $shipping_fee,
+            'total_price' => $price * $quantity - $discount,
+            'final_amount' => $price * $quantity - $discount + $shipping_fee,
+            'payment_method' => $this->faker->randomElement(['COD', 'Credit Card', 'Bank Transfer']),
+            'payment_status' => $this->faker->randomElement(['pending', 'paid', 'failed']),
+            'order_status' => $this->faker->randomElement(['pending', 'processing', 'completed', 'cancelled']),
+            'status' => 'pending',
         ];
     }
 }

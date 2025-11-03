@@ -1,106 +1,54 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
-  <meta charset="utf-8">
-  <title>@yield('title', 'Fashion Admin')</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@yield('title', 'Sherah - HTML eCommerce Dashboard Template')</title>
 
-  {{-- CSS gốc LBD --}}
-  <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
-  <link href="{{ asset('assets/css/animate.min.css') }}" rel="stylesheet">
-  <link href="{{ asset('assets/css/light-bootstrap-dashboard.css?v=1.4.0') }}" rel="stylesheet">
-  <link href="{{ asset('assets/css/demo.css') }}" rel="stylesheet">
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700,300" rel="stylesheet">
-  <link href="{{ asset('assets/css/pe-icon-7-stroke.css') }}" rel="stylesheet">
+    <!-- Moved CSS links from original -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,300;1,400;1,500;1,700;1,900&display=swap"
+        rel="stylesheet">
 
-  {{-- Vá dropdown bị ẩn/cắt --}}
-  <style>
-    .dropdown-menu {
-        z-index: 2060 !important;
-        display: none;
-        position: absolute !important;
-    }
-    .dropdown.open > .dropdown-menu {
-        display: block !important;
-    }
-    .table-wrap { overflow: visible !important; }
-    .card-body, .content, .main-panel, .container-fluid { position: relative; }
-  </style>
+    <link rel="icon" href="img/favicon.png">
 
-  @stack('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/font-awesome-all.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/charts.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/datatables.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/jvector-map.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/slickslider.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/jquery-ui.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/reset.css') }}">
+    <link rel="stylesheet" href="{{ asset('/style.css') }}">
+    @stack('styles')
 </head>
 
-<body>
-  <div class="wrapper">
-    @include('layouts.admin.sidebar')
+<body id="sherah-dark-light">
+    <div class="sherah-body-area">
+        @include('partials.navbar')
+        @include('partials.header')
 
-    <div class="main-panel">
-      @include('layouts.admin.navbar')
-
-      <div class="content">
-        <div class="container-fluid">
-          @yield('content')
-        </div>
-      </div>
-
-      <footer class="footer">
-        <div class="container-fluid text-center">
-          <p class="copyright pull-right mb-0">
-            &copy; {{ date('Y') }} Fashion Admin
-          </p>
-        </div>
-      </footer>
+        <main class="sherah-main-content">
+            @yield('content')
+        </main>
     </div>
-  </div>
 
-  {{-- JS gốc LBD --}}
-  <script src="{{ asset('assets/js/jquery.3.2.1.min.js') }}"></script>
-  <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
-  <script src="{{ asset('assets/js/chartist.min.js') }}"></script>
-  <script src="{{ asset('assets/js/bootstrap-notify.js') }}"></script>
-  <script src="{{ asset('assets/js/light-bootstrap-dashboard.js?v=1.4.0') }}"></script>
-  <script src="{{ asset('assets/js/demo.js') }}"></script>
-
-  {{-- ✅ Vá dropdown bằng JS thuần, bỏ phụ thuộc Bootstrap --}}
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Bắt tất cả các nút dropdown
-      document.querySelectorAll('[data-bs-toggle="dropdown"], [data-toggle="dropdown"]').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-
-          const parent = btn.closest('.dropdown, .btn-group');
-          const menu = parent ? parent.querySelector('.dropdown-menu') : null;
-
-          // Ẩn các dropdown khác
-          document.querySelectorAll('.dropdown.open').forEach(d => {
-            if (d !== parent) d.classList.remove('open');
-          });
-
-          // Toggle mở/đóng
-          if (parent && menu) {
-            parent.classList.toggle('open');
-          }
-        });
-      });
-
-      // Click ngoài sẽ đóng lại dropdown
-      document.addEventListener('click', function (e) {
-        if (!e.target.closest('.dropdown, .btn-group')) {
-          document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
-        }
-      });
-
-      // Chặn click trong menu lan ra
-      document.querySelectorAll('.dropdown-menu').forEach(menu => {
-        menu.addEventListener('click', e => e.stopPropagation());
-      });
-    });
-  </script>
-
-  @stack('scripts')
+    <!-- Scripts from original -->
+    <script src="{{ asset('assets/js/jquery.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-migrate.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-ui.min.js') }}"></script>
+    <script src="{{ asset('assets/js/popper.min.js') }}"></script>
+    <script src="{{ asset('assets/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/js/charts.js') }}"></script>
+    <script src="{{ asset('assets/js/datatables.min.js') }}"></script>
+    <script src="{{ asset('assets/js/circle-progress.min.js') }}"></script>
+    <script src="{{ asset('assets/js/jquery-jvectormap.js') }}"></script>
+    <script src="{{ asset('assets/js/jvector-map.js') }}"></script>
+    <script src="{{ asset('assets/js/slickslider.min.js') }}"></script>
+    <script src="{{ asset('assets/js/main.js') }}"></script>
+    @stack('scripts')
 </body>
+
 </html>

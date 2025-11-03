@@ -19,7 +19,11 @@ return new class extends Migration
             $table->boolean('is_new')->default(false);
             $table->boolean('is_on_sale')->default(false);
             $table->tinyInteger('status')->default(1);
+
             $table->timestamps();
+
+            // ✅ Thêm SoftDeletes
+            $table->softDeletes(); // tạo cột deleted_at
         });
     }
 
