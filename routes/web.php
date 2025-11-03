@@ -16,6 +16,8 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
+use App\Http\Controllers\Admin\CustomerController;
+
 
 // Trang chủ
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -112,6 +114,19 @@ Route::prefix('admin')
         Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
 
+    
+
+        // Customers
+        Route::prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('/{id}', [CustomerController::class, 'show'])->name('show');
+        Route::patch('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggleStatus');
+});
+
+
+
+
+
         // Users
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
@@ -122,10 +137,14 @@ Route::prefix('admin')
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
             ->name('accounts.toggleStatus');
 
+            
+
         // Vouchers
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
             ->name('vouchers.report');
+
+
     });
 
 require __DIR__ . '/auth.php';
