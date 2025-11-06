@@ -114,13 +114,23 @@ Route::prefix('admin')
         Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
 
     
+//customers
+Route::prefix('customers')->name('customers.')->group(function () {
+    // LIST + CREATE/STORE + EDIT/UPDATE + DELETE
+    Route::get('/',            [CustomerController::class, 'index'])->name('index');
+    Route::get('/create',      [CustomerController::class, 'create'])->name('create');
+    Route::post('/',           [CustomerController::class, 'store'])->name('store');
+    Route::get('/{id}/edit',   [CustomerController::class, 'edit'])->name('edit')->whereNumber('id');
+    Route::put('/{id}',        [CustomerController::class, 'update'])->name('update')->whereNumber('id');
+    Route::delete('/{id}',     [CustomerController::class, 'destroy'])->name('destroy')->whereNumber('id');
 
-        // Customers
-        Route::prefix('customers')->name('customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/{id}', [CustomerController::class, 'show'])->name('show');
-        Route::patch('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggleStatus');
+    // SHOW + ACTIONS (đặt SAU cùng và ràng buộc id là số)
+    Route::get('/{id}',                    [CustomerController::class, 'show'])->name('show')->whereNumber('id');
+    Route::patch('/{id}/toggle-status',    [CustomerController::class, 'toggleStatus'])->name('toggleStatus')->whereNumber('id');
+    Route::post('/{id}/reset-link',        [CustomerController::class, 'sendResetLink'])->name('resetLink')->whereNumber('id');
+    Route::post('/{id}/force-reset',       [CustomerController::class, 'forceReset'])->name('forceReset')->whereNumber('id');
 });
+
 
 
 

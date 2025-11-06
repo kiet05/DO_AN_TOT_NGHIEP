@@ -6,13 +6,12 @@
     <div class="row">
       <div class="col-12">
         <div class="sherah-body">
-          <!-- Dashboard Inner -->
           <div class="sherah-dsinner">
 
-            {{-- Header + breadcrumb + bộ lọc --}}
+            {{-- Header + breadcrumb + nút thêm --}}
             <div class="row mg-top-30">
               <div class="col-12 sherah-flex-between">
-                <!-- Sherah Breadcrumb -->
+
                 <div class="sherah-breadcrumb">
                   <h2 class="sherah-breadcrumb__title">Danh sách khách hàng</h2>
                   <ul class="sherah-breadcrumb__list">
@@ -20,115 +19,115 @@
                     <li class="active"><a href="#">Khách hàng</a></li>
                   </ul>
                 </div>
-                <!-- End Sherah Breadcrumb -->
 
-                {{-- Bộ lọc nhanh (search + status) --}}
-                <form action="{{ route('admin.customers.index') }}" method="GET" class="d-flex gap-2">
-                  <input type="text" name="search" value="{{ request('search') }}" class="form-control"
-                         placeholder="Tìm tên / email / SĐT" style="min-width: 260px">
-                  <select name="status" class="form-select">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="active"  @selected(request('status')==='active')>Hoạt động</option>
-                    <option value="inactive"@selected(request('status')==='inactive')>Bị khóa</option>
-                  </select>
-                  <button class="sherah-btn sherah-gbcolor">Lọc</button>
-                </form>
+                <div class="d-flex gap-2">
+                  {{-- Ô tìm kiếm --}}
+                  <form action="{{ route('admin.customers.index') }}" method="GET" class="d-flex gap-2">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                           class="form-control" placeholder="Tìm tên / email / SĐT" style="min-width: 240px">
+
+                    <select name="status" class="form-select">
+                      <option value="">Tất cả</option>
+                      <option value="active" @selected(request('status')=='active')>Hoạt động</option>
+                      <option value="inactive" @selected(request('status')=='inactive')>Bị khóa</option>
+                    </select>
+
+                    <button class="sherah-btn sherah-gbcolor">Lọc</button>
+                  </form>
+
+                  {{-- nút thêm mới --}}
+                  <a href="{{ route('admin.customers.create') }}" class="sherah-btn sherah-gbcolor">
+                    + Thêm khách hàng
+                  </a>
+                </div>
               </div>
             </div>
 
             {{-- Bảng danh sách --}}
             <div class="sherah-table sherah-page-inner sherah-border sherah-default-bg mg-top-25">
-              <table id="sherah-table__vendor" class="sherah-table__main sherah-table__main-v3">
-                <!-- Head -->
+              <table class="sherah-table__main sherah-table__main-v3">
                 <thead class="sherah-table__head">
                   <tr>
-                    <th class="sherah-table__column-1 sherah-table__h1">#</th>
-                    <th class="sherah-table__column-2 sherah-table__h2">Tên khách hàng</th>
-                    <th class="sherah-table__column-3 sherah-table__h3">Email</th>
-                    <th class="sherah-table__column-4 sherah-table__h4">SĐT</th>
-                    <th class="sherah-table__column-5 sherah-table__h5">Số đơn hàng</th>
-                    <th class="sherah-table__column-6 sherah-table__h6">Trạng thái</th>
-                    <th class="sherah-table__column-7 sherah-table__h7">Hành động</th>
+                    <th>#</th>
+                    <th>Tên khách hàng</th>
+                    <th>Email</th>
+                    <th>SĐT</th>
+                    <th>Số đơn hàng</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Hành động</th>
                   </tr>
                 </thead>
 
-                <!-- Body -->
                 <tbody class="sherah-table__body">
-                @forelse ($customers as $idx => $u)
+                @forelse ($customers as $index => $u)
                   <tr>
-                    {{-- STT --}}
-                    <td class="sherah-table__column-1 sherah-table__data-1">
-                      <p class="crany-table__product--number">
-                        <a href="#" class="sherah-color1">
-                          #{{ $customers->firstItem() + $idx }}
-                        </a>
-                      </p>
+                    <td>{{ $customers->firstItem() + $index }}</td>
+                    <td>{{ $u->name }}</td>
+                    <td>{{ $u->email }}</td>
+                    <td>{{ $u->phone ?? '—' }}</td>
+                    <td>{{ $u->orders_count }}</td>
+
+                    <td>
+                      <span class="sherah-table__status {{ $u->status ? 'sherah-color3' : 'sherah-color2' }}">
+                        {{ $u->status ? 'Hoạt động' : 'Bị khóa' }}
+                      </span>
                     </td>
 
-                    {{-- Tên --}}
-                    <td class="sherah-table__column-2 sherah-table__data-2">
-                      <div class="sherah-table__product-content">
-                        <p class="sherah-table__product-desc">{{ $u->name }}</p>
-                      </div>
-                    </td>
+                    <td class="text-center">
+                      <div class="d-flex gap-1 justify-content-center">
 
-                    {{-- Email --}}
-                    <td class="sherah-table__column-3 sherah-table__data-3">
-                      <p class="sherah-table__product-desc">{{ $u->email }}</p>
-                    </td>
-
-                    {{-- SĐT --}}
-                    <td class="sherah-table__column-4 sherah-table__data-4">
-                      <p class="sherah-table__product-desc">{{ $u->phone ?? '—' }}</p>
-                    </td>
-
-                    {{-- Số đơn --}}
-                    <td class="sherah-table__column-5 sherah-table__data-5">
-                      <p class="sherah-table__product-desc">{{ $u->orders_count }}</p>
-                    </td>
-
-                    {{-- Trạng thái --}}
-                    <td class="sherah-table__column-6 sherah-table__data-6">
-                      <div class="sherah-table__product-content">
-                        <div class="sherah-table__status {{ $u->status ? 'sherah-color3' : 'sherah-color2' }}">
-                          {{ $u->status ? 'Hoạt động' : 'Bị khóa' }}
-                        </div>
-                      </div>
-                    </td>
-
-                    {{-- Hành động --}}
-                    <td class="sherah-table__column-7 sherah-table__data-7">
-                      <div class="sherah-table__status__group d-flex gap-1">
+                        {{-- LỊCH SỬ HOẠT ĐỘNG --}}
                         <a href="{{ route('admin.customers.show', $u->id) }}"
                            class="sherah-table__action"
-                           style="background-color:#0ea5e9;color:#fff;border-radius:4px;padding:4px 8px;">
+                           style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:4px;">
                           Lịch sử
                         </a>
 
-                        <form action="{{ route('admin.customers.toggleStatus', $u->id) }}"
-                              method="POST" onsubmit="return confirm('Xác nhận {{ $u->status ? 'KHÓA' : 'MỞ KHÓA' }} tài khoản?')">
+                        {{-- SỬA --}}
+                        <a href="{{ route('admin.customers.edit', $u->id) }}"
+                           class="sherah-table__action"
+                           style="background:#10b981;color:#fff;padding:4px 10px;border-radius:4px;">
+                          Sửa
+                        </a>
+
+                        {{-- KHÓA/MỞ --}}
+                        <form method="POST"
+                              action="{{ route('admin.customers.toggleStatus', $u->id) }}"
+                              onsubmit="return confirm('Xác nhận {{ $u->status ? 'KHÓA' : 'MỞ KHÓA' }} tài khoản?')">
                           @csrf @method('PATCH')
-                          <button type="submit" class="sherah-table__action"
-                                  style="background-color:{{ $u->status ? '#f59e0b' : '#10b981' }};color:#fff;border-radius:4px;padding:4px 8px;">
-                            {{ $u->status ? 'Khóa' : 'Mở khóa' }}
+                          <button type="submit"
+                                  class="sherah-table__action"
+                                  style="background:{{ $u->status ? '#f59e0b' : '#06b6d4' }};color:#fff;padding:4px 10px;border-radius:4px;">
+                            {{ $u->status ? 'Khóa' : 'Mở' }}
                           </button>
                         </form>
+
+                        {{-- XOÁ --}}
+                        <form method="POST"
+                              action="{{ route('admin.customers.destroy', $u->id) }}"
+                              onsubmit="return confirm('Xác nhận xoá khách hàng này?')">
+                          @csrf @method('DELETE')
+                          <button type="submit"
+                                  class="sherah-table__action"
+                                  style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;">
+                            Xoá
+                          </button>
+                        </form>
+
                       </div>
                     </td>
                   </tr>
                 @empty
-                  <tr>
-                    <td colspan="7" class="text-center">Không có khách hàng nào</td>
-                  </tr>
+                  <tr><td colspan="7" class="text-center">Không có khách hàng nào</td></tr>
                 @endforelse
                 </tbody>
               </table>
 
-              {{-- Pagination giống categories --}}
+              {{-- Pagination --}}
               <div class="row mg-top-40">
                 <div class="sherah-pagination">
                   <ul class="sherah-pagination__list">
-                    <li class="sherah-pagination__button {{ $customers->onFirstPage() ? 'disabled' : '' }}">
+                    <li class="{{ $customers->onFirstPage() ? 'disabled' : '' }}">
                       <a href="{{ $customers->previousPageUrl() }}"><i class="fas fa-angle-left"></i></a>
                     </li>
 
@@ -138,16 +137,17 @@
                       </li>
                     @endfor
 
-                    <li class="sherah-pagination__button {{ $customers->currentPage() == $customers->lastPage() ? 'disabled' : '' }}">
+                    <li class="{{ $customers->currentPage() == $customers->lastPage() ? 'disabled' : '' }}">
                       <a href="{{ $customers->nextPageUrl() }}"><i class="fas fa-angle-right"></i></a>
                     </li>
+
                   </ul>
                 </div>
               </div>
-            </div>
+
+            </div> <!-- end table -->
 
           </div>
-          <!-- End Dashboard Inner -->
         </div>
       </div>
     </div>
