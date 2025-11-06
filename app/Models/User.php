@@ -19,7 +19,6 @@ class User extends Authenticatable
         'password',
         'address',
         'role_id',
-        'slug',
         'status',
         'two_factor_secret',
         'two_factor_recovery_codes',

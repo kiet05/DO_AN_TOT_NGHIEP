@@ -34,30 +34,7 @@ class Register extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        
-        // Lấy role "customer" (khách hàng) bằng slug thay vì hardcode ID
-        $customerRole = \App\Models\Role::where('slug', 'customer')->first();
-        if (!$customerRole) {
-            // Nếu không tìm thấy, tạo role customer mặc định
-            $customerRole = \App\Models\Role::create([
-                'name' => 'Khách hàng',
-                'slug' => 'customer',
-                'description' => 'Người dùng bình thường'
-            ]);
-        }
-        $validated['role_id'] = $customerRole->id;
-        
-        // Tạo slug từ name, đảm bảo unique
-        $baseSlug = \Illuminate\Support\Str::slug($validated['name']);
-        $slug = $baseSlug;
-        $counter = 1;
-        
-        // Kiểm tra và tạo slug unique nếu trùng
-        while (\App\Models\User::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
-        }
-        $validated['slug'] = $slug;
+        $validated['role_id'] = 3;
 
         event(new Registered(($user = User::create($validated))));
 

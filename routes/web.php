@@ -16,7 +16,6 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
-use App\Http\Controllers\Admin\CustomerController;
 
 
 // Trang chủ
@@ -60,13 +59,12 @@ Route::prefix('admin')
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
-        // routes/web.php (bên trong group 'admin' nếu có)
-
-        Route::resource('banners', BannerController::class)->except(['show']);
-
-        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
-
+        // Banners
+        Route::prefix('banners')->name('banners.')->group(function () {
+            Route::resource('/', BannerController::class)->except(['show']);
+            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        });
 
         // Posts
         Route::prefix('posts')->name('posts.')->group(function () {
@@ -78,16 +76,6 @@ Route::prefix('admin')
             Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
         });
 
-
-
-
-        // Reports
-        Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('reports/', [ReportController::class, 'index'])->name('reports.index');
-            Route::get('reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
-            Route::get('reports/top-products', [ReportController::class, 'topProducts'])->name('reports.topProducts');
-            Route::get('reports/top-customers', [ReportController::class, 'topCustomers'])->name('reports.topCustomers');
-        });
 
         // Products
         Route::prefix('products')->name('products.')->group(function () {
@@ -110,21 +98,21 @@ Route::prefix('admin')
         });
 
         // Orders
-        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
-        Route::post('orders/update-status/{id}', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-        Route::get('orders/export', [OrderController::class, 'export'])->name('orders.export');
-
-    
-
-        // Customers
-        Route::prefix('customers')->name('customers.')->group(function () {
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/{id}', [CustomerController::class, 'show'])->name('show');
-        Route::patch('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->name('toggleStatus');
-});
-
-
-
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
+        // Invoice show + PDF
+        Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::get('/orders/{order}/invoice/pdf', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.pdf');
+        
+        // Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
+            Route::get('/top-customers', [ReportController::class, 'topCustomers'])->name('topCustomers');
+            Route::get('/top-products', [ReportController::class, 'topProducts'])->name('topProducts');
+        });
 
 
         // Users
@@ -137,14 +125,10 @@ Route::prefix('admin')
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
             ->name('accounts.toggleStatus');
 
-            
-
         // Vouchers
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
             ->name('vouchers.report');
-
-
     });
 
 require __DIR__ . '/auth.php';

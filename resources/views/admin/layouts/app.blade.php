@@ -11,9 +11,6 @@
   {{-- Custom admin CSS --}}
   <link rel="stylesheet" href="{{ asset('admin/css/admin-style.css') }}">
 
-  <!-- Font Awesome CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
   @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100">
