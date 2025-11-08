@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
 
-            $table->string('gateway', 50)->index();       // zalopay|cod|bank...
+            $table->string('gateway', 50)->index();       
             $table->string('app_trans_id')->unique();     // yymmdd_order_rand
             $table->string('zp_trans_id')->nullable()->index();
 

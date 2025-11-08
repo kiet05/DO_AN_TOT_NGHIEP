@@ -41,9 +41,6 @@
                                 Canceled
                             </a>
                         </div>
-
-
-
                     </div>
 
                     {{-- Alerts --}}
@@ -68,7 +65,7 @@
                                 <div class="col-lg-2 col-md-4">
                                     <select name="gateway" class="form-select form-select-sm">
                                         <option value="">-- Cổng thanh toán --</option>
-                                        @foreach (['zalopay' => 'ZALOPAY', 'cod' => 'COD', 'bank' => 'BANK'] as $val => $label)
+                                        @foreach (['vnpay' => 'VNPay', 'cod' => 'COD', 'bank' => 'BANK'] as $val => $label)
                                             <option value="{{ $val }}" @selected(request('gateway') === $val)>
                                                 {{ $label }}</option>
                                         @endforeach
@@ -135,7 +132,7 @@
                                                     <div class="btn-group btn-group-sm">
                                                         <a class="btn btn-outline-primary"
                                                             href="{{ route('admin.payments.show', $payment) }}">Xem</a>
-                                                        @if (strtolower($payment->gateway) === 'zalopay')
+                                                        @if (strtolower($payment->gateway) === 'vnpay')
                                                             <form method="POST"
                                                                 action="{{ route('admin.payments.query', $payment) }}">
                                                                 @csrf

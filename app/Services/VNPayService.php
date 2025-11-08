@@ -5,7 +5,7 @@ namespace App\Services;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 
-class ZaloPayService
+class VNPayService  
 {
     protected string $appId;
     protected string $key1;
@@ -15,11 +15,11 @@ class ZaloPayService
 
     public function __construct()
     {
-        // đọc từ .env hoặc config/services.php
-        $this->appId    = trim((string)config('services.zalopay.app_id', env('ZP_APP_ID')));
-        $this->key1     = trim((string)config('services.zalopay.key1',    env('ZP_APP_KEY1')));
-        $this->key2     = trim((string)config('services.zalopay.key2',    env('ZP_APP_KEY2')));
-        $this->endpoint = rtrim((string)env('ZP_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2'), '/');
+        // Đọc từ .env hoặc config/services.php
+        $this->appId    = trim((string)config('services.vnpay.app_id', env('VNP_APP_ID')));
+        $this->key1     = trim((string)config('services.vnpay.key1', env('VNP_APP_KEY1')));
+        $this->key2     = trim((string)config('services.vnpay.key2', env('VNP_APP_KEY2')));
+        $this->endpoint = rtrim((string)env('VNP_ENDPOINT', 'https://sandbox.vnpayment.vn/v2'), '/');  // Endpoint VNPay
         $this->http     = new Client(['timeout' => 20]);
     }
 
@@ -36,16 +36,16 @@ class ZaloPayService
 
     protected function callbackDomain(): string
     {
-        return rtrim((string)env('ZP_CALLBACK_DOMAIN', config('app.url')), '/');
+        return rtrim((string)env('VNP_CALLBACK_DOMAIN', config('app.url')), '/');
     }
 
-    /** Tạo đơn thanh toán */
+    /** Tạo đơn thanh toán VNPay */
     public function create(array $input): array
     {
         $appTransId = (string)$input['app_trans_id'];
 
         $embedData = $this->jencode([
-            'redirecturl' => $this->callbackDomain() . '/payment/zalopay/return',
+            'redirecturl' => $this->callbackDomain() . '/payment/vnpay/return',
         ]);
         $items = $this->jencode($input['items'] ?? []);
 
@@ -59,7 +59,7 @@ class ZaloPayService
             'bank_code'    => (string)($input['bank_code'] ?? ''),
             'item'         => $items,
             'embed_data'   => $embedData,
-            'callback_url' => $this->callbackDomain() . '/payment/zalopay/callback',
+            'callback_url' => $this->callbackDomain() . '/payment/vnpay/callback',
         ];
 
         // Chuỗi ký: app_id|app_trans_id|app_user|amount|app_time|embed_data|item
@@ -68,24 +68,24 @@ class ZaloPayService
 
         $data['mac'] = hash_hmac('sha256', $raw, $this->key1);
 
-        Log::info('ZP_CREATE_DEBUG', [
+        Log::info('VNP_CREATE_DEBUG', [
             'key1_len' => strlen($this->key1),
             'raw'      => $raw,
             'mac'      => $data['mac'],
         ]);
 
         try {
-            $res  = $this->http->post($this->endpoint . '/create', ['form_params' => $data]);
+            $res  = $this->http->post($this->endpoint . '/create', ['form_params' => $data]);  // Thay đổi URL của VNPay
             $body = json_decode((string)$res->getBody(), true) ?: [];
-            Log::info('ZP_CREATE', ['request' => $data, 'response' => $body]);
+            Log::info('VNP_CREATE', ['request' => $data, 'response' => $body]);
             return [$data, $body];
         } catch (\Throwable $e) {
-            Log::error('ZP_CREATE_ERR', ['message' => $e->getMessage(), 'request' => $data]);
+            Log::error('VNP_CREATE_ERR', ['message' => $e->getMessage(), 'request' => $data]);
             return [$data, ['return_code' => 0, 'return_message' => $e->getMessage()]];
         }
     }
 
-    /** Query giao dịch (KEY1) */
+    /** Query giao dịch VNPay */
     public function query(string $appTransId): array
     {
         $raw = $this->appId . '|' . $appTransId . '|query';
@@ -98,7 +98,7 @@ class ZaloPayService
         ];
 
         try {
-            $res  = $this->http->post($this->endpoint . '/query', ['form_params' => $params]);
+            $res  = $this->http->post($this->endpoint . '/query', ['form_params' => $params]);  // Endpoint query của VNPay
             $body = json_decode((string)$res->getBody(), true) ?: [];
             return $body;
         } catch (\Throwable $e) {
@@ -106,8 +106,7 @@ class ZaloPayService
         }
     }
 
-
-    /** Verify callback (KEY2) */
+    /** Verify callback VNPay */
     public function verifyCallback(?string $data, ?string $mac): bool
     {
         if (!$data || !$mac) return false;

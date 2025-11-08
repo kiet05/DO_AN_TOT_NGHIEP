@@ -63,9 +63,9 @@
 
                                 $rows = [
                                     'Đơn hàng' => $payment->order_id ? '#' . $payment->order_id : null,
-                                    'Cổng thanh toán' => strtoupper($payment->gateway),
+                                    'Cổng thanh toán' => strtoupper($payment->gateway), 
                                     'Mã giao dịch App' => $payment->app_trans_id,
-                                    'Mã giao dịch Gateway' => $payment->zp_trans_id ?? $payment->gateway_trans_id,
+                                    'Mã giao dịch Gateway' => $payment->vnp_trans_id ?? $payment->gateway_trans_id, 
                                     'Số tiền' => number_format($payment->amount) . 'đ',
                                     'Trạng thái' => '<span class="badge bg-' . $badge . '">' . $statusText . '</span>',
                                     'Thanh toán lúc' => optional($payment->paid_at)->format('d/m/Y H:i'),

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\PaymentLog;
-use App\Services\ZaloPayService;
+use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -95,15 +95,14 @@ class PaymentController extends Controller
         return back()->with('status', 'Đã cập nhật trạng thái thành công.');
     }
 
-    /** Đồng bộ trạng thái từ ZaloPay (nút Query) */
-    public function query(Payment $payment, ZaloPayService $zp): RedirectResponse
+    /** Đồng bộ trạng thái từ VNPay (nút Query) */
+    public function query(Payment $payment, VNPayService $vnPay)
     {
-        if (strtolower($payment->gateway) !== 'zalopay') {
-            return back()->with('error', 'Chỉ hỗ trợ query ZaloPay.');
+        if (strtolower($payment->gateway) !== 'vnpay') {  
+            return back()->with('error', 'Chỉ hỗ trợ query VNPay.');
         }
 
-
-        $res = $zp->query($payment->app_trans_id);
+        $res = $vnPay->query($payment->app_trans_id);  
 
         DB::transaction(function () use ($payment, $res) {
             PaymentLog::create([
@@ -142,7 +141,7 @@ class PaymentController extends Controller
     }
 
     /** (Tuỳ chọn) Refund */
-    public function refund(Payment $payment, ZaloPayService $zp): RedirectResponse
+    public function refund(Payment $payment, VNPayService $vnPay): RedirectResponse  
     {
         return back()->with('status', '(Demo) Chưa triển khai refund.');
     }

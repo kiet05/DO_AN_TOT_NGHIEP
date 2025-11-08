@@ -34,11 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-   'zalopay' => [
-    'app_id' => env('ZP_APP_ID'),
-    'key1'   => env('ZP_APP_KEY1'),
-    'key2'   => env('ZP_APP_KEY2'),
-    'endpoint' => env('ZP_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2'),
+ 'vnpay' => [
+    'app_id' => env('VNP_APP_ID'),
+    'key1'   => env('VNP_APP_KEY1'),
+    'key2'   => env('VNP_APP_KEY2'),
+    'endpoint' => env('VNP_ENDPOINT', 'https://sandbox.vnpayment.vn/v2'),
+    'callback_domain' => env('VNP_CALLBACK_DOMAIN', 'https://abc123.ngrok.io'),  // Nếu cần
 ],
 
 
