@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+   'zalopay' => [
+    'app_id' => env('ZP_APP_ID'),
+    'key1'   => env('ZP_APP_KEY1'),
+    'key2'   => env('ZP_APP_KEY2'),
+    'endpoint' => env('ZP_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2'),
+],
+
 
 ];
