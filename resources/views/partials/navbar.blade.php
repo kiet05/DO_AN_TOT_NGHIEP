@@ -140,6 +140,39 @@
                     </li>
 
                     <li>
+                        <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_customers">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    {{-- Users icon --}}
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Khách hàng</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+
+                        <!-- Dropdown -->
+                        <div class="collapse sherah__dropdown" id="menu-item_customers" data-bs-parent="#sherahMenu">
+                            <ul class="menu-bar__one-dropdown">
+                                <li>
+                                    <a href="{{ route('admin.customers.index') }}">
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Danh sách khách hàng</span></span>
+                                    </a>
+                                </li>
+                                {{-- Tùy chọn: trang bộ lọc/ báo cáo khách hàng
+                                <li>
+                                    <a href="{{ route('admin.customers.reports') }}">
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Báo cáo khách hàng</span></span>
+                                    </a>
+                                </li>
+                                --}}
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-item_post">
                             <span class="menu-bar__text">

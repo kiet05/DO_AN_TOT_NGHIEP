@@ -37,13 +37,16 @@ class DatabaseSeeder extends Seeder
             BrandSeeder::class,
             ProductSeeder::class,
             AttributeSeeder::class,
+            UserActivitySeeder::class,
             AttributeValueSeeder::class,
             ProductVariantSeeder::class,
             ProductVariantAttributeSeeder::class,
-            OrderSeeder::class,
             OrderItemSeeder::class,
             ReviewSeeder::class,
             BannerSeeder::class,
+
+            // ✅ Thêm PaymentSeeder vào cuối
+            PaymentSeeder::class,
         ]);
     }
 }
