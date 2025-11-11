@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Log;
 
 class PaymentMethodController extends Controller
 {
@@ -24,7 +25,7 @@ class PaymentMethodController extends Controller
             
             // Debug: dump data để kiểm tra
             if (config('app.debug')) {
-                \Log::info('PaymentMethods data: ' . json_encode($paymentMethods->toArray()));
+                Log::info('PaymentMethods data: ' . json_encode($paymentMethods->toArray()));
             }
 
             return view('admin.payment-methods.index', compact('paymentMethods'));
