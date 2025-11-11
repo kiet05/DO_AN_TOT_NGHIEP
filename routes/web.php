@@ -17,8 +17,9 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
-use App\Http\Controllers\Admin\PaymentController;  // ✅ Đúng rồi
-use App\Models\Order;
+use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\ShopSettingController;
+use App\Http\Controllers\Admin\PaymentController;
 
 
 // ============================
@@ -66,11 +67,9 @@ Route::prefix('admin')
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
         // 🧱 Banners
-        Route::prefix('banners')->name('banners.')->group(function () {
-            Route::resource('/', BannerController::class)->except(['show']);
-            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
-        });
+        Route::resource('banners', BannerController::class)->except(['show']);
+Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
         // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
@@ -124,6 +123,7 @@ Route::prefix('admin')
 
         // 🧑‍💼 Admin accounts
         Route::resource('accounts', AdminAccountController::class);
+        Route::get('accounts', [AdminAccountController::class, 'index'])->name('accounts.index');
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])->name('accounts.toggleStatus');
 
         // 🎟️ Vouchers
@@ -138,7 +138,22 @@ Route::prefix('admin')
         Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
         Route::post('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])
             ->name('payments.updateStatus');
+
+        // Payment Methods
+       // Route::resource('payment-methods', PaymentMethodController::class);
+       // Route::post('payment-methods/{id}/toggle-status', [PaymentMethodController::class, 'toggleStatus'])
+          //  ->name('payment-methods.toggle-status');
+
+        // Shop Settings
+        // Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
+        // Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
     });
 
+// Payment routes (outside admin)
+Route::prefix('payment')->name('payment.')->group(function () {
+    Route::post('/process', [PaymentController::class, 'processPayment'])->name('process')->middleware('auth');
+    Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
+    Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
+});
 
 require __DIR__ . '/auth.php';
