@@ -515,19 +515,23 @@
                                                         </div>
                                                     </li>
                                                     <li>
-                                                        <div class="sherah-dropdown-card-info">
-                                                            <div class="sherah-dropdown-card__img sherah-color1__bg">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="17.5"
-                                                                    height="17.5" viewBox="0 0 17.5 17.5">
-                                                                    <path id="path52"
-                                                                        d="M9.27,291.179a.877.877,0,0,0-.867.889V299.1a.876.876,0,1,0,1.752,0v-7.033a.877.877,0,0,0-.885-.889Zm5.105,1.763c-.028,0-.057,0-.085,0A.88.88,0,0,0,13.8,294.5a7,7,0,1,1-9.076.026.882.882,0,0,0,.1-1.239.873.873,0,0,0-1.234-.1,8.815,8.815,0,0,0,5.691,15.495,8.815,8.815,0,0,0,5.652-15.521.873.873,0,0,0-.561-.216Z"
-                                                                        transform="translate(-0.529 -291.179)"
-                                                                        fill="#fff" />
-                                                                </svg>
-                                                            </div>
-                                                            <h4 class="sherah-dropdown-card-name"><a
-                                                                    href="#">Logout</a></h4>
-                                                        </div>
+                                                        <form method="POST" action="{{ route('logout') }}" class="sherah-dropdown-card-info-form">
+                                                            @csrf
+                                                            <button type="submit" class="sherah-dropdown-card-info" style="width: 100%; border: none; background: none; text-align: left; padding: 0; cursor: pointer;">
+                                                                <div class="sherah-dropdown-card-info">
+                                                                    <div class="sherah-dropdown-card__img sherah-color1__bg">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="17.5"
+                                                                            height="17.5" viewBox="0 0 17.5 17.5">
+                                                                            <path id="path52"
+                                                                                d="M9.27,291.179a.877.877,0,0,0-.867.889V299.1a.876.876,0,1,0,1.752,0v-7.033a.877.877,0,0,0-.885-.889Zm5.105,1.763c-.028,0-.057,0-.085,0A.88.88,0,0,0,13.8,294.5a7,7,0,1,1-9.076.026.882.882,0,0,0,.1-1.239.873.873,0,0,0-1.234-.1,8.815,8.815,0,0,0,5.691,15.495,8.815,8.815,0,0,0,5.652-15.521.873.873,0,0,0-.561-.216Z"
+                                                                                transform="translate(-0.529 -291.179)"
+                                                                                fill="#fff" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <h4 class="sherah-dropdown-card-name">Logout</h4>
+                                                                </div>
+                                                            </button>
+                                                        </form>
                                                     </li>
                                                 </ul>
                                             </div>

@@ -54,7 +54,7 @@
 
                                 $badge =
                                     [
-                                        'pending' => 'secondary',
+'pending' => 'secondary',
                                         'success' => 'success',
                                         'failed' => 'danger',
                                         'canceled' => 'warning',
@@ -101,7 +101,7 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th style="min-width:160px">Thời gian</th>
+<th style="min-width:160px">Thời gian</th>
                                             <th style="min-width:140px">Loại</th>
                                             <th>Nội dung</th>
                                         </tr>

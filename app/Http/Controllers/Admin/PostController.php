@@ -14,24 +14,30 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $q = Post::query();
+        $status = $request->query('status', 'all');
+
+        // Lọc theo status: all | published | draft | trash
+        if ($status === 'trash') {
+            $q = Post::onlyTrashed();
+        } else {
+            $q = Post::query();
+            if ($status === 'published') {
+                $q->whereNotNull('published_at');
+            } elseif ($status === 'draft') {
+                $q->whereNull('published_at');
+            }
+        }
 
         // Đếm để hiển thị badge
         $total     = Post::count();
         $published = Post::whereNotNull('published_at')->count();
         $draft     = Post::whereNull('published_at')->count();
-
-        // Lọc theo ?status=published|draft
-        if ($request->status === 'published') {
-            $q->whereNotNull('published_at');
-        } elseif ($request->status === 'draft') {
-            $q->whereNull('published_at');
-        }
+        $trash     = Post::onlyTrashed()->count();
 
         // ✅ Sắp xếp ID tăng dần (nhỏ → lớn)
         $posts = $q->orderBy('id', 'asc')->get();
 
-        return view('admin.posts.index', compact('posts', 'total', 'published', 'draft'));
+        return view('admin.posts.index', compact('posts', 'total', 'published', 'draft', 'trash'));
     }
 
     /**
@@ -105,27 +111,52 @@ class PostController extends Controller
         $data['published_at'] = $request->boolean('is_published') ? now() : null;
 
         $post->update($data);
-
-        return redirect()
+return redirect()
             ->route('admin.posts.index')
             ->with('success', 'Bài viết đã được cập nhật.');
     }
 
     /**
-     * Xóa bài viết
+     * Xóa mềm (chuyển vào thùng rác)
      */
     public function destroy($id)
     {
         $post = Post::findOrFail($id);
+        $post->delete();
+
+        return redirect()
+            ->route('admin.posts.index')
+            ->with('success', 'Bài viết đã được chuyển vào thùng rác.');
+    }
+
+    /**
+     * Khôi phục từ thùng rác
+     */
+    public function restore($id)
+    {
+        $post = Post::onlyTrashed()->findOrFail($id);
+        $post->restore();
+
+        return redirect()
+            ->route('admin.posts.index', ['status' => 'trash'])
+            ->with('success', 'Bài viết đã được khôi phục.');
+    }
+
+    /**
+     * Xóa vĩnh viễn
+     */
+    public function forceDelete($id)
+    {
+        $post = Post::onlyTrashed()->findOrFail($id);
 
         if (!empty($post->image) && Storage::disk('public')->exists($post->image)) {
             Storage::disk('public')->delete($post->image);
         }
 
-        $post->delete();
+        $post->forceDelete();
 
         return redirect()
-            ->route('admin.posts.index')
-            ->with('success', 'Bài viết đã được xóa.');
+            ->route('admin.posts.index', ['status' => 'trash'])
+            ->with('success', 'Bài viết đã được xóa vĩnh viễn.');
     }
 }

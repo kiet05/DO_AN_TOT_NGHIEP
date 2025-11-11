@@ -58,15 +58,19 @@ class BannerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'  => 'required|string|max:255',
-            'image'  => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'status' => 'nullable',
+            'title'    => 'required|string|max:255',
+            'image'    => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'link'     => 'nullable|string|max:500',
+            'position' => 'nullable|string|in:top,middle,bottom',
+            'status'   => 'nullable',
         ]);
 
         $data = [
-            'title'  => $request->input('title'),
-            'status' => $request->boolean('status') ? 1 : 0, // ép 0/1 chắc chắn
-            'image'  => $request->file('image')->store('banners', 'public'),
+            'title'    => $request->input('title'),
+            'link'     => $request->input('link'),
+            'position' => $request->input('position', 'top'),
+            'status'   => $request->boolean('status') ? 1 : 0, // ép 0/1 chắc chắn
+            'image'    => $request->file('image')->store('banners', 'public'),
         ];
 
         Banner::create($data);
@@ -75,24 +79,30 @@ class BannerController extends Controller
             ->with('success', 'Thêm banner thành công!');
     }
 
-    public function edit(Banner $banner): View
+    public function edit($id): View
     {
-
+        $banner = Banner::findOrFail($id);
         return view('admin.banners.edit', compact('banner'));
     }
 
     // UPDATE
-    public function update(Request $request, Banner $banner)
+    public function update(Request $request, $id)
     {
+        $banner = Banner::findOrFail($id);
+        
         $request->validate([
-            'title'  => 'required|string|max:255',
-            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'status' => 'nullable',
+            'title'    => 'required|string|max:255',
+            'image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'link'     => 'nullable|string|max:500',
+            'position' => 'nullable|string|in:top,middle,bottom',
+            'status'   => 'nullable',
         ]);
 
         $data = [
-            'title'  => $request->input('title'),
-            'status' => $request->boolean('status') ? 1 : 0,
+            'title'    => $request->input('title'),
+            'link'     => $request->input('link'),
+            'position' => $request->input('position', 'top'),
+            'status'   => $request->boolean('status') ? 1 : 0,
         ];
 
         if ($request->hasFile('image')) {

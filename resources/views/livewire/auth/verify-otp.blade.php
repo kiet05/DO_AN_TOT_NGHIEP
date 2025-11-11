@@ -17,6 +17,13 @@
         </div>
     @endif
 
+    @if (session('otp_debug'))
+        <div class="p-3 text-sm text-yellow-800 bg-yellow-100 rounded-md border border-yellow-300">
+            <strong>⚠️ DEBUG MODE:</strong><br>
+            {{ session('otp_debug') }}
+        </div>
+    @endif
+
     <form wire:submit.prevent="verify" class="flex flex-col gap-6">
         <flux:input
             wire:model="otp_code"

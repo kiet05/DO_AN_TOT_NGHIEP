@@ -48,11 +48,19 @@ class Login extends Component
             'expires_at' => Carbon::now()->addMinutes(5),
         ]);
 
-        // Gửi email chứa mã OTP
-        Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
-            $message->to($user->email)
-                    ->subject('Mã xác thực đăng nhập (OTP)');
-        });
+        // Gửi email chứa mã OTP (với try-catch để tránh lỗi nếu SMTP không cấu hình đúng)
+        try {
+            Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
+                $message->to($user->email)
+                        ->subject('Mã xác thực đăng nhập (OTP)');
+            });
+        } catch (\Exception $e) {
+            \Log::error('Không thể gửi email OTP: ' . $e->getMessage());
+            // Nếu ở chế độ debug, hiển thị OTP trong session để test
+            if (config('app.debug')) {
+                Session::flash('otp_debug', "Mã OTP (chỉ hiển thị trong debug): {$otp}");
+            }
+        }
 
         // Lưu thông tin tạm thời để xác minh OTP sau
         Session::put('2fa:user:id', $user->id);

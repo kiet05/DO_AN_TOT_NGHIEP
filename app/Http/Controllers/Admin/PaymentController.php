@@ -79,7 +79,7 @@ class PaymentController extends Controller
                 ]);
             } elseif ($to === 'refunded') {
                 $payment->update(['status' => 'refunded']);
-                $payment->order?->update(['payment_status' => 'refunded']);
+$payment->order?->update(['payment_status' => 'refunded']);
             } else {
                 $payment->update(['status' => $to, 'paid_at' => null]);
                 $payment->order?->update(['payment_status' => 'unpaid', 'paid_at' => null]);
