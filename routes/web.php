@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\ReturnRequestController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\PaymentController;
 use App\Models\Order;
@@ -146,6 +147,13 @@ Route::prefix('admin')
         Route::resource('payment-methods', PaymentMethodController::class);
         Route::post('payment-methods/{id}/toggle-status', [PaymentMethodController::class, 'toggleStatus'])
             ->name('payment-methods.toggle-status');
+        
+        // Returns
+        Route::get('returns', [ReturnRequestController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}', [ReturnRequestController::class, 'show'])->name('returns.show');
+        Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
+        Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
+
 
         // Shop Settings
         // Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
