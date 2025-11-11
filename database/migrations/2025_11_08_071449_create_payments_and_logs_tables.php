@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('amount');
             $table->string('currency', 10)->default('VND');
 
-            $table->enum('status', ['pending','success','failed','canceled'])
+            $table->enum('status', ['pending','success','failed','canceled','refunded'])
                   ->default('pending')->index();
 
             $table->json('meta')->nullable();
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->foreignId('payment_id')->nullable()
                   ->constrained('payments')->nullOnDelete();
 
-            $table->string('type', 40); // create|callback|query|error|create_failed
+            $table->string('type', 40); 
             $table->string('message')->nullable(); // 🟢 thêm dòng này
             $table->json('payload')->nullable();
 
