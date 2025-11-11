@@ -16,4 +16,3 @@ class Banner extends Model
         'status' => 'boolean',
     ];
 }
-

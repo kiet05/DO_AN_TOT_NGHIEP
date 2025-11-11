@@ -117,6 +117,7 @@
                                                 <th class="bn-action-col">Hành động</th>
                                             </tr>
                                         </thead>
+
                                         <tbody class="sherah-table__body">
                                             @forelse($banners as $banner)
                                                 <tr>
