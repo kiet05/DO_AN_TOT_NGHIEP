@@ -10,7 +10,7 @@ class Banner extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'image', 'status'];
+    protected $fillable = ['title', 'image', 'link', 'position', 'status'];
 
     protected $casts = [
         'status' => 'boolean',

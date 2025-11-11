@@ -21,12 +21,20 @@ use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReturnRequestController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 
+
+// ============================
+// 🔹 FRONTEND - TRANG KHÁCH HÀNG
+// ============================
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
 
 // ============================
 // 🔹 TRANG CHỦ & DASHBOARD
 // ============================
-Route::get('/', fn() => view('welcome'))->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
