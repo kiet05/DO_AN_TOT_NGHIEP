@@ -11,12 +11,16 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('wallet_id')->constrained('wallets')->onDelete('cascade');
-            $table->string('type', 50); // e.g., 'deposit', 'withdraw'
+            $table->string('type', 50);
             $table->decimal('amount', 15, 2);
             $table->text('description')->nullable();
-            $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('set null');
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->foreignId('order_id')->nullable()->constrained('orders')->nullOnDelete();
+            $table->string('ref_type', 50)->nullable();
+            $table->unsignedBigInteger('ref_id')->nullable();
+            $table->json('meta')->nullable();
+            $table->timestamps();
+
+            $table->index(['ref_type','ref_id'], 'idx_wt_ref');
         });
     }
 

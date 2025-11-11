@@ -5,8 +5,8 @@
 
         <!-- Logo -->
         <div class="logo sherah-sidebar-padding">
-            <a href="index.html">
-                <img class="sherah-logo__main" src="img/logo.png" alt="#">
+            <a href="{{ route('admin.dashboard') }}">
+                <img class="sherah-logo__main" src="{{ asset('logo-ega-horizontal.svg') }}" alt="EGA Fashion Shop" style="max-height: 50px; width: auto;">
             </a>
             <div class="sherah__sicon close-icon d-xl-none">
                 <svg width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -21,8 +21,9 @@
             <!-- Nav Menu -->
             <div class="menu-bar">
                 <ul class="menu-bar__one sherah-dashboard-menu" id="sherahMenu">
-                    <li><a href="#!" data-bs-toggle="collapse" data-bs-target="#menu-item_home"><span
-                                class="menu-bar__text">
+                    <li>
+                        <a href="{{ route('admin.reports.index') }}">
+                            <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="18.075"
                                         height="18.075" viewBox="0 0 18.075 18.075">
@@ -41,8 +42,9 @@
                                         </g>
                                     </svg>
                                 </span>
-                                <span class="menu-bar__name">Dashboard</span></span></a></span>
-
+                                <span class="menu-bar__name">Dashboard</span>
+                            </span>
+                        </a>
                     </li>
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
@@ -142,14 +144,53 @@
 
                     </li>
 
+                    <li><a href="#!" class="collapsed" data-bs-toggle="collapse"
+                            data-bs-target="#menu-item__return"><span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="17.092"
+                                        height="17.873" viewBox="0 0 17.092 17.873">
+                                        <g id="Icon" transform="translate(-409.241 -375.497)">
+                                            <path id="Path_219" data-name="Path 219"
+                                                d="M413.466,380.6a15.992,15.992,0,0,1,.123-1.943,4.18,4.18,0,0,1,4.549-3.151,4.054,4.054,0,0,1,3.919,3.741c.009.436,0,.872,0,1.354h2.872c.193,0,.386,0,.579,0,.589.012.879.286.813.811-.4,3.247-.8,6.495-1.227,9.739a2.674,2.674,0,0,1-2.769,2.2q-4.543.022-9.086,0a2.681,2.681,0,0,1-2.771-2.2c-.344-2.558-.649-5.12-.97-7.68-.078-.62-.147-1.242-.234-1.861-.108-.759.125-1.011.967-1.012Zm-2.723,1.3c.062.5.119.978.177,1.452.306,2.481.606,4.963.924,7.443.114.888.642,1.293,1.628,1.294q4.32,0,8.639,0a2.279,2.279,0,0,0,.57-.059,1.428,1.428,0,0,0,1.074-1.446c.213-1.836.452-3.669.679-5.5.13-1.052.257-2.1.387-3.174h-2.742v1.215c.038.015.076.032.115.046.437.159.649.424.563.746a.73.73,0,0,1-.826.524c-.43-.008-.861.008-1.291-.006a.668.668,0,0,1-.711-.588c-.021-.423.28-.612.676-.709v-1.218h-5.655v1.221c.434.1.724.3.683.722a.613.613,0,0,1-.636.565c-.518.026-1.039.024-1.558,0-.349-.016-.627-.224-.614-.526a1.458,1.458,0,0,1,.364-.659c.051-.071.2-.084.292-.118V381.9Zm4.154-1.321h5.727c0-.514.036-1-.007-1.491a2.723,2.723,0,0,0-2.627-2.306,2.77,2.77,0,0,0-2.967,1.982A12.7,12.7,0,0,0,414.9,380.578Z"
+                                                transform="translate(0 0)" />
+                                            <path id="Path_220" data-name="Path 220"
+                                                d="M475.527,506.525c.71-.887,1.409-1.754,2.1-2.627a.66.66,0,0,1,.828-.285.609.609,0,0,1,.258.961c-.841,1.079-1.7,2.145-2.563,3.206a.6.6,0,0,1-.858.123c-.635-.412-1.267-.829-1.89-1.259a.635.635,0,1,1,.71-1.053C474.584,505.888,475.043,506.2,475.527,506.525Z"
+                                                transform="translate(-57.815 -117.848)" />
+                                        </g>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Hoàn hàng</span></span><span
+                                class="sherah__toggle"></span></a></span>
+                        <!-- Dropdown Menu Order -->
+                        <div class="collapse sherah__dropdown" id="menu-item__return" data-bs-parent="#sherahMenu">
+                            <ul class="menu-bar__one-dropdown">
+                                <li>
+                                    <a href="{{ route('admin.returns.index') }}">
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Yêu cầu hủy đơn</span></span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="">
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Báo cáo & Thống
+                                                kê</span></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </li>
+
                     {{-- Customers --}}
                     <li>
-                        <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_customers">
+                        <a href="#!" class="collapsed" data-bs-toggle="collapse"
+                            data-bs-target="#menu-item_customers">
                             <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     {{-- Users icon --}}
-                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20"
+                                        height="20" viewBox="0 0 24 24">
+                                        <path
+                                            d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">Khách hàng</span>
@@ -158,22 +199,24 @@
                         </a>
 
                         <!-- Dropdown -->
-                        <div class="collapse sherah__dropdown" id="menu-item_customers" data-bs-parent="#sherahMenu">
+                        {{-- <div class="collapse sherah__dropdown" id="menu-item_customers" data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
                                 <li>
                                     <a href="{{ route('admin.customers.index') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Danh sách khách hàng</span></span>
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Danh sách khách
+                                                hàng</span></span>
                                     </a>
                                 </li>
-                                {{-- Tùy chọn: trang bộ lọc/ báo cáo khách hàng
+                                Tùy chọn: trang bộ lọc/ báo cáo khách hàng
                                 <li>
                                     <a href="{{ route('admin.customers.reports') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Báo cáo khách hàng</span></span>
+                                        <span class="menu-bar__text"><span class="menu-bar__name">Báo cáo khách
+                                                hàng</span></span>
                                     </a>
                                 </li>
-                                --}}
+
                             </ul>
-                        </div>
+                        </div> --}}
                     </li>
 
                     {{-- Account Management --}}
@@ -206,9 +249,19 @@
                         <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_payment_methods">
                             <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
-                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    <!-- Premium Credit Card Icon -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <!-- Card body with rounded corners -->
+                                        <rect x="2" y="5" width="20" height="14" rx="2.5" ry="2.5" fill="none" stroke="currentColor"/>
+                                        <!-- Chip -->
+                                        <rect x="4" y="9" width="4" height="5" rx="0.8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                        <!-- Card number lines -->
+                                        <line x1="10" y1="11" x2="18" y2="11" stroke="currentColor" stroke-width="1.5"/>
+                                        <line x1="10" y1="13.5" x2="16" y2="13.5" stroke="currentColor" stroke-width="1.5"/>
+                                        <!-- Expiry -->
+                                        <line x1="10" y1="16" x2="14" y2="16" stroke="currentColor" stroke-width="1.5"/>
+                                        <!-- Premium badge -->
+                                        <circle cx="19" cy="8" r="2" fill="currentColor" opacity="0.3"/>
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">Phương thức thanh toán</span>
@@ -223,14 +276,40 @@
                         </div>
                     </li>
 
+                    {{-- Quản lý thanh toán --}}
+                    <li>
+                        <a href="{{ route('admin.payments.index') }}" class="collapsed">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <!-- Icon Thẻ Tín Dụng -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19"
+                                        height="19" viewBox="0 0 19 19" aria-hidden="true">
+                                        <path
+                                            d="M2 5H17C17.55 5 18 5.45 18 6V15C18 15.55 17.55 16 17 16H2C1.45 16 1 15.55 1 15V6C1 5.45 1.45 5 2 5Z"
+                                            fill="none" stroke="#000" stroke-width="1.5" />
+                                        <path d="M2 8H17" fill="none" stroke="#000" stroke-width="1.5" />
+                                        <path d="M4 13H7" fill="none" stroke="#000" stroke-width="1.5" />
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Quản lý thanh toán</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+                    </li>
+
                     {{-- Shop Settings --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_shop_settings">
                             <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
-                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                        <circle cx="12" cy="10" r="3"></circle>
+                                    <!-- Premium Settings/Gear Icon -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <!-- Outer gear -->
+                                        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor"/>
+                                        <!-- Gear teeth -->
+                                        <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="1.5"/>
+                                        <!-- Center dot -->
+                                        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">Cài đặt shop</span>
@@ -251,43 +330,60 @@
                             data-bs-target="#menu-item_post">
                             <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
-                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="22.029"
-                                        height="20.972" viewBox="0 0 22.029 20.972">
-                                        <g id="Icon" transform="translate(-451.809 -436.251)">
-                                            <path id="Path_234" data-name="Path 234"
-                                                d="M467.255,446.744q0,4.038,0,8.077c0,1.587-.776,2.4-2.294,2.4-2.7,0-5.39-.01-8.085.005a1.466,1.466,0,0,1-1.172-.506q-1.723-1.84-3.5-3.629a1.259,1.259,0,0,1-.381-.945c0-.907-.017-1.814-.017-2.722q0-5.4.007-10.8a2.082,2.082,0,0,1,2.28-2.37q5.44,0,10.881,0a2.076,2.076,0,0,1,2.278,2.369Q467.259,442.683,467.255,446.744Zm-10.039,9.007h7.751c.691,0,.864-.179.864-.893q0-8.119,0-16.237c0-.719-.169-.895-.859-.895H454.1c-.678,0-.846.167-.846.857q0,6.29,0,12.58c0,.144.014.288.024.474,1.017,0,2,0,2.988,0,.725,0,.953.234.955.981C457.218,453.641,457.217,454.665,457.217,455.75Zm-2.774-2.636,1.3,1.408v-1.408Z"
-                                                transform="translate(0 0)" />
-                                            <path id="Path_235" data-name="Path 235"
-                                                d="M640.677,446.844c0,2.765.005,5.531,0,8.3a2.052,2.052,0,0,1-1.852,2.175.733.733,0,1,1-.177-1.452.635.635,0,0,0,.6-.721q0-8.3,0-16.592a.632.632,0,0,0-.6-.721.734.734,0,1,1,.174-1.454,2.054,2.054,0,0,1,1.853,2.174C640.682,441.313,640.677,444.079,640.677,446.844Z"
-                                                transform="translate(-170.125 -0.109)" />
-                                            <path id="Path_236" data-name="Path 236"
-                                                d="M678.986,446.8c0,2.78.005,5.56,0,8.339a2.04,2.04,0,0,1-1.845,2.13.725.725,0,0,1-.862-.655.736.736,0,0,1,.689-.8c.464-.088.595-.253.6-.81q.006-2.876,0-5.753,0-5.262,0-10.524c0-.722-.044-.777-.728-.953a.744.744,0,0,1-.558-.791.712.712,0,0,1,.735-.66,2.033,2.033,0,0,1,1.97,2.1c.013,2.021,0,4.043,0,6.065Q678.986,445.64,678.986,446.8Z"
-                                                transform="translate(-205.15 -0.063)" />
-                                        </g>
+                                    <!-- COLLECTION: white fill + black stroke -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="18"
+                                        height="18" viewBox="0 0 16 16" aria-hidden="true">
+                                        <!-- tờ phía sau -->
+                                        <rect x="2.5" y="3.5" width="9" height="11" rx="1.5"
+                                            fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <!-- tờ phía trước -->
+                                        <rect x="4.5" y="1.5" width="9" height="11" rx="1.5"
+                                            fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <!-- các dòng nội dung -->
+                                        <line x1="6" y1="5.5" x2="11.5" y2="5.5"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
+                                        <line x1="6" y1="8" x2="11.5" y2="8"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
+                                        <line x1="6" y1="10.5" x2="9.5" y2="10.5"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
                                     </svg>
                                 </span>
-                                <span class="menu-bar__name">Bài đăng</span>
+                                <span class="menu-bar__name">Quản lí nội dung</span>
                             </span>
                             <span class="sherah__toggle"></span>
                         </a>
+
                         <div class="collapse sherah__dropdown" id="menu-item_post" data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
-                                <li>
-                                    <a href="{{ route('admin.posts.index') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Danh sách bài
-                                                đăng</span></span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.posts.create') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Upload bài
-                                                đăng</span></span>
-                                    </a>
-                                </li>
+                                <li><a href="{{ route('admin.banners.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Banner</span></span></a></li>
+                                <li><a href="{{ route('admin.posts.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Post</span></span></a></li>
                             </ul>
                         </div>
                     </li>
 
+                    <li><a href="history.html" class="collapsed"><span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19.527"
+                                        height="19.582" viewBox="0 0 19.527 19.582">
+                                        <g id="Icon" transform="translate(-115.401 35.25)">
+                                            <path id="Path_1026" data-name="Path 1026"
+                                                d="M133.432-15.668h-13.28c-.137-.024-.274-.048-.412-.071a5.177,5.177,0,0,1-4.285-4.372,5.176,5.176,0,0,1,2.84-5.353,5.455,5.455,0,0,1,1.7-.5V-26.2q0-3.631,0-7.263a1.665,1.665,0,0,1,.776-1.489,4.105,4.105,0,0,1,.717-.295h9.185a5.733,5.733,0,0,1,.452.369c1.18,1.172,2.353,2.351,3.533,3.523a.846.846,0,0,1,.267.645q-.008,3.918,0,7.835c0,1.815,0,3.631,0,5.446a1.68,1.68,0,0,1-1.056,1.627A3.581,3.581,0,0,1,133.432-15.668ZM129.949-34.1h-8.134a.591.591,0,0,0-.669.669q0,3.633,0,7.265v.2a5.282,5.282,0,0,1,2.534,1.006.59.59,0,0,0,.326.107q3.75.009,7.5,0c.064,0,.128,0,.191,0a.579.579,0,0,1,.546.541.579.579,0,0,1-.484.6,1.439,1.439,0,0,1-.229.008h-6.663a5.29,5.29,0,0,1,.841,2.295h.32q2.784,0,5.567,0a.591.591,0,0,1,.6.353.574.574,0,0,1-.583.8q-2.841,0-5.682,0h-.223a5.257,5.257,0,0,1-1.884,3.442h9.254c.485,0,.7-.213.7-.7q0-6.271,0-12.542v-.22H130.6a.585.585,0,0,1-.654-.646c0-.452,0-.9,0-1.357Zm-5.358,13.269a4.023,4.023,0,0,0-4.016-4.013,4.023,4.023,0,0,0-4.021,4.008,4.024,4.024,0,0,0,4.025,4.023A4.024,4.024,0,0,0,124.591-20.834Zm8.268-10.6-1.747-1.748v1.748Z"
+                                                transform="translate(0 0)" />
+                                            <path id="Path_1027" data-name="Path 1027"
+                                                d="M262.772,101.242q2.084,0,4.168,0a.572.572,0,0,1,.572.789.554.554,0,0,1-.539.357c-.376,0-.752,0-1.128,0h-7.151a1.177,1.177,0,0,1-.247-.014.572.572,0,0,1,.138-1.132q1.941,0,3.881,0Z"
+                                                transform="translate(-135.313 -129.532)" />
+                                            <path id="Path_1028" data-name="Path 1028"
+                                                d="M206.635,193.557c.317,0,.609,0,.9,0a.576.576,0,1,1,0,1.147q-.708,0-1.415,0a.58.58,0,0,1-.631-.63q0-1.09,0-2.181a.576.576,0,1,1,1.147-.006C206.636,192.435,206.635,192.983,206.635,193.557Z"
+                                                transform="translate(-85.488 -214.962)" />
+                                        </g>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">History</span></span></a></span>
+                    </li>
                     {{-- Vouchers --}}
 
                     <li><a href="#!" class="collapsed" data-bs-toggle="collapse"
