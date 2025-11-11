@@ -98,11 +98,11 @@ class PaymentController extends Controller
     /** Đồng bộ trạng thái từ VNPay (nút Query) */
     public function query(Payment $payment, VNPayService $vnPay)
     {
-        if (strtolower($payment->gateway) !== 'vnpay') {  
+        if (strtolower($payment->gateway) !== 'vnpay') {
             return back()->with('error', 'Chỉ hỗ trợ query VNPay.');
         }
 
-        $res = $vnPay->query($payment->app_trans_id);  
+        $res = $vnPay->query($payment->app_trans_id);
 
         DB::transaction(function () use ($payment, $res) {
             PaymentLog::create([
@@ -141,7 +141,7 @@ class PaymentController extends Controller
     }
 
     /** (Tuỳ chọn) Refund */
-    public function refund(Payment $payment, VNPayService $vnPay): RedirectResponse  
+    public function refund(Payment $payment, VNPayService $vnPay): RedirectResponse
     {
         return back()->with('status', '(Demo) Chưa triển khai refund.');
     }

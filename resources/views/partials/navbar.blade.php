@@ -207,50 +207,87 @@
                         </a>
                     </li>
 
-                    {{-- Posts --}}
+                    <li>
+                        <a href="{{ route('admin.payments.index') }}" class="collapsed">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <!-- Icon Thẻ Tín Dụng -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19"
+                                        height="19" viewBox="0 0 19 19" aria-hidden="true">
+                                        <path
+                                            d="M2 5H17C17.55 5 18 5.45 18 6V15C18 15.55 17.55 16 17 16H2C1.45 16 1 15.55 1 15V6C1 5.45 1.45 5 2 5Z"
+                                            fill="none" stroke="#000" stroke-width="1.5" />
+                                        <path d="M2 8H17" fill="none" stroke="#000" stroke-width="1.5" />
+                                        <path d="M4 13H7" fill="none" stroke="#000" stroke-width="1.5" />
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Quản lý thanh toán</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+                    </li>
+
+
 
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-item_post">
                             <span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
-                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="22.029"
-                                        height="20.972" viewBox="0 0 22.029 20.972">
-                                        <g id="Icon" transform="translate(-451.809 -436.251)">
-                                            <path id="Path_234" data-name="Path 234"
-                                                d="M467.255,446.744q0,4.038,0,8.077c0,1.587-.776,2.4-2.294,2.4-2.7,0-5.39-.01-8.085.005a1.466,1.466,0,0,1-1.172-.506q-1.723-1.84-3.5-3.629a1.259,1.259,0,0,1-.381-.945c0-.907-.017-1.814-.017-2.722q0-5.4.007-10.8a2.082,2.082,0,0,1,2.28-2.37q5.44,0,10.881,0a2.076,2.076,0,0,1,2.278,2.369Q467.259,442.683,467.255,446.744Zm-10.039,9.007h7.751c.691,0,.864-.179.864-.893q0-8.119,0-16.237c0-.719-.169-.895-.859-.895H454.1c-.678,0-.846.167-.846.857q0,6.29,0,12.58c0,.144.014.288.024.474,1.017,0,2,0,2.988,0,.725,0,.953.234.955.981C457.218,453.641,457.217,454.665,457.217,455.75Zm-2.774-2.636,1.3,1.408v-1.408Z"
-                                                transform="translate(0 0)" />
-                                            <path id="Path_235" data-name="Path 235"
-                                                d="M640.677,446.844c0,2.765.005,5.531,0,8.3a2.052,2.052,0,0,1-1.852,2.175.733.733,0,1,1-.177-1.452.635.635,0,0,0,.6-.721q0-8.3,0-16.592a.632.632,0,0,0-.6-.721.734.734,0,1,1,.174-1.454,2.054,2.054,0,0,1,1.853,2.174C640.682,441.313,640.677,444.079,640.677,446.844Z"
-                                                transform="translate(-170.125 -0.109)" />
-                                            <path id="Path_236" data-name="Path 236"
-                                                d="M678.986,446.8c0,2.78.005,5.56,0,8.339a2.04,2.04,0,0,1-1.845,2.13.725.725,0,0,1-.862-.655.736.736,0,0,1,.689-.8c.464-.088.595-.253.6-.81q.006-2.876,0-5.753,0-5.262,0-10.524c0-.722-.044-.777-.728-.953a.744.744,0,0,1-.558-.791.712.712,0,0,1,.735-.66,2.033,2.033,0,0,1,1.97,2.1c.013,2.021,0,4.043,0,6.065Q678.986,445.64,678.986,446.8Z"
-                                                transform="translate(-205.15 -0.063)" />
-                                        </g>
+                                    <!-- COLLECTION: white fill + black stroke -->
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="18"
+                                        height="18" viewBox="0 0 16 16" aria-hidden="true">
+                                        <!-- tờ phía sau -->
+                                        <rect x="2.5" y="3.5" width="9" height="11" rx="1.5"
+                                            fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <!-- tờ phía trước -->
+                                        <rect x="4.5" y="1.5" width="9" height="11" rx="1.5"
+                                            fill="#fff" stroke="#000" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <!-- các dòng nội dung -->
+                                        <line x1="6" y1="5.5" x2="11.5" y2="5.5"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
+                                        <line x1="6" y1="8" x2="11.5" y2="8"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
+                                        <line x1="6" y1="10.5" x2="9.5" y2="10.5"
+                                            stroke="#000" stroke-width="1.5" stroke-linecap="round" />
                                     </svg>
                                 </span>
-                                <span class="menu-bar__name">Bài đăng</span>
+                                <span class="menu-bar__name">Quản lí nội dung</span>
                             </span>
                             <span class="sherah__toggle"></span>
                         </a>
+
                         <div class="collapse sherah__dropdown" id="menu-item_post" data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
-                                <li>
-                                    <a href="{{ route('admin.posts.index') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Danh sách bài
-                                                đăng</span></span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('admin.posts.create') }}">
-                                        <span class="menu-bar__text"><span class="menu-bar__name">Upload bài
-                                                đăng</span></span>
-                                    </a>
-                                </li>
+                                <li><a href="{{ route('admin.banners.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Banner</span></span></a></li>
+                                <li><a href="{{ route('admin.posts.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Post</span></span></a></li>
                             </ul>
                         </div>
                     </li>
 
+                    <li><a href="history.html" class="collapsed"><span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19.527"
+                                        height="19.582" viewBox="0 0 19.527 19.582">
+                                        <g id="Icon" transform="translate(-115.401 35.25)">
+                                            <path id="Path_1026" data-name="Path 1026"
+                                                d="M133.432-15.668h-13.28c-.137-.024-.274-.048-.412-.071a5.177,5.177,0,0,1-4.285-4.372,5.176,5.176,0,0,1,2.84-5.353,5.455,5.455,0,0,1,1.7-.5V-26.2q0-3.631,0-7.263a1.665,1.665,0,0,1,.776-1.489,4.105,4.105,0,0,1,.717-.295h9.185a5.733,5.733,0,0,1,.452.369c1.18,1.172,2.353,2.351,3.533,3.523a.846.846,0,0,1,.267.645q-.008,3.918,0,7.835c0,1.815,0,3.631,0,5.446a1.68,1.68,0,0,1-1.056,1.627A3.581,3.581,0,0,1,133.432-15.668ZM129.949-34.1h-8.134a.591.591,0,0,0-.669.669q0,3.633,0,7.265v.2a5.282,5.282,0,0,1,2.534,1.006.59.59,0,0,0,.326.107q3.75.009,7.5,0c.064,0,.128,0,.191,0a.579.579,0,0,1,.546.541.579.579,0,0,1-.484.6,1.439,1.439,0,0,1-.229.008h-6.663a5.29,5.29,0,0,1,.841,2.295h.32q2.784,0,5.567,0a.591.591,0,0,1,.6.353.574.574,0,0,1-.583.8q-2.841,0-5.682,0h-.223a5.257,5.257,0,0,1-1.884,3.442h9.254c.485,0,.7-.213.7-.7q0-6.271,0-12.542v-.22H130.6a.585.585,0,0,1-.654-.646c0-.452,0-.9,0-1.357Zm-5.358,13.269a4.023,4.023,0,0,0-4.016-4.013,4.023,4.023,0,0,0-4.021,4.008,4.024,4.024,0,0,0,4.025,4.023A4.024,4.024,0,0,0,124.591-20.834Zm8.268-10.6-1.747-1.748v1.748Z"
+                                                transform="translate(0 0)" />
+                                            <path id="Path_1027" data-name="Path 1027"
+                                                d="M262.772,101.242q2.084,0,4.168,0a.572.572,0,0,1,.572.789.554.554,0,0,1-.539.357c-.376,0-.752,0-1.128,0h-7.151a1.177,1.177,0,0,1-.247-.014.572.572,0,0,1,.138-1.132q1.941,0,3.881,0Z"
+                                                transform="translate(-135.313 -129.532)" />
+                                            <path id="Path_1028" data-name="Path 1028"
+                                                d="M206.635,193.557c.317,0,.609,0,.9,0a.576.576,0,1,1,0,1.147q-.708,0-1.415,0a.58.58,0,0,1-.631-.63q0-1.09,0-2.181a.576.576,0,1,1,1.147-.006C206.636,192.435,206.635,192.983,206.635,193.557Z"
+                                                transform="translate(-85.488 -214.962)" />
+                                        </g>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">History</span></span></a></span>
+                    </li>
                     {{-- Vouchers --}}
 
                     <li><a href="#!" class="collapsed" data-bs-toggle="collapse"

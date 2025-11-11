@@ -19,8 +19,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ShopSettingController;
-use App\Http\Controllers\PaymentController;
-use App\Models\Order;
+use App\Http\Controllers\Admin\PaymentController;
 
 
 // ============================
@@ -68,11 +67,9 @@ Route::prefix('admin')
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
         // 🧱 Banners
-        Route::prefix('banners')->name('banners.')->group(function () {
-            Route::resource('/', BannerController::class)->except(['show']);
-            Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-            Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
-        });
+        Route::resource('banners', BannerController::class)->except(['show']);
+Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
         // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
@@ -133,7 +130,7 @@ Route::prefix('admin')
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])->name('vouchers.report');
 
-        // 💳 Payments (Admin)
+         // 💳 Payments (Admin)
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
         Route::post('/payments/{payment}/query', [PaymentController::class, 'query'])->name('payments.query');
@@ -141,6 +138,7 @@ Route::prefix('admin')
         Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
         Route::post('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])
             ->name('payments.updateStatus');
+    
 
         // Payment Methods
         Route::resource('payment-methods', PaymentMethodController::class);

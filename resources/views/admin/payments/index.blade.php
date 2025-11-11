@@ -18,29 +18,6 @@
                             </ul>
                         </div>
 
-                        {{-- Quick filters --}}
-                        <div class="d-flex gap-1 flex-wrap">
-                            <a href="{{ route('admin.payments.index') }}"
-                                class="sherah-btn sherah-light btn-sm px-3 py-2 fs-5 {{ request('status') ? '' : 'active' }}">
-                                Tất cả
-                            </a>
-                            <a href="{{ route('admin.payments.index', ['status' => 'pending']) }}"
-                                class="sherah-btn sherah-border btn-sm px-3 py-2 fs-5 {{ request('status') === 'pending' ? 'active' : '' }}">
-                                Pending
-                            </a>
-                            <a href="{{ route('admin.payments.index', ['status' => 'success']) }}"
-                                class="sherah-btn sherah-gbcolor btn-sm px-3 py-2 fs-5 {{ request('status') === 'success' ? 'active' : '' }}">
-                                Success
-                            </a>
-                            <a href="{{ route('admin.payments.index', ['status' => 'failed']) }}"
-                                class="sherah-btn sherah-color btn-sm px-3 py-2 fs-5 {{ request('status') === 'failed' ? 'active' : '' }}">
-                                Failed
-                            </a>
-                            <a href="{{ route('admin.payments.index', ['status' => 'canceled']) }}"
-                                class="sherah-btn sherah-border-warning btn-sm px-3 py-2 fs-5 {{ request('status') === 'canceled' ? 'active' : '' }}">
-                                Canceled
-                            </a>
-                        </div>
                     </div>
 
                     {{-- Alerts --}}
@@ -74,7 +51,7 @@
                                 <div class="col-lg-2 col-md-4">
                                     <select name="status" class="form-select form-select-sm">
                                         <option value="">-- Trạng thái --</option>
-                                        @foreach (['pending', 'success', 'failed', 'canceled'] as $st)
+                                        @foreach (['pending', 'success', 'failed', 'canceled', 'refunded'] as $st)
                                             <option value="{{ $st }}" @selected(request('status') === $st)>
                                                 {{ ucfirst($st) }}</option>
                                         @endforeach
@@ -110,7 +87,7 @@
                                             <th>Mã giao dịch</th>
                                             <th class="text-end" style="width:140px">Số tiền</th>
                                             <th style="width:120px">Trạng thái</th>
-                                            <th style="width:160px">Thời gian thanh toán</th>
+                                            <th style="width:170px">Thời gian thanh toán</th>
                                             <th class="text-end" style="width:140px">Thao tác</th>
                                         </tr>
                                     </thead>
@@ -126,8 +103,9 @@
                                                 <td><span
                                                         class="badge bg-{{ $map[$payment->status] ?? 'secondary' }}">{{ ucfirst($payment->status) }}</span>
                                                 </td>
-                                                <td class="text-nowrap">
-                                                    {{ optional($payment->paid_at)->format('d/m/Y H:i') }}</td>
+                                                <td>{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : 'Chưa thanh toán' }}
+                                                </td>
+
                                                 <td class="text-end">
                                                     <div class="btn-group btn-group-sm">
                                                         <a class="btn btn-outline-primary"

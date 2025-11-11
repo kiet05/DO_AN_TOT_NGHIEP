@@ -20,7 +20,8 @@ return new class extends Migration
             $table->unsignedBigInteger('amount');
             $table->string('currency', 10)->default('VND');
 
-            $table->enum('status', ['pending','success','failed','canceled'])
+            // Đã thêm giá trị 'refunded' vào enum
+            $table->enum('status', ['pending', 'success', 'failed', 'canceled', 'refunded'])
                   ->default('pending')->index();
 
             $table->json('meta')->nullable();
