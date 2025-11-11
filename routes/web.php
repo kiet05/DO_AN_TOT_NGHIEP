@@ -126,6 +126,7 @@ Route::prefix('admin')
 
         // 🧑‍💼 Admin accounts
         Route::resource('accounts', AdminAccountController::class);
+        Route::get('accounts', [AdminAccountController::class, 'index'])->name('accounts.index');
         Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])->name('accounts.toggleStatus');
 
         // 🎟️ Vouchers
@@ -147,8 +148,8 @@ Route::prefix('admin')
             ->name('payment-methods.toggle-status');
 
         // Shop Settings
-        Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
-        Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
+        // Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
+        // Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
     });
 
 // Payment routes (outside admin)

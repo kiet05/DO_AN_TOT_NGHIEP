@@ -77,6 +77,7 @@ class BannerController extends Controller
 
     public function edit(Banner $banner): View
     {
+
         return view('admin.banners.edit', compact('banner'));
     }
 

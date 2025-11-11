@@ -1,52 +1,82 @@
 @extends('layouts.admin.master')
 
 @section('content')
-    <div class="container">
-        <h1 class="mb-4">Sửa Banner</h1>
+    <section class="sherah-adashboard sherah-show">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="sherah-body">
+                        <div class="sherah-dsinner">
+                            <div class="row mg-top-30">
+                                <div class="col-12 sherah-flex-between">
+                                    <!-- Sherah Breadcrumb -->
+                                    <div class="sherah-breadcrumb">
+                                        <h2 class="sherah-breadcrumb__title">Sản phẩm</h2>
+                                        <ul class="sherah-breadcrumb__list">
+                                            <li><a href="/">Dashboard</a></li>
+                                            <li class="active"><a href="{{ route('admin.products.index') }}">Sản phẩm</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <!-- End Sherah Breadcrumb -->
+                                </div>
+                            </div>
+                            <h1 class="mb-4">Sửa Banner</h1>
 
-        <form action="{{ route('admin.banners.update', $banner->id) }}" method="POST" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
+                            <form action="{{ route('admin.banners.update', $banner->id) }}" method="POST"
+                                enctype="multipart/form-data">
+                                @csrf
+                                @method('PUT')
 
-            <div class="mb-3">
-                <label for="title" class="form-label">Tiêu đề</label>
-                <input type="text" name="title" id="title" class="form-control"
-                    value="{{ old('title', $banner->title) }}" required>
-            </div>
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Tiêu đề</label>
+                                    <input type="text" name="title" id="title" class="form-control"
+                                        value="{{ old('title', $banner->title) }}" required>
+                                </div>
 
-            <div class="mb-3">
-                <label for="image" class="form-label">Ảnh</label>
-                <input type="file" name="image" id="image" class="form-control">
-                @if ($banner->image)
-                    <div class="mt-2">
-                        <img src="{{ asset('storage/' . $banner->image) }}" width="200" alt="Banner hiện tại">
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Ảnh</label>
+                                    <input type="file" name="image" id="image" class="form-control">
+                                    @if ($banner->image)
+                                        <div class="mt-2">
+                                            <img src="{{ asset('storage/' . $banner->image) }}" width="200"
+                                                alt="Banner hiện tại">
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="link" class="form-label">Liên kết (link)</label>
+                                    <input type="text" name="link" id="link" class="form-control"
+                                        value="{{ old('link', $banner->link) }}">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="position" class="form-label">Vị trí hiển thị</label>
+                                    <select name="position" id="position" class="form-control">
+                                        <option value="top" {{ $banner->position == 'top' ? 'selected' : '' }}>Top
+                                        </option>
+                                        <option value="middle" {{ $banner->position == 'middle' ? 'selected' : '' }}>Middle
+                                        </option>
+                                        <option value="bottom" {{ $banner->position == 'bottom' ? 'selected' : '' }}>Bottom
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input type="hidden" name="status" value="0">
+                                    <input class="form-check-input" type="checkbox" id="status" name="status"
+                                        value="1" checked>
+                                    <label class="form-check-label" for="status">Bật</label>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">Cập nhật</button>
+                                <a href="{{ route('admin.banners.index') }}" class="btn btn-secondary">Quay lại</a>
+                            </form>
+                        </div>
                     </div>
-                @endif
+                </div>
             </div>
-
-            <div class="mb-3">
-                <label for="link" class="form-label">Liên kết (link)</label>
-                <input type="text" name="link" id="link" class="form-control"
-                    value="{{ old('link', $banner->link) }}">
-            </div>
-
-            <div class="mb-3">
-                <label for="position" class="form-label">Vị trí hiển thị</label>
-                <select name="position" id="position" class="form-control">
-                    <option value="top" {{ $banner->position == 'top' ? 'selected' : '' }}>Top</option>
-                    <option value="middle" {{ $banner->position == 'middle' ? 'selected' : '' }}>Middle</option>
-                    <option value="bottom" {{ $banner->position == 'bottom' ? 'selected' : '' }}>Bottom</option>
-                </select>
-            </div>
-
-            <div class="form-check form-switch mb-3">
-                <input type="hidden" name="status" value="0">
-                <input class="form-check-input" type="checkbox" id="status" name="status" value="1" checked>
-                <label class="form-check-label" for="status">Bật</label>
-            </div>
-
-            <button type="submit" class="btn btn-success">Cập nhật</button>
-            <a href="{{ route('admin.banners.index') }}" class="btn btn-secondary">Quay lại</a>
-        </form>
-    </div>
+        </div>
+    </section>
 @endsection
