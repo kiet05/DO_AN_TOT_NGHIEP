@@ -9,37 +9,20 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('banners', function (Blueprint $table) {
-            $table->id();
+   public function up(): void
+{
+    Schema::create('banners', function (Blueprint $table) {
+        $table->id();
+        $table->string('title');
+        $table->string('image');
+        $table->string('link')->nullable();
+        $table->enum('position', ['top', 'middle', 'bottom'])->default('top');
+        $table->boolean('status')->default(1);
+        $table->softDeletes();
+        $table->timestamps();
+    });
+}
 
-            // Tiêu đề banner
-            $table->string('title');
-
-            // Đường dẫn hình ảnh
-            $table->string('image_url');
-
-            // Liên kết banner (nếu có)
-            $table->string('link')->nullable();
-
-            // Vị trí hiển thị (trên, giữa, dưới)
-            $table->enum('position', ['top', 'middle', 'bottom'])->default('top');
-
-            // Trạng thái hoạt động
-            $table->boolean('is_active')->default(true);
-
-            // Ngày bắt đầu và kết thúc hiển thị
-            $table->dateTime('start_date')->nullable();
-            $table->dateTime('end_date')->nullable();
-
-            // Cột mềm để xóa tạm
-            $table->softDeletes();
-
-            // Thời gian tạo & cập nhật
-            $table->timestamps();
-        });
-    }
 
     /**
      * Reverse the migrations.
