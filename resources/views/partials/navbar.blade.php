@@ -182,7 +182,6 @@
                     </li>
 
                     {{-- Account Management --}}
-
                     <li>
                         <a href="{{ route('admin.accounts.index') }}" class="collapsed"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
@@ -207,8 +206,51 @@
                         </a>
                     </li>
 
-                    {{-- Posts --}}
+                    {{-- Payment Methods --}}
+                    <li>
+                        <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_payment_methods">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Phương thức thanh toán</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+                        <div class="collapse sherah__dropdown" id="menu-item_payment_methods" data-bs-parent="#sherahMenu">
+                            <ul class="menu-bar__one-dropdown">
+                                <li><a href="{{ route('admin.payment-methods.index') }}"><span class="menu-bar__text"><span class="menu-bar__name">Danh sách phương thức</span></span></a></li>
+                                <li><a href="{{ route('admin.payment-methods.create') }}"><span class="menu-bar__text"><span class="menu-bar__name">Thêm phương thức mới</span></span></a></li>
+                            </ul>
+                        </div>
+                    </li>
 
+                    {{-- Shop Settings --}}
+                    <li>
+                        <a href="#!" class="collapsed" data-bs-toggle="collapse" data-bs-target="#menu-item_shop_settings">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Cài đặt shop</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+                        <div class="collapse sherah__dropdown" id="menu-item_shop_settings" data-bs-parent="#sherahMenu">
+                            <ul class="menu-bar__one-dropdown">
+                                <li><a href="{{ route('admin.shop-settings.edit') }}"><span class="menu-bar__text"><span class="menu-bar__name">Cài đặt thông tin shop</span></span></a></li>
+                                <li><a href="#!" data-bs-toggle="modal" data-bs-target="#shopInfoModal"><span class="menu-bar__text"><span class="menu-bar__name">Xem thông tin shop</span></span></a></li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    {{-- Posts --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-item_post">
