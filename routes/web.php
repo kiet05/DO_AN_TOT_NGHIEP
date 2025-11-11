@@ -7,6 +7,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\TwoFactor;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OrderController;
@@ -19,19 +20,22 @@ use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\PaymentController;
+use App\Models\Order;
 
 
-// Trang chủ
+// ============================
+// 🔹 TRANG CHỦ & DASHBOARD
+// ============================
 Route::get('/', fn() => view('welcome'))->name('home');
 
-// Dashboard người dùng
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-/**
- * CÀI ĐẶT NGƯỜI DÙNG (settings)
- */
+
+// ============================
+// 🔹 CÀI ĐẶT NGƯỜI DÙNG
+// ============================
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
@@ -51,9 +55,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('two-factor.show');
 });
 
-/**
- * KHU VỰC QUẢN TRỊ /admin
- */
+
+// ==================================================
+// 🔹 KHU VỰC QUẢN TRỊ (ADMIN PANEL)
+// ==================================================
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', CheckRole::class . ':admin'])
@@ -62,14 +67,14 @@ Route::prefix('admin')
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
 
-        // Banners
+        // 🧱 Banners
         Route::prefix('banners')->name('banners.')->group(function () {
             Route::resource('/', BannerController::class)->except(['show']);
             Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
             Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
         });
 
-        // Posts
+        // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
             Route::get('/', [PostController::class, 'index'])->name('index');
             Route::get('/create', [PostController::class, 'create'])->name('create');
@@ -79,8 +84,7 @@ Route::prefix('admin')
             Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
         });
 
-
-        // Products
+        // 🛍️ Products
         Route::prefix('products')->name('products.')->group(function () {
             Route::get('/', [ProductController::class, 'index'])->name('index');
             Route::get('/create', [ProductController::class, 'create'])->name('create');
@@ -90,7 +94,7 @@ Route::prefix('admin')
             Route::delete('/{id}/delete', [ProductController::class, 'destroy'])->name('destroy');
         });
 
-        // Categories
+        // 🗂️ Categories
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/', [CategoryController::class, 'index'])->name('index');
             Route::get('/create', [CategoryController::class, 'create'])->name('create');
@@ -100,16 +104,14 @@ Route::prefix('admin')
             Route::delete('/{id}/delete', [CategoryController::class, 'destroy'])->name('destroy');
         });
 
-        // Orders
+        // 📦 Orders
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
         Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-        // Route::get('/orders/{order}', [OrderController::class, 'show'])->name('admin.orders.show');
-        // Invoice show + PDF
         Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('/orders/{order}/invoice/pdf', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.pdf');
-        
-        // Reports
+
+        // 📊 Reports
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
             Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
@@ -117,21 +119,27 @@ Route::prefix('admin')
             Route::get('/top-products', [ReportController::class, 'topProducts'])->name('topProducts');
         });
 
-
-        // Users
+        // 👥 Users
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 
-        // Admin accounts
+        // 🧑‍💼 Admin accounts
         Route::resource('accounts', AdminAccountController::class);
-        Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])
-            ->name('accounts.toggleStatus');
+        Route::post('accounts/{id}/toggle-status', [AdminAccountController::class, 'toggleStatus'])->name('accounts.toggleStatus');
 
-        // Vouchers
+        // 🎟️ Vouchers
         Route::resource('vouchers', VoucherController::class);
-        Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])
-            ->name('vouchers.report');
+        Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])->name('vouchers.report');
+
+        // 💳 Payments (Admin)
+        Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+        Route::post('/payments/{payment}/query', [PaymentController::class, 'query'])->name('payments.query');
+        Route::get('/payments/{payment}/logs', [PaymentController::class, 'logs'])->name('payments.logs');
+        Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
+        Route::post('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])
+            ->name('payments.updateStatus');
 
         // Payment Methods
         Route::resource('payment-methods', PaymentMethodController::class);

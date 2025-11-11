@@ -23,6 +23,8 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'order_status',
+                'payment_id',
+
     ];
 
     // Mỗi đơn hàng thuộc về 1 user
@@ -39,5 +41,9 @@ class Order extends Model
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
+    }
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
     }
 }
