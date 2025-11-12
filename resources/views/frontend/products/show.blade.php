@@ -281,9 +281,70 @@
     }
     
     function addToCart(productId) {
-        const quantity = document.getElementById('quantity')?.value || 1;
-        // TODO: Implement add to cart functionality
-        alert('Đã thêm vào giỏ hàng!');
+        if (!selectedVariantId) {
+            alert('Vui lòng chọn phân loại sản phẩm');
+            return;
+        }
+        
+        const quantity = parseInt(document.getElementById('quantity')?.value || 1);
+        
+        // Disable button
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span> Đang thêm...';
+        
+        fetch('{{ route("cart.add") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                product_variant_id: selectedVariantId,
+                quantity: quantity
+            })
+        })
+        .then(response => {
+            // Check if response is 401 (Unauthenticated)
+            if (response.status === 401) {
+                return response.json().then(data => {
+                    if (confirm(data.message + '\n\nBạn có muốn đăng nhập ngay bây giờ?')) {
+                        window.location.href = '{{ route("login") }}';
+                    }
+                    throw new Error('Unauthenticated');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Update cart count
+                if (window.updateCartCount) {
+                    window.updateCartCount(data.cart_count);
+                }
+                
+                // Show success message
+                alert(data.message || 'Đã thêm vào giỏ hàng!');
+                
+                // Optionally open cart sidebar
+                // document.getElementById('cart-sidebar').classList.add('open');
+                // document.getElementById('cart-overlay').classList.add('show');
+            } else {
+                alert(data.message || 'Có lỗi xảy ra');
+            }
+        })
+        .catch(error => {
+            if (error.message !== 'Unauthenticated') {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi thêm vào giỏ hàng');
+            }
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
     }
     
     function buyNow(productId) {

@@ -34,7 +34,7 @@ class Register extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['role_id'] = 3;
+        $validated['role_id'] = 3; // Customer role
 
         event(new Registered(($user = User::create($validated))));
 
@@ -42,6 +42,7 @@ class Register extends Component
 
         Session::regenerate();
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        // Redirect user to homepage instead of dashboard
+        $this->redirect(route('home', absolute: false), navigate: true);
     }
 }

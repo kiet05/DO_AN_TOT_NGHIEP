@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
+use App\Http\Controllers\Frontend\CartController;
 
 
 // ============================
@@ -31,6 +32,21 @@ use App\Http\Controllers\Frontend\ProductController as FrontendProductController
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
+
+// Giỏ hàng
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/count', [CartController::class, 'getCount'])->name('count');
+    Route::get('/sidebar', [CartController::class, 'sidebar'])->name('sidebar');
+    
+    // Route add không cần middleware để có thể trả JSON response khi chưa đăng nhập
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+    
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('index');
+        Route::put('/{id}/update', [CartController::class, 'update'])->name('update');
+        Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
+    });
+});
 
 // ============================
 // 🔹 TRANG CHỦ & DASHBOARD
