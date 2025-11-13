@@ -1,0 +1,38 @@
+<svg width="220" height="85" viewBox="0 0 220 85" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldMain" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d4af37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f4d03f;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Premium icon circle -->
+  <circle cx="42" cy="42.5" r="32" fill="url(#mainGrad)"/>
+  <circle cx="42" cy="42.5" r="32" fill="none" stroke="url(#goldMain)" stroke-width="2.5"/>
+  <circle cx="42" cy="42.5" r="26" fill="none" stroke="url(#goldMain)" stroke-width="1" opacity="0.4"/>
+  
+  <!-- Elegant Tie Icon -->
+  <g transform="translate(42, 32)">
+    <!-- Tie knot -->
+    <ellipse cx="0" cy="0" rx="5" ry="6" fill="url(#goldMain)"/>
+    <!-- Tie body -->
+    <path d="M -2.5 6 L -2 22 L 2 22 L 2.5 6 Z" fill="url(#goldMain)"/>
+    <!-- Tie bottom -->
+    <path d="M -2 22 L -4 32 L 0 30 L 4 32 L 2 22 Z" fill="url(#goldMain)"/>
+  </g>
+  
+  <!-- EGA Text - Bold & Masculine -->
+  <text x="85" y="48" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" 
+        font-size="40" font-weight="900" fill="url(#mainGrad)" letter-spacing="3">EGA</text>
+  
+  <!-- Premium subtitle -->
+  <text x="85" y="65" font-family="'Helvetica Neue', Arial, sans-serif" 
+        font-size="9" fill="#666" font-weight="600" letter-spacing="2">GENTLEMEN'S FASHION</text>
+  
+  <!-- Decorative accent line -->
+  <line x1="85" y1="54" x2="200" y2="54" stroke="url(#goldMain)" stroke-width="1.5" opacity="0.5"/>
+</svg>

@@ -1,0 +1,41 @@
+<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconPremium" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2d2d2d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="iconGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4af37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f4d03f;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Premium circle background -->
+  <circle cx="70" cy="70" r="65" fill="url(#iconPremium)"/>
+  <circle cx="70" cy="70" r="65" fill="none" stroke="url(#iconGold)" stroke-width="3"/>
+  
+  <!-- Inner circle -->
+  <circle cx="70" cy="70" r="55" fill="none" stroke="url(#iconGold)" stroke-width="1.5" opacity="0.3"/>
+  
+  <!-- Premium Tie Icon -->
+  <g transform="translate(70, 50)" filter="url(#shadow)">
+    <!-- Tie knot (premium) -->
+    <ellipse cx="0" cy="0" rx="6" ry="7" fill="url(#iconGold)"/>
+    <ellipse cx="0" cy="0" rx="4" ry="5" fill="#1a1a1a" opacity="0.3"/>
+    
+    <!-- Tie body -->
+    <path d="M -3 7 L -2.5 25 L 2.5 25 L 3 7 Z" fill="url(#iconGold)"/>
+    <path d="M -2.5 25 L -4.5 40 L 0 37 L 4.5 40 L 2.5 25 Z" fill="url(#iconGold)"/>
+    
+    <!-- Tie details -->
+    <line x1="0" y1="7" x2="0" y2="25" stroke="#1a1a1a" stroke-width="0.5" opacity="0.4"/>
+  </g>
+  
+  <!-- EGA Text below -->
+  <text x="70" y="110" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" 
+        font-size="22" font-weight="900" text-anchor="middle" fill="url(#iconGold)" letter-spacing="3">EGA</text>
+</svg>

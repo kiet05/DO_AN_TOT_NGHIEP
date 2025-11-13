@@ -55,7 +55,7 @@ class OrderController extends Controller
 
     // Cập nhật trạng thái đơn hàng
 
-    public function updateStatus(Request $request, \App\Models\Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
         // Chấp nhận cả biến thể cũ khi submit
         $valid = array_merge($this->allowedStatuses(), array_keys($this->legacyAliases()));
@@ -107,7 +107,7 @@ class OrderController extends Controller
 
 
 
-    public function invoice(\App\Models\Order $order)
+    public function invoice(Order $order)
     {
         if (method_exists($order, 'items')) {
             $order->load(['items.product']);

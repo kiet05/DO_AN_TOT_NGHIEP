@@ -3,24 +3,49 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    /**
-     * Show the site homepage (temporary fallback).
-     */
-    public function index(Request $request)
+    public function index()
     {
-        // If a frontend view exists, render it; otherwise return a simple placeholder.
-        if (function_exists('view') && view()->exists('frontend.home')) {
-            return view('frontend.home');
-        }
+        // Lấy banners active
+        $banners = Banner::where('status', true)
+            ->orderBy('position', 'asc')
+            ->get();
 
-        if (function_exists('view') && view()->exists('home')) {
-            return view('home');
-        }
+        // Lấy danh mục chính
+        $categories = Category::whereNull('parent_id')
+            ->where('status', 1)
+            ->with('children')
+            ->get();
 
-        return response('Homepage placeholder', 200);
+        // Sản phẩm mới
+        $newProducts = Product::where('is_new', true)
+            ->where('status', 1)
+            ->with(['category', 'images'])
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        // Sản phẩm khuyến mãi
+        $saleProducts = Product::where('is_on_sale', true)
+            ->where('status', 1)
+            ->with(['category', 'images'])
+            ->latest()
+            ->limit(12)
+            ->get();
+
+        // Sản phẩm nổi bật (có thể thêm logic riêng)
+        $featuredProducts = Product::where('status', 1)
+            ->with(['category', 'images'])
+            ->inRandomOrder()
+            ->limit(12)
+            ->get();
+
+        return view('frontend.home', compact('banners', 'categories', 'newProducts', 'saleProducts', 'featuredProducts'));
     }
 }
