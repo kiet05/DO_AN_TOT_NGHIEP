@@ -13,33 +13,16 @@ return new class extends Migration
     {
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
-
-            // Tiêu đề banner
             $table->string('title');
-
-            // Đường dẫn hình ảnh
-            $table->string('image_url');
-
-            // Liên kết banner (nếu có)
-            $table->string('link')->nullable();
-
-            // Vị trí hiển thị (trên, giữa, dưới)
+            $table->string('image');
+            $table->text('link')->nullable();
             $table->enum('position', ['top', 'middle', 'bottom'])->default('top');
-
-            // Trạng thái hoạt động
-            $table->boolean('is_active')->default(true);
-
-            // Ngày bắt đầu và kết thúc hiển thị
-            $table->dateTime('start_date')->nullable();
-            $table->dateTime('end_date')->nullable();
-
-            // Cột mềm để xóa tạm
+            $table->boolean('status')->default(1);
             $table->softDeletes();
-
-            // Thời gian tạo & cập nhật
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

@@ -17,8 +17,12 @@ return new class extends Migration
             $table->string('category', 100)->nullable();
             $table->boolean('is_published')->default(false);
             $table->tinyInteger('status')->default(1);
-            $table->string('image')->nullable(); // đường dẫn trong storage
-            $table->timestamp('published_at')->nullable(); // chỉ giữ 1 dòng này
+            $table->string('image')->nullable();
+            $table->timestamp('published_at')->nullable();
+
+            // ✅ Gộp phần này trực tiếp vào migration chính
+            $table->softDeletes();
+
             $table->timestamps();
         });
     }

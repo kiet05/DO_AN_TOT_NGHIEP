@@ -67,10 +67,11 @@ class VerifyOtp extends Component
 
         // ✅ Kiểm tra vai trò và điều hướng
         if ($user->role && $user->role->slug === 'admin') {
-        return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công với tư cách Admin!');
+            return redirect()->route('admin.dashboard')->with('success', 'Đăng nhập thành công với tư cách Admin!');
         }
 
-        return redirect()->route('dashboard')->with('success', 'Đăng nhập thành công!');
+        // User thông thường redirect về trang chủ frontend
+        return redirect()->route('home')->with('success', 'Đăng nhập thành công!');
 
         
     }
