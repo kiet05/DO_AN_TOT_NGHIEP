@@ -16,6 +16,8 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+            'slug',   // ⚠️ thêm dòng này
+
         'password',
         'address',
         'role_id',

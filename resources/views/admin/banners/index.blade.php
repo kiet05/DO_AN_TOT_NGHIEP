@@ -44,6 +44,30 @@
         .bn-action-col {
             width: 160px
         }
+
+        /* Căn trái các nút hành động */
+        .action-buttons {
+            display: flex;
+            justify-content: flex-start;
+            /* ← thay vì center */
+            align-items: center;
+            gap: 8px;
+            height: 100%;
+        }
+
+        /* Giữ kích thước đồng nhất và thẳng hàng */
+        .action-buttons .btn {
+            min-width: 60px;
+            height: 45px;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 0 10px;
+        }
+
+        /* Giữ ô "Hành động" canh giữa theo trục dọc */
+        td.action-col {
+            vertical-align: middle !important;
+        }
     </style>
 
     <section class="sherah-adashboard sherah-show">
@@ -154,69 +178,58 @@
                                                         @endif
                                                     </td>
 
-                                                    <td>
-                                                        <div class="btn-group dropdown">
-                                                            <button type="button"
-                                                                class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center"
-                                                                data-bs-toggle="dropdown" data-bs-display="static"
-                                                                {{-- tránh bị cắt trong vùng cuộn --}} aria-expanded="false"
-                                                                onclick="event.preventDefault(); event.stopPropagation();">
-                                                                <i class="bi bi-gear-fill me-1 text-secondary"></i>
-                                                                <span>Hành động</span>
-                                                            </button>
+                                                    <td class="action-col">
+                                                        <div class="action-buttons">
+                                                            @if (request('status') === 'trash')
+                                                                {{-- 🔄 Khôi phục --}}
+                                                                <form method="POST"
+                                                                    action="{{ route('admin.banners.restore', $banner->id) }}"
+                                                                    class="m-0">
+                                                                    @csrf
+                                                                    <button type="submit"
+                                                                        class="btn btn-sm btn-success d-flex align-items-center gap-1">
+                                                                        <i class="bi bi-arrow-counterclockwise"></i> Khôi
+                                                                        phục
+                                                                    </button>
+                                                                </form>
 
-                                                            <ul
-                                                                class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2">
-                                                                @if (request('status') === 'trash')
-                                                                    <li>
-                                                                        <form method="POST"
-                                                                            action="{{ route('admin.banners.restore', $banner->id) }}"
-                                                                            class="m-0">
-                                                                            @csrf
-                                                                            <button type="submit"
-                                                                                class="dropdown-item py-2 d-flex align-items-center gap-2">
-                                                                                <i
-                                                                                    class="bi bi-arrow-counterclockwise text-success"></i>Khôi
-                                                                                phục
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                    <li>
-                                                                        <form method="POST"
-                                                                            action="{{ route('admin.banners.force', $banner->id) }}"
-                                                                            onsubmit="return confirm('Xóa vĩnh viễn banner này?')"
-                                                                            class="m-0">
-                                                                            @csrf @method('DELETE')
-                                                                            <button type="submit"
-                                                                                class="dropdown-item py-2 text-danger d-flex align-items-center gap-2">
-                                                                                <i class="bi bi-trash3"></i>Xóa vĩnh viễn
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                @else
-                                                                    <li>
-                                                                        <a href="{{ route('admin.banners.edit', $banner->id) }}"
-                                                                            class="dropdown-item py-2 d-flex align-items-center gap-2">
-                                                                            <i
-                                                                                class="bi bi-pencil-square text-primary"></i>Sửa
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <form method="POST"
-                                                                            action="{{ route('admin.banners.destroy', $banner->id) }}"
-                                                                            onsubmit="return confirm('Chuyển banner vào thùng rác?')"
-                                                                            class="m-0">
-                                                                            @csrf @method('DELETE')
-                                                                            <button type="submit"
-                                                                                class="dropdown-item py-2 text-danger d-flex align-items-center gap-2">
-                                                                                <i class="bi bi-trash3"></i>Xóa
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                @endif
-                                                            </ul>
+                                                                {{-- ❌ Xóa vĩnh viễn --}}
+                                                                <form method="POST"
+                                                                    action="{{ route('admin.banners.force', $banner->id) }}"
+                                                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn banner này?')"
+                                                                    class="m-0">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        class="btn btn-sm btn-danger d-flex align-items-center gap-1">
+                                                                        <i class="bi bi-trash3"></i> Xóa vĩnh viễn
+                                                                    </button>
+                                                                </form>
+                                                            @else
+                                                                {{-- ✏️ Sửa --}}
+                                                                <a href="{{ route('admin.banners.edit', $banner->id) }}"
+                                                                    class="btn btn-warning btn-sm text-white d-flex align-items-center gap-1">
+                                                                    <i class="bi bi-pencil-square"></i> Sửa
+                                                                </a>
+
+                                                                {{-- 🗑️ Xóa --}}
+                                                                <form method="POST"
+                                                                    action="{{ route('admin.banners.destroy', $banner->id) }}"
+                                                                    onsubmit="return confirm('Chuyển banner vào thùng rác?')"
+                                                                    class="m-0">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit"
+                                                                        class="btn btn-danger btn-sm d-flex align-items-center gap-1">
+                                                                        <i class="bi bi-trash3"></i> Xóa
+                                                                    </button>
+                                                                </form>
+                                                            @endif
                                                         </div>
                                                     </td>
+
+
+
                                                 </tr>
                                             @empty
                                                 <tr>

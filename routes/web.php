@@ -7,7 +7,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\TwoFactor;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OrderController;
@@ -18,14 +18,39 @@ use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
+use App\Http\Controllers\Admin\ReturnRequestController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\PaymentController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
+use App\Http\Controllers\Frontend\CartController;
 
+
+// ============================
+// 🔹 FRONTEND - TRANG KHÁCH HÀNG
+// ============================
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
+Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
+
+// Giỏ hàng
+Route::prefix('cart')->name('cart.')->group(function () {
+    Route::get('/count', [CartController::class, 'getCount'])->name('count');
+    Route::get('/sidebar', [CartController::class, 'sidebar'])->name('sidebar');
+
+    // Route add không cần middleware để có thể trả JSON response khi chưa đăng nhập
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('/', [CartController::class, 'index'])->name('index');
+        Route::put('/{id}/update', [CartController::class, 'update'])->name('update');
+        Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
+    });
+});
 
 // ============================
 // 🔹 TRANG CHỦ & DASHBOARD
 // ============================
-Route::get('/', fn() => view('welcome'))->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -68,8 +93,8 @@ Route::prefix('admin')
 
         // 🧱 Banners
         Route::resource('banners', BannerController::class)->except(['show']);
-Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
-Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
         // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
@@ -108,6 +133,22 @@ Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->n
         Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('/orders/{order}/invoice/pdf', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.pdf');
 
+        //Customers
+        Route::prefix('customers')->name('customers.')->group(function () {
+            // LIST + CREATE/STORE + EDIT/UPDATE + DELETE
+            Route::get('/',            [CustomerController::class, 'index'])->name('index');
+            Route::get('/create',      [CustomerController::class, 'create'])->name('create');
+            Route::post('/',           [CustomerController::class, 'store'])->name('store');
+            Route::get('/{id}/edit',   [CustomerController::class, 'edit'])->name('edit')->whereNumber('id');
+            Route::put('/{id}',        [CustomerController::class, 'update'])->name('update')->whereNumber('id');
+            Route::delete('/{id}',     [CustomerController::class, 'destroy'])->name('destroy')->whereNumber('id');
+            // SHOW + ACTIONS (đặt SAU cùng và ràng buộc id là số)
+            Route::get('/{id}',                    [CustomerController::class, 'show'])->name('show')->whereNumber('id');
+            Route::patch('/{id}/toggle-status',    [CustomerController::class, 'toggleStatus'])->name('toggleStatus')->whereNumber('id');
+            Route::post('/{id}/reset-link',        [CustomerController::class, 'sendResetLink'])->name('resetLink')->whereNumber('id');
+            Route::post('/{id}/force-reset',       [CustomerController::class, 'forceReset'])->name('forceReset')->whereNumber('id');
+        });
+
         // 📊 Reports
         Route::prefix('reports')->name('reports.')->group(function () {
             Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -130,7 +171,7 @@ Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->n
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])->name('vouchers.report');
 
-         // 💳 Payments (Admin)
+        // 💳 Payments (Admin)
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
         Route::post('/payments/{payment}/query', [PaymentController::class, 'query'])->name('payments.query');
@@ -138,16 +179,22 @@ Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->n
         Route::post('/payments/{payment}/refund', [PaymentController::class, 'refund'])->name('payments.refund');
         Route::post('/payments/{payment}/status', [PaymentController::class, 'updateStatus'])
             ->name('payments.updateStatus');
-    
 
         // Payment Methods
         Route::resource('payment-methods', PaymentMethodController::class);
         Route::post('payment-methods/{id}/toggle-status', [PaymentMethodController::class, 'toggleStatus'])
             ->name('payment-methods.toggle-status');
 
+        // Returns
+        Route::get('returns', [ReturnRequestController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}', [ReturnRequestController::class, 'show'])->name('returns.show');
+        Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
+        Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
+
+
         // Shop Settings
-        // Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
-        // Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
+        Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
+        Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
     });
 
 // Payment routes (outside admin)

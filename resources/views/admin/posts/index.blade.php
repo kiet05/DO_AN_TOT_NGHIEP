@@ -4,61 +4,55 @@
 
 @section('content')
     <style>
-        /* Layout bảng giống banner */
-        .posts-table {
+        .sherah-table__main {
             table-layout: fixed;
             border-collapse: collapse;
-            width: 100%
+            width: 100%;
         }
 
-        .posts-table th,
-        .posts-table td {
+        .sherah-table__main th,
+        .sherah-table__main td {
             padding: 12px 16px;
-            vertical-align: middle
+            vertical-align: middle;
         }
 
-        /* Nếu theme Sherah set block cho thead/tbody -> ép lại để không lệch cột */
-        .posts-head {
-            display: table-header-group !important
+        /* Ép lại thead/tbody không bị lệch */
+        .sherah-table__head {
+            display: table-header-group !important;
         }
 
-        .posts-body {
-            display: table-row-group !important
+        .sherah-table__body {
+            display: table-row-group !important;
         }
 
+        /* Ảnh bài viết */
         .post-thumb {
             width: 160px;
             height: 90px;
             object-fit: cover;
-            border-radius: 8px
+            border-radius: 8px;
         }
 
         .post-title {
             max-width: 420px;
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis
+            text-overflow: ellipsis;
         }
 
         .post-excerpt {
             white-space: nowrap;
             overflow: hidden;
-            text-overflow: ellipsis
+            text-overflow: ellipsis;
         }
 
         .status-col {
-            width: 160px
+            width: 160px;
         }
 
         .action-col {
-            width: 160px
+            width: 160px;
         }
-
-        .dropdown-menu {
-            z-index: 1060
-        }
-
-        /* tránh bị cắt trong vùng có overflow */
     </style>
 
     <section class="sherah-adashboard sherah-show">
@@ -68,13 +62,13 @@
                     <div class="sherah-body">
                         <div class="sherah-dsinner">
 
-                            {{-- Header + filter giống banner --}}
+                            {{-- Header + filter --}}
                             <div class="row mg-top-30">
                                 <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div class="sherah-breadcrumb">
                                         <h2 class="sherah-breadcrumb__title">
                                             <i class="bi bi-journal-text me-2"></i>
-                                            @php $st=request('status'); @endphp
+                                            @php $st = request('status'); @endphp
                                             @switch($st)
                                                 @case('published')
                                                     Bài viết đã xuất bản
@@ -82,10 +76,6 @@
 
                                                 @case('draft')
                                                     Bài viết nháp
-                                                @break
-
-                                                @case('trash')
-                                                    Bài viết trong thùng rác
                                                 @break
 
                                                 @default
@@ -129,17 +119,17 @@
                             {{-- BẢNG --}}
                             <div class="sherah-table sherah-page-inner sherah-border sherah-default-bg mg-top-25">
                                 <div class="table-responsive">
-                                    <table class="posts-table align-middle">
+                                    <table class="sherah-table__main align-middle">
                                         <colgroup>
                                             <col style="width:90px;"> {{-- ID --}}
                                             <col style="width:180px;"> {{-- Ảnh --}}
-                                            <col> {{-- Tiêu đề (co giãn) --}}
-                                            <col> {{-- Nội dung (co giãn) --}}
+                                            <col> {{-- Tiêu đề --}}
+                                            <col> {{-- Nội dung --}}
                                             <col style="width:160px;"> {{-- Trạng thái --}}
                                             <col style="width:160px;"> {{-- Hành động --}}
                                         </colgroup>
 
-                                        <thead class="posts-head table-light">
+                                        <thead class="sherah-table__head">
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Ảnh</th>
@@ -150,19 +140,18 @@
                                             </tr>
                                         </thead>
 
-                                        <tbody class="posts-body">
-                                            @forelse($posts as $post)
+                                        <tbody class="sherah-table__body">
+                                            @forelse ($posts as $post)
                                                 <tr>
-                                                    {{-- Bỏ dấu # trước ID --}}
                                                     <td class="text-nowrap">{{ $post->id }}</td>
 
                                                     <td>
                                                         @if ($post->image)
                                                             <img class="post-thumb"
                                                                 src="{{ asset('storage/' . $post->image) }}"
-                                                                alt="thumb">
+                                                                alt="Ảnh bài viết">
                                                         @else
-                                                            <span class="text-muted">Không ảnh</span>
+                                                            <span class="text-muted">Không có ảnh</span>
                                                         @endif
                                                     </td>
 
@@ -174,81 +163,53 @@
                                                     </td>
 
                                                     <td>
-                                                        @if (request('status') === 'trash')
-                                                            <span class="badge bg-warning text-dark">Trong thùng rác</span>
+                                                        @if (!empty($post->published_at))
+                                                            <span
+                                                                class="btn btn-success btn-sm px-3 rounded-pill d-inline-flex align-items-center">
+                                                                <i class="bi bi-check2-circle me-1"></i> Xuất bản
+                                                            </span>
                                                         @else
-                                                            @if (!empty($post->published_at))
-                                                                <span
-                                                                    class="btn btn-success btn-sm px-3 rounded-pill d-inline-flex align-items-center">
-                                                                    <i class="bi bi-check2-circle me-1"></i> Xuất bản
-                                                                </span>
-                                                            @else
-                                                                <span
-                                                                    class="btn btn-secondary btn-sm px-3 rounded-pill d-inline-flex align-items-center">
-                                                                    <i class="bi bi-file-earmark-text me-1"></i> Nháp
-                                                                </span>
-                                                            @endif
+                                                            <span
+                                                                class="btn btn-secondary btn-sm px-3 rounded-pill d-inline-flex align-items-center">
+                                                                <i class="bi bi-file-earmark-text me-1"></i> Nháp
+                                                            </span>
                                                         @endif
                                                     </td>
 
                                                     <td>
-                                                        <div class="btn-group dropdown">
-                                                            <button type="button"
-                                                                class="btn btn-sm btn-light border dropdown-toggle d-flex align-items-center"
-                                                                data-bs-toggle="dropdown" data-bs-display="static"
-                                                                aria-expanded="false"
-                                                                onclick="event.preventDefault(); event.stopPropagation();">
-                                                                <i class="bi bi-gear-fill me-1 text-secondary"></i>
-                                                                Hành động
-                                                            </button>
+                                                        <div class="d-flex justify-content-center gap-2">
+                                                            {{-- Nút sửa --}}
+                                                            <a href="{{ route('admin.posts.edit', $post->id) }}"
+                                                                class="btn btn-sm btn-warning text-white d-flex align-items-center gap-1">
+                                                                <i class="bi bi-pencil-square"></i> Sửa
+                                                            </a>
 
-                                                            <ul
-                                                                class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 py-2">
-                                                                @if (request('status') === 'trash')
-                                                                    {{-- Không khôi phục / không xóa vĩnh viễn --}}
-                                                                    <li>
-                                                                        <span
-                                                                            class="dropdown-item text-muted d-flex align-items-center gap-2">
-                                                                            <i class="bi bi-info-circle"></i> Đang ở thùng
-                                                                            rác
-                                                                        </span>
-                                                                    </li>
-                                                                @else
-                                                                    <li>
-                                                                        <a href="{{ route('admin.posts.edit', $post->id) }}"
-                                                                            class="dropdown-item py-2 d-flex align-items-center gap-2">
-                                                                            <i
-                                                                                class="bi bi-pencil-square text-primary"></i>Sửa
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <form method="POST"
-                                                                            action="{{ route('admin.posts.destroy', $post->id) }}"
-                                                                            onsubmit="return confirm('Chuyển bài viết vào thùng rác?')"
-                                                                            class="m-0">
-                                                                            @csrf @method('DELETE')
-                                                                            <button type="submit"
-                                                                                class="dropdown-item py-2 text-danger d-flex align-items-center gap-2">
-                                                                                <i class="bi bi-trash3"></i>Xóa
-                                                                            </button>
-                                                                        </form>
-                                                                    </li>
-                                                                @endif
-                                                            </ul>
+                                                            {{-- Nút xóa --}}
+                                                            <form method="POST"
+                                                                action="{{ route('admin.posts.destroy', $post->id) }}"
+                                                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')"
+                                                                class="m-0">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="btn btn-sm btn-danger d-flex align-items-center gap-1">
+                                                                    <i class="bi bi-trash3"></i> Xóa
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center text-muted py-4">Chưa có bài viết
-                                                        nào.</td>
+                                                    <td colspan="6" class="text-center text-muted py-4">
+                                                        Không có bài viết nào.
+                                                    </td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {{-- Pagination: chỉ hiển thị khi là paginator (không đụng controller) --}}
                                 @if (is_object($posts) && method_exists($posts, 'links'))
                                     <div class="mt-3 d-flex justify-content-end">
                                         {{ $posts->appends(request()->all())->links('pagination::bootstrap-5') }}
