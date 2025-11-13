@@ -131,29 +131,23 @@
                                     </div>
                                 </div>
                             </div>
-
                             {{-- Xuất bản --}}
-                            <div class="col-12">
-                                <div class="form-check form-switch">
-                                    <input type="hidden" name="is_published" value="0">
-                                    <input class="form-check-input" type="checkbox" id="is_published" name="is_published"
-                                        value="1"
-                                        {{ old('is_published', !empty($post?->published_at)) ? 'checked' : '' }}>
-                                    <label class="form-check-label" for="is_published">Xuất bản ngay</label>
-                                </div>
+                            <div class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" id="is_published" name="is_published"
+                                    value="1" {{ old('is_published', $post->is_published ?? 0) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_published">
+                                    Xuất bản bài viết này
+                                </label>
+                            </div>
+                            {{-- Footer actions --}}
+                            <div class="post-actions d-flex justify-content-end gap-2">
+                                <a href="{{ route('admin.posts.index', ['status' => request('status')]) }}"
+                                    class="btn btn-light border">Hủy</a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check2 me-1"></i> Lưu
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    {{-- Footer actions --}}
-                    <div class="post-actions d-flex justify-content-end gap-2">
-                        <a href="{{ route('admin.posts.index', ['status' => request('status')]) }}"
-                            class="btn btn-light border">Hủy</a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check2 me-1"></i> Lưu
-                        </button>
-                    </div>
-                </div>
             </form>
         </div>
     </div>

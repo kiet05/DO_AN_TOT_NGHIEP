@@ -75,19 +75,11 @@
                                                 class="menu-bar__name">Đơn hàng</span></span></a></li>
                                 <li><a href="{{ route('admin.returns.index') }}"><span class="menu-bar__text"><span
                                                 class="menu-bar__name">Hoàn hàng</span></span></a></li>
-
+                                <li><a href="{{ route('admin.vouchers.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Vouchers</span></span></a></li>
                             </ul>
                         </div>
                     </li>
-
-
-
-
-
-
-
-
-
                     {{-- QUẢN LÝ TÀI KHOẢN --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
@@ -115,7 +107,6 @@
                             </ul>
                         </div>
                     </li>
-
                     {{-- Payment Methods --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
@@ -161,10 +152,6 @@
                             </ul>
                         </div>
                     </li>
-
-
-
-
                     {{-- QUẢN LÝ NỘI DUNG --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
@@ -225,22 +212,18 @@
                                         </span>
                                     </a>
                                 </li>
-
-                                {{-- Vouchers --}}
                                 <li>
-                                    <a href="{{ route('admin.vouchers.index') }}">
+                                    <a href="{{ route('admin.contacts.index') }}">
                                         <span class="menu-bar__text">
-                                            <span class="menu-bar__name">Vouchers</span>
+                                            <span class="menu-bar__name">Liên hệ & Hỗ trợ</span>
                                         </span>
                                     </a>
                                 </li>
 
+
                             </ul>
                         </div>
                     </li>
-
-
-
                     {{-- Login 
                     <li><a class="collapsed" href="login.html"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">

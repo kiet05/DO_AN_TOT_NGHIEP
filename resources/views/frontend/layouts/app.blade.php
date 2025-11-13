@@ -337,7 +337,8 @@
                     <span>Hotline: 0964942121 (8:30-21:30, Tất cả các ngày trong tuần)</span>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="#" class="text-white me-3">Liên hệ</a>
+                    {{-- link Liên hệ dẫn tới trang Liên hệ & Hỗ trợ --}}
+                    <a href="{{ route('contact.index') }}" class="text-white me-3">Liên hệ</a>
                     <a href="#" class="text-white">Thông báo của tôi</a>
                 </div>
             </div>
@@ -381,6 +382,11 @@
                 <div class="d-flex">
                     <a href="{{ route('home') }}" class="nav-link">Trang chủ</a>
                     <a href="{{ route('products.index') }}" class="nav-link">Sản phẩm</a>
+
+                    {{-- Link Liên hệ & Hỗ trợ trên menu chính --}}
+                    <a href="{{ route('contact.index') }}" class="nav-link">Liên hệ &amp; Hỗ trợ</a>
+                    {{-- Thêm dòng này --}}
+                    <a href="{{ route('blog.index') }}" class="nav-link">Tin tức / Blog</a>
                     @php
                         $navCategories = \App\Models\Category::whereNull('parent_id')
                             ->where('status', 1)
@@ -592,6 +598,22 @@
                     }
                 });
         };
+    </script>
+
+    {{-- Live chat Tawk.to: thay YOUR_TAWK_PROPERTY_ID bằng mã thật trong tài khoản Tawk.to của bạn --}}
+    <script type="text/javascript">
+        var Tawk_API = Tawk_API || {},
+            Tawk_LoadStart = new Date();
+        (function() {
+            var s1 = document.createElement("script"),
+                s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            // TODO: thay YOUR_TAWK_PROPERTY_ID/DEFAULT bằng mã Tawk.to thật
+            s1.src = 'https://embed.tawk.to/YOUR_TAWK_PROPERTY_ID/DEFAULT';
+            s1.charset = 'UTF-8';
+            s1.setAttribute('crossorigin', '*');
+            s0.parentNode.insertBefore(s1, s0);
+        })();
     </script>
 
     @stack('scripts')

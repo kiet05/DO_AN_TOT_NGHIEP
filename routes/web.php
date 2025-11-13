@@ -24,6 +24,9 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Frontend\BlogController;
 
 
 // ============================
@@ -32,6 +35,16 @@ use App\Http\Controllers\Frontend\CartController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
+
+// Liên hệ & Hỗ trợ (client)
+Route::get('/lien-he', [FrontendContactController::class, 'index'])->name('contact.index');
+Route::post('/lien-he', [FrontendContactController::class, 'store'])->name('contact.store');
+// Tin tức / Blog
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
+Route::post('/blog/{id}/comments', [BlogController::class, 'storeComment'])
+    ->middleware('auth')
+    ->name('blog.comments.store');
 
 // Giỏ hàng
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -133,7 +146,7 @@ Route::prefix('admin')
         Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
         Route::get('/orders/{order}/invoice/pdf', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.pdf');
 
-        //Customers
+        // Customers
         Route::prefix('customers')->name('customers.')->group(function () {
             // LIST + CREATE/STORE + EDIT/UPDATE + DELETE
             Route::get('/',            [CustomerController::class, 'index'])->name('index');
@@ -191,10 +204,15 @@ Route::prefix('admin')
         Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
         Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
 
-
         // Shop Settings
         Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
         Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
+
+        // Contacts (admin xem yêu cầu hỗ trợ)
+        Route::get('contacts', [AdminContactController::class, 'index'])
+            ->name('contacts.index');
+        Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
+            ->name('contacts.show');
     });
 
 // Payment routes (outside admin)
