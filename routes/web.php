@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReturnRequestController;
@@ -24,6 +25,14 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Livewire\Actions\Logout;
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\VerifyEmail;
+use App\Livewire\Auth\VerifyOtp;
 
 
 // ============================
@@ -47,6 +56,30 @@ Route::prefix('cart')->name('cart.')->group(function () {
         Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
     });
 });
+
+// ============================
+// 🔹 XÁC THỰC (AUTHENTICATION)
+// ============================
+Route::middleware('guest')->group(function () {
+    Route::get('login', Login::class)->name('login');
+    Route::get('verify-otp', VerifyOtp::class)->name('verify-otp');
+    Route::get('register', Register::class)->name('register');
+    Route::get('forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('reset-password/{token}', ResetPassword::class)->name('password.reset');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('verify-email', VerifyEmail::class)
+        ->name('verification.notice');
+
+    Route::get('verify-email/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+});
+
+Route::post('logout', Logout::class)
+    ->middleware('auth')
+    ->name('logout');
 
 // ============================
 // 🔹 TRANG CHỦ & DASHBOARD
@@ -203,5 +236,3 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
     Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
 });
-
-require __DIR__ . '/auth.php';

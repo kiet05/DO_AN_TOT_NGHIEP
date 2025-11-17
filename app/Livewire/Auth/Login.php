@@ -37,6 +37,13 @@ class Login extends Component
 
         // Kiểm tra thông tin đăng nhập
         $user = $this->validateCredentials();
+        $user->loadMissing('role');
+
+        // Admin đăng nhập trực tiếp, không cần OTP
+        if ($this->shouldBypassOtp($user)) {
+            $this->loginAndRedirect($user);
+            return;
+        }
 
         // ✅ Nếu đúng, tạo mã OTP và gửi email
         $otp = rand(100000, 999999);
@@ -48,18 +55,18 @@ class Login extends Component
             'expires_at' => Carbon::now()->addMinutes(5),
         ]);
 
-        // Gửi email chứa mã OTP (với try-catch để tránh lỗi nếu SMTP không cấu hình đúng)
+        // Gửi email chứa mã OTP
         try {
-            Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
+            Mail::raw("Mã xác thực đăng nhập của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.\n\nVui lòng không chia sẻ mã này với bất kỳ ai.", function ($message) use ($user) {
                 $message->to($user->email)
-                        ->subject('Mã xác thực đăng nhập (OTP)');
+                        ->subject('Mã xác thực đăng nhập (OTP) - EGA Gentlemen\'s Fashion');
             });
         } catch (\Exception $e) {
             \Log::error('Không thể gửi email OTP: ' . $e->getMessage());
-            // Nếu ở chế độ debug, hiển thị OTP trong session để test
-            if (config('app.debug')) {
-                Session::flash('otp_debug', "Mã OTP (chỉ hiển thị trong debug): {$otp}");
-            }
+            // Nếu không gửi được email, hiển thị lỗi cho user
+            throw ValidationException::withMessages([
+                'email' => 'Không thể gửi email OTP. Vui lòng thử lại sau hoặc liên hệ hỗ trợ.',
+            ]);
         }
 
         // Lưu thông tin tạm thời để xác minh OTP sau
@@ -115,6 +122,22 @@ class Login extends Component
     protected function throttleKey(): string
     {
         return Str::lower($this->email) . '|' . request()->ip();
+    }
+
+    protected function shouldBypassOtp(User $user): bool
+    {
+        return optional($user->role)->slug === 'admin';
+    }
+
+    protected function loginAndRedirect(User $user): void
+    {
+        Auth::login($user, $this->remember);
+        Session::regenerate();
+        RateLimiter::clear($this->throttleKey());
+
+        $routeName = optional($user->role)->slug === 'admin' ? 'admin.dashboard' : 'home';
+
+        $this->redirect(route($routeName), navigate: true);
     }
 
     public function render()

@@ -24,17 +24,20 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     }
     .auth-logo {
-        width: 60px;
-        height: 60px;
-        background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+        width: 80px;
+        height: 80px;
+        background: transparent;
         border-radius: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
         margin: 0 auto 20px;
+        padding: 5px;
+    }
+    .auth-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
     .auth-title {
         color: #2d3748;

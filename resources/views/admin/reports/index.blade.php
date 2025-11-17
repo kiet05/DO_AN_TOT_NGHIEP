@@ -24,6 +24,7 @@
               </div>
 
               {{-- Tabs Reports --}}
+              
           <!-- <div class="mg-top-10 mg-bottom-10"> -->
             <!-- <ul class="nav nav-pills">
               <li class="nav-item">

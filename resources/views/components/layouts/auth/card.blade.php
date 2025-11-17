@@ -8,9 +8,9 @@
             <div class="auth-container w-100" style="max-width: 420px; padding: 40px;">
                 <div class="text-center mb-4">
                     <div class="auth-logo">
-                        <i class="fas fa-shopping-bag"></i>
+                        <img src="{{ asset('logo-ega-icon.svg') }}" alt="EGA" style="width: 100%; height: 100%; object-fit: contain;">
                     </div>
-                    <h1 class="auth-title">{{ config('app.name', 'EGA') }}</h1>
+                    <p class="auth-subtitle" style="color: #718096; font-size: 12px; margin-top: 10px;">GENTLEMEN'S FASHION</p>
                 </div>
                 
                 {{ $slot }}
