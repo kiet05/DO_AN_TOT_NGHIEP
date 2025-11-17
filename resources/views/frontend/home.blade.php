@@ -3,30 +3,50 @@
 @section('title', 'Trang chủ - ' . config('app.name'))
 
 @section('content')
-    <!-- Hero Banner -->
-    @if(isset($banners) && $banners->count() > 0)
-    <section class="hero-banner mb-5">
-        <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-                @foreach($banners as $index => $banner)
+<!-- Hero Banner -->
+@if(isset($banners) && $banners->count() > 0)
+<section class="hero-banner mb-5">
+    <div id="bannerCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+
+            @foreach($banners as $index => $banner)
+                @php
+                    $path = $banner->image ?? $banner->image ?? null;
+
+                    if ($path && Storage::disk('public')->exists($path)) {
+                        $imgSrc = asset('storage/' . $path);
+                    } else {
+                        $imgSrc = asset('template/img/hero/hero-1.jpg'); // fallback
+                    }
+                @endphp
+
                 <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
-                    <a href="{{ $banner->link ?? '#' }}">
-                        <img src="{{ asset('storage/' . $banner->image) }}" class="d-block w-100" alt="{{ $banner->title }}" style="height: 500px; object-fit: cover;">
+                    <a href="{{ $banner->link ?? '#' }}" target="_blank">
+                        <img src="{{ $imgSrc }}"
+                             class="d-block w-100"
+                             alt="{{ $banner->title }}"
+                             onerror="this.src='{{ asset('template/img/hero/hero-1.jpg') }}'"
+                             style="height: 500px; object-fit: cover;">
                     </a>
                 </div>
-                @endforeach
-            </div>
-            @if($banners->count() > 1)
-            <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </button>
-            @endif
+            @endforeach
+
         </div>
-    </section>
-    @endif
+
+        @if($banners->count() > 1)
+        <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+        @endif
+
+    </div>
+</section>
+@endif
+
+
 
     <div class="container">
         <!-- Danh mục sản phẩm -->

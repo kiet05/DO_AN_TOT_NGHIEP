@@ -12,10 +12,10 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Lấy banners active
-        $banners = Banner::where('status', true)
+        // Lấy banners active (dùng cột image_url)
+        $banners = Banner::where('status', 1)
             ->orderBy('position', 'asc')
-            ->get();
+            ->get(['id', 'title', 'image', 'link']);
 
         // Lấy danh mục chính
         $categories = Category::whereNull('parent_id')
@@ -39,14 +39,19 @@ class HomeController extends Controller
             ->limit(12)
             ->get();
 
-        // Sản phẩm nổi bật (có thể thêm logic riêng)
+        // Sản phẩm nổi bật
         $featuredProducts = Product::where('status', 1)
             ->with(['category', 'images'])
             ->inRandomOrder()
             ->limit(12)
             ->get();
 
-        return view('frontend.home', compact('banners', 'categories', 'newProducts', 'saleProducts', 'featuredProducts'));
+        return view('frontend.home', compact(
+            'banners',
+            'categories',
+            'newProducts',
+            'saleProducts',
+            'featuredProducts'
+        ));
     }
 }
-

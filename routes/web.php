@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReturnRequestController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 use App\Http\Controllers\Frontend\CartController;
 

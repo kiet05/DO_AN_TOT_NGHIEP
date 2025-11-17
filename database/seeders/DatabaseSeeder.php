@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Str;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -14,21 +15,33 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // ✅ Gọi RoleSeeder trước để tạo roles
+        // 1) Gọi RoleSeeder (nên dùng updateOrCreate trong RoleSeeder)
         $this->call([
             RoleSeeder::class,
         ]);
 
-        // ✅ Tạo user Admin sau khi có roles
-        User::create([
-            'name' => 'Admin',
-            'slug' => Str::slug('Admin'),
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('123456'),
-            'role_id' => 1,
-        ]);
+        // 2) Lấy role admin (nếu chưa có, bạn có thể tạo một lần nữa bằng firstOrCreate)
+        $adminRole = Role::firstWhere('slug', 'admin');
+        if (!$adminRole) {
+            $adminRole = Role::create([
+                'name' => 'Quản trị viên',
+                'slug' => 'admin',
+                'description' => 'Toàn quyền quản lý hệ thống',
+            ]);
+        }
 
-        // ✅ Gọi các seeder khác
+        // 3) Tạo hoặc update user admin (không tạo duplicate email)
+        User::updateOrCreate(
+            ['email' => 'admin@gmail.com'], // điều kiện tìm
+            [
+                'name' => 'Admin',
+                'slug' => Str::slug('Admin'),
+                'password' => Hash::make('123456'),
+                'role_id' => $adminRole->id,
+            ]
+        );
+
+        // 4) Gọi các seeder khác (nếu cần)
         $this->call([
             PermissionSeeder::class,
             RolePermissionSeeder::class,
