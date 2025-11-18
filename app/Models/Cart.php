@@ -39,4 +39,6 @@ class Cart extends Model
         $this->update(['total_price' => $total]);
         return $total;
     }
+
 }
+

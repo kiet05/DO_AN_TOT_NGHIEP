@@ -4,6 +4,7 @@
 
 @section('content')
     <style>
+
         .sherah-table__main {
             table-layout: fixed;
             border-collapse: collapse;
@@ -26,23 +27,29 @@
         }
 
         /* Ảnh bài viết */
+
         .post-thumb {
             width: 160px;
             height: 90px;
             object-fit: cover;
+
             border-radius: 8px;
+
         }
 
         .post-title {
             max-width: 420px;
             white-space: nowrap;
             overflow: hidden;
+
             text-overflow: ellipsis;
+
         }
 
         .post-excerpt {
             white-space: nowrap;
             overflow: hidden;
+
             text-overflow: ellipsis;
         }
 
@@ -53,6 +60,7 @@
         .action-col {
             width: 160px;
         }
+
     </style>
 
     <section class="sherah-adashboard sherah-show">
@@ -63,12 +71,15 @@
                         <div class="sherah-dsinner">
 
                             {{-- Header + filter --}}
+
                             <div class="row mg-top-30">
                                 <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2">
                                     <div class="sherah-breadcrumb">
                                         <h2 class="sherah-breadcrumb__title">
                                             <i class="bi bi-journal-text me-2"></i>
+
                                             @php $st = request('status'); @endphp
+
                                             @switch($st)
                                                 @case('published')
                                                     Bài viết đã xuất bản
@@ -77,6 +88,7 @@
                                                 @case('draft')
                                                     Bài viết nháp
                                                 @break
+
 
                                                 @default
                                                     Tất cả bài viết
@@ -125,11 +137,13 @@
                                             <col style="width:180px;"> {{-- Ảnh --}}
                                             <col> {{-- Tiêu đề --}}
                                             <col> {{-- Nội dung --}}
+
                                             <col style="width:160px;"> {{-- Trạng thái --}}
                                             <col style="width:160px;"> {{-- Hành động --}}
                                         </colgroup>
 
                                         <thead class="sherah-table__head">
+
                                             <tr>
                                                 <th>ID</th>
                                                 <th>Ảnh</th>
@@ -140,18 +154,22 @@
                                             </tr>
                                         </thead>
 
+
                                         <tbody class="sherah-table__body">
                                             @forelse ($posts as $post)
                                                 <tr>
+
                                                     <td class="text-nowrap">{{ $post->id }}</td>
 
                                                     <td>
                                                         @if ($post->image)
                                                             <img class="post-thumb"
                                                                 src="{{ asset('storage/' . $post->image) }}"
+
                                                                 alt="Ảnh bài viết">
                                                         @else
                                                             <span class="text-muted">Không có ảnh</span>
+
                                                         @endif
                                                     </td>
 
@@ -163,6 +181,7 @@
                                                     </td>
 
                                                     <td>
+
                                                         @if (!empty($post->published_at))
                                                             <span
                                                                 class="btn btn-success btn-sm px-3 rounded-pill d-inline-flex align-items-center">
@@ -173,10 +192,12 @@
                                                                 class="btn btn-secondary btn-sm px-3 rounded-pill d-inline-flex align-items-center">
                                                                 <i class="bi bi-file-earmark-text me-1"></i> Nháp
                                                             </span>
+
                                                         @endif
                                                     </td>
 
                                                     <td>
+
                                                         <div class="d-flex justify-content-center gap-2">
                                                             {{-- Nút sửa --}}
                                                             <a href="{{ route('admin.posts.edit', $post->id) }}"
@@ -196,19 +217,23 @@
                                                                     <i class="bi bi-trash3"></i> Xóa
                                                                 </button>
                                                             </form>
+
                                                         </div>
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
+
                                                     <td colspan="6" class="text-center text-muted py-4">
                                                         Không có bài viết nào.
                                                     </td>
+
                                                 </tr>
                                             @endforelse
                                         </tbody>
                                     </table>
                                 </div>
+
 
                                 @if (is_object($posts) && method_exists($posts, 'links'))
                                     <div class="mt-3 d-flex justify-content-end">

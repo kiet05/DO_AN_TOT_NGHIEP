@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', config('app.name', 'EGA')) - Thời trang nam cao cấp</title>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         :root {
             --primary-color: #1a1a1a;
@@ -21,19 +22,19 @@
             --bg-light: #f8f8f8;
             --border-color: #e5e5e5;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Inter', sans-serif;
             color: var(--text-color);
             background-color: #fff;
         }
-        
+
         /* Header */
         .header-top {
             background-color: var(--primary-color);
@@ -41,6 +42,7 @@
             padding: 8px 0;
             font-size: 13px;
         }
+
         
         .header-main {
             background-color: #fff;
@@ -49,11 +51,12 @@
             top: 0;
             z-index: 1000;
         }
-        
+
         .logo img {
             max-height: 50px;
             width: auto;
         }
+
         
         .search-box {
             position: relative;
@@ -64,7 +67,7 @@
             border-radius: 4px;
             padding: 10px 40px 10px 15px;
         }
-        
+
         .search-box button {
             position: absolute;
             right: 5px;
@@ -74,7 +77,7 @@
             background: none;
             color: #666;
         }
-        
+
         .header-icons a {
             color: var(--text-color);
             font-size: 20px;
@@ -82,7 +85,7 @@
             text-decoration: none;
             position: relative;
         }
-        
+
         .header-icons .cart-count {
             position: absolute;
             top: -8px;
@@ -97,13 +100,13 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         /* Navigation */
         .main-nav {
             background-color: #fff;
             border-top: 1px solid var(--border-color);
         }
-        
+
         .main-nav .nav-link {
             color: var(--text-color);
             font-weight: 500;
@@ -111,6 +114,7 @@
             text-decoration: none;
             transition: color 0.3s;
         }
+
         
         .main-nav .nav-link:hover {
             color: var(--secondary-color);
@@ -124,6 +128,7 @@
             transition: transform 0.3s, box-shadow 0.3s;
             background: #fff;
         }
+
         
         .product-card:hover {
             transform: translateY(-5px);
@@ -135,13 +140,14 @@
             overflow: hidden;
             aspect-ratio: 1;
         }
-        
+
         .product-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transition: transform 0.3s;
         }
+
         
         .product-card:hover .product-image img {
             transform: scale(1.05);
@@ -158,6 +164,7 @@
             font-size: 12px;
             font-weight: 600;
         }
+
         
         .product-info {
             padding: 15px;
@@ -173,37 +180,37 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
-        
+
         .product-price {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .price-current {
             font-size: 16px;
             font-weight: 600;
             color: var(--text-color);
         }
-        
+
         .price-old {
             font-size: 14px;
             color: #999;
             text-decoration: line-through;
         }
-        
+
         .price-discount {
             font-size: 12px;
             color: #e74c3c;
             font-weight: 600;
         }
-        
+
         .product-actions {
             margin-top: 10px;
             display: flex;
             gap: 8px;
         }
-        
+
         .btn-add-cart {
             flex: 1;
             background: var(--primary-color);
@@ -214,6 +221,7 @@
             font-size: 13px;
             transition: background 0.3s;
         }
+
         
         .btn-add-cart:hover {
             background: #333;
@@ -228,6 +236,7 @@
             color: var(--text-color);
             transition: all 0.3s;
         }
+
         
         .btn-quick-view:hover {
             background: var(--bg-light);
@@ -240,18 +249,19 @@
             padding: 40px 0 20px;
             margin-top: 60px;
         }
-        
+
         .footer h5 {
             font-size: 16px;
             font-weight: 600;
             margin-bottom: 20px;
         }
-        
+
         .footer a {
             color: #ccc;
             text-decoration: none;
             transition: color 0.3s;
         }
+
         
         .footer a:hover {
             color: var(--secondary-color);
@@ -265,11 +275,13 @@
             width: 400px;
             height: 100vh;
             background: #fff;
+
             box-shadow: -2px 0 10px rgba(0,0,0,0.1);
             transition: right 0.3s;
             z-index: 2000;
             overflow-y: auto;
         }
+
         
         .cart-sidebar.open {
             right: 0;
@@ -281,6 +293,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+
             background: rgba(0,0,0,0.5);
             z-index: 1999;
             display: none;
@@ -297,7 +310,7 @@
             margin-bottom: 30px;
             text-align: center;
         }
-        
+
         /* Category Grid */
         .category-card {
             text-align: center;
@@ -309,12 +322,12 @@
             color: var(--text-color);
             display: block;
         }
-        
+
         .category-card:hover {
             border-color: var(--secondary-color);
             transform: translateY(-5px);
         }
-        
+
         .category-card img {
             width: 80px;
             height: 80px;
@@ -323,6 +336,7 @@
             margin-bottom: 15px;
         }
     </style>
+
     
     @stack('styles')
 </head>
@@ -335,13 +349,15 @@
                     <span>Hotline: 0964942121 (8:30-21:30, Tất cả các ngày trong tuần)</span>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="#" class="text-white me-3">Liên hệ</a>
+                    {{-- link Liên hệ dẫn tới trang Liên hệ & Hỗ trợ --}}
+                    <a href="{{ route('contact.index') }}" class="text-white me-3">Liên hệ</a>
+
                     <a href="#" class="text-white">Thông báo của tôi</a>
                 </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Header Main -->
     <header class="header-main">
         <div class="container">
@@ -359,15 +375,19 @@
                 </div>
                 <div class="col-md-3 text-end header-icons">
                     @auth
-                        <a href="{{ route('dashboard') }}"><i class="fas fa-user"></i></a>
+                        <a href="{{ url('/admin') }}"><i class="fas fa-user"></i></a>
                     @else
                         <a href="{{ route('login') }}"><i class="fas fa-user"></i></a>
                     @endauth
+
+
                     <a href="#" id="cart-toggle">
                         <i class="fas fa-shopping-bag"></i>
                         <span class="cart-count">0</span>
                     </a>
                 </div>
+
+
             </div>
         </div>
         
@@ -377,12 +397,19 @@
                 <div class="d-flex">
                     <a href="{{ route('home') }}" class="nav-link">Trang chủ</a>
                     <a href="{{ route('products.index') }}" class="nav-link">Sản phẩm</a>
+
+                    {{-- Link Liên hệ & Hỗ trợ trên menu chính --}}
+                    <a href="{{ route('contact.index') }}" class="nav-link">Liên hệ &amp; Hỗ trợ</a>
+                    {{-- Thêm dòng này --}}
+                    <a href="{{ route('blog.index') }}" class="nav-link">Tin tức / Blog</a>
+
                     @php
                         $navCategories = \App\Models\Category::whereNull('parent_id')
                             ->where('status', 1)
                             ->limit(6)
                             ->get();
                     @endphp
+
                     @foreach($navCategories as $category)
                         <a href="{{ route('products.index', ['category' => $category->id]) }}" class="nav-link">{{ $category->name }}</a>
                     @endforeach
@@ -390,12 +417,12 @@
             </div>
         </nav>
     </header>
-    
+
     <!-- Main Content -->
     <main>
         @yield('content')
     </main>
-    
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -430,7 +457,7 @@
             </div>
         </div>
     </footer>
-    
+
     <!-- Cart Sidebar -->
     <div class="cart-overlay" id="cart-overlay"></div>
     <div class="cart-sidebar" id="cart-sidebar">
@@ -444,13 +471,14 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Load cart count on page load
         function loadCartCount() {
             @auth
+
             fetch('{{ route("cart.count") }}')
                 .then(response => response.json())
                 .then(data => {
@@ -461,12 +489,14 @@
                     });
                 })
                 .catch(error => console.error('Error loading cart count:', error));
+
             @else
             const cartCountElements = document.querySelectorAll('.cart-count');
             cartCountElements.forEach(el => {
                 el.textContent = 0;
                 el.style.display = 'none';
             });
+
             @endauth
         }
         
@@ -479,6 +509,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading cart sidebar:', error);
+
                     document.getElementById('cart-content').innerHTML = '<p class="text-center text-muted">Có lỗi xảy ra khi tải giỏ hàng</p>';
                 });
         }
@@ -488,6 +519,7 @@
             e.preventDefault();
             @auth
             loadCartSidebar();
+
             @endauth
             document.getElementById('cart-sidebar').classList.add('open');
             document.getElementById('cart-overlay').classList.add('show');
@@ -497,17 +529,17 @@
             document.getElementById('cart-sidebar').classList.remove('open');
             document.getElementById('cart-overlay').classList.remove('show');
         });
-        
+
         document.getElementById('cart-overlay')?.addEventListener('click', function() {
             document.getElementById('cart-sidebar').classList.remove('open');
             this.classList.remove('show');
         });
-        
+
         // Load cart count on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadCartCount();
         });
-        
+
         // Global function to update cart count (used by other pages)
         window.updateCartCount = function(count) {
             const cartCountElements = document.querySelectorAll('.cart-count');
@@ -516,13 +548,14 @@
                 el.style.display = (count > 0) ? 'flex' : 'none';
             });
         };
-        
+
         // Global function to add to cart from product card
         window.addToCartFromCard = function(productId, variantId, event) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
             }
+
             
             const btn = event ? event.target.closest('button') : null;
             const originalText = btn ? btn.innerHTML : '';
@@ -531,6 +564,7 @@
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang thêm...';
             }
+
             
             fetch('{{ route("cart.add") }}', {
                 method: 'POST',

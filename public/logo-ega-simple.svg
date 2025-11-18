@@ -1,0 +1,27 @@
+<svg width="200" height="65" viewBox="0 0 200 65" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="simpleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2d2d2d;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="goldAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d4af37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f4d03f;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Premium border -->
+  <rect x="0" y="0" width="200" height="65" rx="10" fill="url(#simpleGrad)" opacity="0.05"/>
+  <rect x="0" y="0" width="200" height="65" rx="10" fill="none" stroke="url(#goldAccent)" stroke-width="2" opacity="0.3"/>
+  
+  <!-- EGA Text - Ultra Bold -->
+  <text x="100" y="42" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" 
+        font-size="38" font-weight="900" text-anchor="middle" fill="url(#simpleGrad)" letter-spacing="4">EGA</text>
+  
+  <!-- Premium line -->
+  <line x1="30" y1="48" x2="170" y2="48" stroke="url(#goldAccent)" stroke-width="2"/>
+  
+  <!-- Subtitle -->
+  <text x="100" y="58" font-family="'Helvetica Neue', Arial, sans-serif" 
+        font-size="8" text-anchor="middle" fill="#888" font-weight="600" letter-spacing="1.5">GENTLEMEN</text>
+</svg>

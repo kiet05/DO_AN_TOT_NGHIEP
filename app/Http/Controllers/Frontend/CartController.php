@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -383,4 +384,7 @@ class CartController extends Controller
 
         return $similarProducts;
     }
+
 }
+
+

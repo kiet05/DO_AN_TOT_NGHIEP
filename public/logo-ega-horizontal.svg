@@ -1,0 +1,38 @@
+<svg width="280" height="75" viewBox="0 0 280 75" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="premiumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#2d2d2d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a1a1a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d4af37;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f4d03f;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Premium badge/circle -->
+  <circle cx="37" cy="37.5" r="30" fill="url(#premiumGrad)"/>
+  <circle cx="37" cy="37.5" r="30" fill="none" stroke="url(#accentGrad)" stroke-width="2.5"/>
+  
+  <!-- Tie/Necktie icon (quý ông) -->
+  <g transform="translate(37, 37.5)">
+    <!-- Tie knot -->
+    <ellipse cx="0" cy="-8" rx="4" ry="5" fill="url(#accentGrad)"/>
+    <!-- Tie body -->
+    <path d="M -2 -3 L -1.5 12 L 1.5 12 L 2 -3 Z" fill="url(#accentGrad)"/>
+    <!-- Tie bottom -->
+    <path d="M -1.5 12 L -3 20 L 0 18 L 3 20 L 1.5 12 Z" fill="url(#accentGrad)"/>
+  </g>
+  
+  <!-- EGA Text - Bold & Premium -->
+  <text x="85" y="45" font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" 
+        font-size="42" font-weight="900" fill="url(#premiumGrad)" letter-spacing="3">EGA</text>
+  
+  <!-- Premium tagline -->
+  <text x="85" y="60" font-family="'Helvetica Neue', Arial, sans-serif" 
+        font-size="10" fill="#666" font-weight="600" letter-spacing="2">GENTLEMEN'S FASHION</text>
+  
+  <!-- Decorative line -->
+  <line x1="85" y1="52" x2="250" y2="52" stroke="url(#accentGrad)" stroke-width="1.5" opacity="0.6"/>
+</svg>

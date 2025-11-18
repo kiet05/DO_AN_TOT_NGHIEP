@@ -14,14 +14,15 @@ use Livewire\Attributes\Layout;
 #[Layout('components.layouts.auth')]
 class VerifyOtp extends Component
 {
-    public $otp_code;
-    public $cooldown = 0;  
+    public string $otp_code = '';
+    public int $cooldown = 0;  
 
     public function mount()
     {
         if (!session('2fa:user:id')) {
             return redirect()->route('login');
         }
+
         $userId = session('2fa:user:id');
         $user = User::find($userId);
         // ADMIN BỎ QUA OTP → ĐĂNG NHẬP NGAY
@@ -35,6 +36,12 @@ class VerifyOtp extends Component
 
     public function verify()
     {
+        $this->otp_code = preg_replace('/\D/', '', $this->otp_code ?? '');
+        if (strlen($this->otp_code) !== 6) {
+            $this->addError('otp_code', 'Mã OTP phải gồm 6 chữ số.');
+            return;
+        }
+
         $userId = session('2fa:user:id');
         $user = User::find($userId);
 
@@ -95,14 +102,18 @@ class VerifyOtp extends Component
         'expires_at' => now()->addMinutes(5),
     ]);
 
-    Mail::raw("Mã xác thực đăng nhập mới của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.", function ($message) use ($user) {
-        $message->to($user->email)
-                ->subject('Mã xác thực đăng nhập mới (OTP)');
-    });
-
-    $this->cooldown = 60; // 60 giây
-
-    $this->dispatch('toast', type: 'success', message: 'Mã OTP mới đã được gửi!');
+    try {
+        Mail::raw("Mã xác thực đăng nhập mới của bạn là: {$otp}\nMã có hiệu lực trong 5 phút.\n\nVui lòng không chia sẻ mã này với bất kỳ ai.", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('Mã xác thực đăng nhập mới (OTP) - EGA Gentlemen\'s Fashion');
+        });
+        
+        $this->cooldown = 60; // 60 giây
+        $this->dispatch('toast', type: 'success', message: 'Mã OTP mới đã được gửi đến email của bạn!');
+    } catch (\Exception $e) {
+        \Log::error('Không thể gửi email OTP: ' . $e->getMessage());
+        $this->dispatch('toast', type: 'error', message: 'Không thể gửi email OTP. Vui lòng thử lại sau.');
+    }
     
     }
 

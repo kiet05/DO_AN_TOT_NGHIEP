@@ -48,4 +48,6 @@ class HomeController extends Controller
 
         return view('frontend.home', compact('banners', 'categories', 'newProducts', 'saleProducts', 'featuredProducts'));
     }
+
 }
+

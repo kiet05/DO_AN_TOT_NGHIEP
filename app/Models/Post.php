@@ -4,14 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use App\Models\Comment;
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
-    protected $fillable = ['title', 'slug', 'content', 'image', 'published_at'];
-
+ protected $fillable = [
+        'title',
+        'content',
+        'slug',
+        'thumbnail',
+        'category',
+        'image',
+        'status',
+        'is_published',   
+        'published_at',
+    ];
     protected static function boot()
     {
         parent::boot();
@@ -22,4 +33,9 @@ class Post extends Model
             }
         });
     }
+
+    public function comments()
+{
+    return $this->hasMany(Comment::class)->latest();
+}
 }

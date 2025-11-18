@@ -6,8 +6,8 @@
         <!-- Logo -->
         <div class="logo sherah-sidebar-padding">
             <a href="{{ route('admin.dashboard') }}">
-                <img class="sherah-logo__main" src="{{ asset('logo-ega-horizontal.svg') }}" alt="EGA Fashion Shop"
-                    style="max-height: 50px; width: auto;">
+
+                <img class="sherah-logo__main" src="{{ asset('logo-ega-horizontal.svg') }}" alt="EGA Fashion Shop" style="max-height: 50px; width: auto;">
             </a>
             <div class="sherah__sicon close-icon d-xl-none">
                 <svg width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -75,20 +75,12 @@
                                                 class="menu-bar__name">Đơn hàng</span></span></a></li>
                                 <li><a href="{{ route('admin.returns.index') }}"><span class="menu-bar__text"><span
                                                 class="menu-bar__name">Hoàn hàng</span></span></a></li>
-
+                                <li><a href="{{ route('admin.vouchers.index') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Vouchers</span></span></a></li>
                             </ul>
                         </div>
                     </li>
 
-
-
-
-
-
-
-
-
-                    {{-- QUẢN LÝ TÀI KHOẢN --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-account-management">
@@ -98,6 +90,7 @@
                                         height="20" viewBox="0 0 24 24">
                                         <path
                                             d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+
                                     </svg>
                                 </span>
                                 <span class="menu-bar__name">Quản lý tài khoản</span>
@@ -116,7 +109,6 @@
                         </div>
                     </li>
 
-                    {{-- Payment Methods --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-item_payment_methods">
@@ -161,15 +153,12 @@
                             </ul>
                         </div>
                     </li>
-
-
-
-
                     {{-- QUẢN LÝ NỘI DUNG --}}
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
                             data-bs-target="#menu-content-management">
                             <span class="menu-bar__text">
+
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="18"
                                         height="18" viewBox="0 0 16 16" aria-hidden="true">
@@ -225,22 +214,18 @@
                                         </span>
                                     </a>
                                 </li>
-
-                                {{-- Vouchers --}}
                                 <li>
-                                    <a href="{{ route('admin.vouchers.index') }}">
+                                    <a href="{{ route('admin.contacts.index') }}">
                                         <span class="menu-bar__text">
-                                            <span class="menu-bar__name">Vouchers</span>
+                                            <span class="menu-bar__name">Liên hệ & Hỗ trợ</span>
                                         </span>
                                     </a>
                                 </li>
 
+
                             </ul>
                         </div>
                     </li>
-
-
-
                     {{-- Login 
                     <li><a class="collapsed" href="login.html"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">

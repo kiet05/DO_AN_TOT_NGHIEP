@@ -21,6 +21,15 @@ class OrderController extends Controller
             $filter = $this->canonicalStatus($request->status);
             $query->whereIn('order_status', $this->statusSynonyms($filter));
         }
+        // Lọc theo ID (chấp nhận #00087 hoặc 87)
+    if ($request->filled('id')) {
+        $raw = (string) $request->input('id');
+        $id  = preg_replace('/\D/', '', $raw); // bỏ mọi ký tự không phải số
+        if ($id !== '') {
+            $query->where('id', (int) $id);
+        }
+    }
+
 
         $orders = $query->orderBy('created_at', 'desc')->paginate(10);
         return view('admin.orders.index', compact('orders'));
@@ -46,7 +55,7 @@ class OrderController extends Controller
 
     // Cập nhật trạng thái đơn hàng
 
-    public function updateStatus(Request $request, \App\Models\Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
         // Chấp nhận cả biến thể cũ khi submit
         $valid = array_merge($this->allowedStatuses(), array_keys($this->legacyAliases()));
@@ -98,7 +107,7 @@ class OrderController extends Controller
 
 
 
-    public function invoice(\App\Models\Order $order)
+    public function invoice(Order $order)
     {
         if (method_exists($order, 'items')) {
             $order->load(['items.product']);
@@ -114,15 +123,17 @@ class OrderController extends Controller
     // }
 
 
-    public function downloadInvoice(\App\Models\Order $order)
-    {
-        if (method_exists($order, 'items')) {
-            $order->load(['items.product']);
-        }
-
-        $pdf = Pdf::loadView('admin.orders.invoice_pdf', compact('order'));
-        return $pdf->download('invoice_' . $order->id . '.pdf');
+    public function downloadInvoice(Order $order)
+{
+    if (method_exists($order, 'items')) {
+        $order->load(['items.product']);
     }
+
+    // Đổi tên view ở đây
+    $pdf = Pdf::loadView('admin.orders.invoice', compact('order'));
+
+    return $pdf->download('invoice_' . $order->id . '.pdf');
+}
 
 
 
