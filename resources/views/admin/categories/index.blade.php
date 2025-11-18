@@ -66,7 +66,7 @@
                                                     <div class="sherah-table__product-content">
                                                         <div
                                                             class="sherah-table__status {{ $category->status ? 'sherah-color3' : 'sherah-color2' }}">
-                                                            {{ $category->status ? 'Hoạn động' : 'Ẩn' }}
+                                                            {{ $category->status ? 'Hoạt động' : 'Ẩn' }}
                                                         </div>
                                                     </div>
                                                 </td>

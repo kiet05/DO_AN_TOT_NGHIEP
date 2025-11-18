@@ -13,24 +13,30 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'customer_id',
         'receiver_name',
         'receiver_phone',
         'receiver_address',
         'shipping_fee',
         'total_price',
         'final_amount',
-        'product_variant_id',
+        'voucher_id',
+        'payment_method_id',
         'payment_method',
         'payment_status',
         'order_status',
-                'payment_id',
-
+        'status',
     ];
 
     // Mỗi đơn hàng thuộc về 1 user
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function voucher()
