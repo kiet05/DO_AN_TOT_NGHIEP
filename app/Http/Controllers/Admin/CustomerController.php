@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 
+
+
 class CustomerController extends Controller
 {
     /**
@@ -257,4 +259,8 @@ private function log(int $userId, string $action, array $payload = []): void
 }
 
 
+
 }
+
+
+

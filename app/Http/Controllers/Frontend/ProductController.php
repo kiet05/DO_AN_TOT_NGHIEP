@@ -70,4 +70,7 @@ class ProductController extends Controller
 
         return view('frontend.products.show', compact('product', 'relatedProducts'));
     }
+
 }
+
+

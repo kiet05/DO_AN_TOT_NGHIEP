@@ -26,4 +26,6 @@ class ShopSetting extends Model
     {
         return $this->logo ? asset('storage/' . $this->logo) : null;
     }
+
 }
+

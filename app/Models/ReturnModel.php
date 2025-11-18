@@ -52,4 +52,6 @@ class ReturnModel extends Model
     {
         return [0 => 'pending', 1 => 'approved', 2 => 'rejected', 3 => 'refunding', 4 => 'completed'][$this->status] ?? 'pending';
     }
+
 }
+

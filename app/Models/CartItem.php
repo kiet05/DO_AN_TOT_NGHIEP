@@ -59,4 +59,6 @@ class CartItem extends Model
         $this->save();
         return $this->subtotal;
     }
+
 }
+

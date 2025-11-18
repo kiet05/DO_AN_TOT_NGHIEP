@@ -384,4 +384,7 @@ class CartController extends Controller
 
         return $similarProducts;
     }
+
 }
+
+

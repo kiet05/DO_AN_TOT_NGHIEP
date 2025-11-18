@@ -136,6 +136,7 @@
                                 </div>
                             </div>
 
+
                             {{-- Xuất bản --}}
                             <div class="form-check mt-3">
                                 <input class="form-check-input" type="checkbox" id="is_published" name="is_published"
@@ -155,6 +156,7 @@
                                 </button>
                             </div>
                         </div>
+
             </form>
         </div>
     </div>

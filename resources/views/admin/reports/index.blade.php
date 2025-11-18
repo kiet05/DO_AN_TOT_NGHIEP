@@ -15,17 +15,18 @@
                 <div class="col-12 sherah-flex-between">
                   <div class="sherah-breadcrumb">
                     <h2 class="sherah-breadcrumb__title">Thống kê & Báo cáo</h2>
-                    <ul class="sherah-breadcrumb__list">
+                    <!-- <ul class="sherah-breadcrumb__list">
                       <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                       <li class="active">Reports</li>
-                    </ul>
+                    </ul> -->
                   </div>
                 </div>
               </div>
 
               {{-- Tabs Reports --}}
-          <div class="mg-top-10 mg-bottom-10">
-            <ul class="nav nav-pills">
+              
+          <!-- <div class="mg-top-10 mg-bottom-10"> -->
+            <!-- <ul class="nav nav-pills">
               <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}"
                   href="{{ route('admin.reports.index') }}">
@@ -51,7 +52,7 @@
                 </a>
               </li>
             </ul>
-          </div>
+          </div> -->
 
 
               {{-- Bộ lọc thời gian --}}

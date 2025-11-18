@@ -89,4 +89,6 @@ class ShopSettingController extends Controller
             ->route('admin.shop-settings.edit')
             ->with('success', 'Cập nhật thông tin shop thành công!');
     }
+
 }
+

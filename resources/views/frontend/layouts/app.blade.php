@@ -43,9 +43,10 @@
             font-size: 13px;
         }
 
+        
         .header-main {
             background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -56,10 +57,11 @@
             width: auto;
         }
 
+        
         .search-box {
             position: relative;
         }
-
+        
         .search-box input {
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -113,10 +115,11 @@
             transition: color 0.3s;
         }
 
+        
         .main-nav .nav-link:hover {
             color: var(--secondary-color);
         }
-
+        
         /* Product Card */
         .product-card {
             border: 1px solid var(--border-color);
@@ -126,11 +129,12 @@
             background: #fff;
         }
 
+        
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
+        
         .product-image {
             position: relative;
             overflow: hidden;
@@ -144,10 +148,11 @@
             transition: transform 0.3s;
         }
 
+        
         .product-card:hover .product-image img {
             transform: scale(1.05);
         }
-
+        
         .product-badge {
             position: absolute;
             top: 10px;
@@ -160,10 +165,11 @@
             font-weight: 600;
         }
 
+        
         .product-info {
             padding: 15px;
         }
-
+        
         .product-name {
             font-size: 14px;
             font-weight: 500;
@@ -216,10 +222,11 @@
             transition: background 0.3s;
         }
 
+        
         .btn-add-cart:hover {
             background: #333;
         }
-
+        
         .btn-quick-view {
             background: #fff;
             border: 1px solid var(--border-color);
@@ -230,10 +237,11 @@
             transition: all 0.3s;
         }
 
+        
         .btn-quick-view:hover {
             background: var(--bg-light);
         }
-
+        
         /* Footer */
         .footer {
             background-color: var(--primary-color);
@@ -254,10 +262,11 @@
             transition: color 0.3s;
         }
 
+        
         .footer a:hover {
             color: var(--secondary-color);
         }
-
+        
         /* Cart Sidebar */
         .cart-sidebar {
             position: fixed;
@@ -266,31 +275,34 @@
             width: 400px;
             height: 100vh;
             background: #fff;
-            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
             transition: right 0.3s;
             z-index: 2000;
             overflow-y: auto;
         }
 
+        
         .cart-sidebar.open {
             right: 0;
         }
-
+        
         .cart-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+
+            background: rgba(0,0,0,0.5);
             z-index: 1999;
             display: none;
         }
-
+        
         .cart-overlay.show {
             display: block;
         }
-
+        
         /* Section Title */
         .section-title {
             font-size: 24px;
@@ -325,9 +337,9 @@
         }
     </style>
 
+    
     @stack('styles')
 </head>
-
 <body>
     <!-- Header Top -->
     <div class="header-top">
@@ -339,6 +351,7 @@
                 <div class="col-md-6 text-end">
                     {{-- link Liên hệ dẫn tới trang Liên hệ & Hỗ trợ --}}
                     <a href="{{ route('contact.index') }}" class="text-white me-3">Liên hệ</a>
+
                     <a href="#" class="text-white">Thông báo của tôi</a>
                 </div>
             </div>
@@ -367,15 +380,17 @@
                         <a href="{{ route('login') }}"><i class="fas fa-user"></i></a>
                     @endauth
 
+
                     <a href="#" id="cart-toggle">
                         <i class="fas fa-shopping-bag"></i>
                         <span class="cart-count">0</span>
                     </a>
                 </div>
 
+
             </div>
         </div>
-
+        
         <!-- Navigation -->
         <nav class="main-nav">
             <div class="container">
@@ -387,15 +402,16 @@
                     <a href="{{ route('contact.index') }}" class="nav-link">Liên hệ &amp; Hỗ trợ</a>
                     {{-- Thêm dòng này --}}
                     <a href="{{ route('blog.index') }}" class="nav-link">Tin tức / Blog</a>
+
                     @php
                         $navCategories = \App\Models\Category::whereNull('parent_id')
                             ->where('status', 1)
                             ->limit(6)
                             ->get();
                     @endphp
-                    @foreach ($navCategories as $category)
-                        <a href="{{ route('products.index', ['category' => $category->id]) }}"
-                            class="nav-link">{{ $category->name }}</a>
+
+                    @foreach($navCategories as $category)
+                        <a href="{{ route('products.index', ['category' => $category->id]) }}" class="nav-link">{{ $category->name }}</a>
                     @endforeach
                 </div>
             </div>
@@ -462,7 +478,8 @@
         // Load cart count on page load
         function loadCartCount() {
             @auth
-            fetch('{{ route('cart.count') }}')
+
+            fetch('{{ route("cart.count") }}')
                 .then(response => response.json())
                 .then(data => {
                     const cartCountElements = document.querySelectorAll('.cart-count');
@@ -472,39 +489,42 @@
                     });
                 })
                 .catch(error => console.error('Error loading cart count:', error));
-        @else
+
+            @else
             const cartCountElements = document.querySelectorAll('.cart-count');
             cartCountElements.forEach(el => {
                 el.textContent = 0;
                 el.style.display = 'none';
             });
-        @endauth
-        }
 
+            @endauth
+        }
+        
         // Load cart sidebar content
         function loadCartSidebar() {
-            fetch('{{ route('cart.sidebar') }}')
+            fetch('{{ route("cart.sidebar") }}')
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('cart-content').innerHTML = data.html;
                 })
                 .catch(error => {
                     console.error('Error loading cart sidebar:', error);
-                    document.getElementById('cart-content').innerHTML =
-                        '<p class="text-center text-muted">Có lỗi xảy ra khi tải giỏ hàng</p>';
+
+                    document.getElementById('cart-content').innerHTML = '<p class="text-center text-muted">Có lỗi xảy ra khi tải giỏ hàng</p>';
                 });
         }
-
+        
         // Cart Toggle
         document.getElementById('cart-toggle')?.addEventListener('click', function(e) {
             e.preventDefault();
             @auth
             loadCartSidebar();
-        @endauth
-        document.getElementById('cart-sidebar').classList.add('open'); document.getElementById('cart-overlay')
-        .classList.add('show');
-        });
 
+            @endauth
+            document.getElementById('cart-sidebar').classList.add('open');
+            document.getElementById('cart-overlay').classList.add('show');
+        });
+        
         document.getElementById('cart-close')?.addEventListener('click', function() {
             document.getElementById('cart-sidebar').classList.remove('open');
             document.getElementById('cart-overlay').classList.remove('show');
@@ -536,87 +556,73 @@
                 event.stopPropagation();
             }
 
+            
             const btn = event ? event.target.closest('button') : null;
             const originalText = btn ? btn.innerHTML : '';
-
+            
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang thêm...';
             }
 
-            fetch('{{ route('cart.add') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        product_variant_id: variantId,
-                        quantity: 1
-                    })
+            
+            fetch('{{ route("cart.add") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_variant_id: variantId,
+                    quantity: 1
                 })
-                .then(response => {
-                    // Check if response is 401 (Unauthenticated)
-                    if (response.status === 401) {
-                        return response.json().then(data => {
-                            if (confirm(data.message + '\n\nBạn có muốn đăng nhập ngay bây giờ?')) {
-                                window.location.href = '{{ route('login') }}';
-                            }
-                            throw new Error('Unauthenticated');
-                        });
+            })
+            .then(response => {
+                // Check if response is 401 (Unauthenticated)
+                if (response.status === 401) {
+                    return response.json().then(data => {
+                        if (confirm(data.message + '\n\nBạn có muốn đăng nhập ngay bây giờ?')) {
+                            window.location.href = '{{ route("login") }}';
+                        }
+                        throw new Error('Unauthenticated');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Update cart count
+                    if (window.updateCartCount) {
+                        window.updateCartCount(data.cart_count);
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // Update cart count
-                        if (window.updateCartCount) {
-                            window.updateCartCount(data.cart_count);
-                        }
-
-                        // Show success message (you can replace with toast notification)
-                        if (typeof showToast === 'function') {
-                            showToast('success', data.message || 'Đã thêm vào giỏ hàng!');
-                        } else {
-                            alert(data.message || 'Đã thêm vào giỏ hàng!');
-                        }
+                    
+                    // Show success message (you can replace with toast notification)
+                    if (typeof showToast === 'function') {
+                        showToast('success', data.message || 'Đã thêm vào giỏ hàng!');
                     } else {
-                        alert(data.message || 'Có lỗi xảy ra');
+                        alert(data.message || 'Đã thêm vào giỏ hàng!');
                     }
-                })
-                .catch(error => {
-                    if (error.message !== 'Unauthenticated') {
-                        console.error('Error:', error);
-                        alert('Có lỗi xảy ra khi thêm vào giỏ hàng');
-                    }
-                })
-                .finally(() => {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
-                    }
-                });
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                if (error.message !== 'Unauthenticated') {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi thêm vào giỏ hàng');
+                }
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
         };
     </script>
-
-    {{-- Live chat Tawk.to: thay YOUR_TAWK_PROPERTY_ID bằng mã thật trong tài khoản Tawk.to của bạn --}}
-    <script type="text/javascript">
-        var Tawk_API = Tawk_API || {},
-            Tawk_LoadStart = new Date();
-        (function() {
-            var s1 = document.createElement("script"),
-                s0 = document.getElementsByTagName("script")[0];
-            s1.async = true;
-            // TODO: thay YOUR_TAWK_PROPERTY_ID/DEFAULT bằng mã Tawk.to thật
-            s1.src = 'https://embed.tawk.to/YOUR_TAWK_PROPERTY_ID/DEFAULT';
-            s1.charset = 'UTF-8';
-            s1.setAttribute('crossorigin', '*');
-            s0.parentNode.insertBefore(s1, s0);
-        })();
-    </script>
-
+    
     @stack('scripts')
 </body>
-
 </html>
+

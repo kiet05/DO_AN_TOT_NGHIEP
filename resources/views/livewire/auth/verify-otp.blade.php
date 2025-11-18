@@ -34,22 +34,19 @@
         @enderror
 
         <div class="flex flex-col gap-4">
-            <flux:button type="submit" variant="primary" class="w-full">
+            <flux:button type="submit" variant="primary" class="w-full font-semibold tracking-wide uppercase">
                 {{ __('Xác minh') }}
             </flux:button>
 
-            <div class="flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span wire:loading.remove wire:target="resendOtp">
-                    {{ __('Không nhận được mã?') }}
-                </span>
-
+            <div class="flex flex-col items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>{{ __('Không nhận được mã?') }}</span>
                 <flux:button
-                    variant="ghost"
+                    variant="outline"
                     type="button"
                     wire:click="resendOtp"
                     wire:loading.attr="disabled"
                     wire:target="resendOtp"
-                    class="p-0 text-blue-600 hover:underline"
+                    class="px-4 py-2 text-blue-600 border-blue-200 hover:border-blue-400 hover:text-blue-700 transition rounded-full"
                 >
                     <span wire:loading.remove wire:target="resendOtp">{{ __('Gửi lại OTP') }}</span>
                     <span wire:loading wire:target="resendOtp">{{ __('Đang gửi...') }}</span>
@@ -57,19 +54,19 @@
             </div>
 
             @if ($cooldown > 0)
-    <p class="text-center text-xs text-gray-500">
-        {{ __('Bạn có thể gửi lại mã sau') }}
-        <strong id="otp-countdown" data-seconds="{{ $cooldown }}">{{ $cooldown }}</strong>
-        {{ __('giây.') }}
-    </p>
-@endif
+                <p class="text-center text-xs text-gray-500">
+                    {{ __('Bạn có thể gửi lại mã sau') }}
+                    <strong id="otp-countdown" data-seconds="{{ $cooldown }}">{{ $cooldown }}</strong>
+                    {{ __('giây.') }}
+                </p>
+            @endif
 
         </div>
     </form>
 </div>
 @push('scripts')
 <script>
-    document.addEventListener('livewire:navigated', () => {
+    const initOtpCountdown = () => {
         const countdownEl = document.getElementById('otp-countdown');
         if (!countdownEl) return;
 
@@ -86,6 +83,9 @@
             }
             countdownEl.textContent = seconds;
         }, 1000);
-    });
+    };
+
+    document.addEventListener('DOMContentLoaded', initOtpCountdown);
+    document.addEventListener('livewire:navigated', initOtpCountdown);
 </script>
 @endpush
