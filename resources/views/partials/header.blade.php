@@ -395,21 +395,26 @@
 
                                         <!-- Header Author -->
                                         <div class="sherah-header__author sherah-flex__center--top">
+                                            @php
+                                                $authUser = auth()->user();
+                                                $topAvatar = 'img/profile-pic.png';
+                                                if ($authUser && !empty($authUser->avatar)) {
+                                                    $candidate = public_path('storage/avatars/' . $authUser->avatar);
+                                                    if (file_exists($candidate)) {
+                                                        $topAvatar = asset('storage/avatars/' . $authUser->avatar) . '?v=' . filemtime($candidate);
+                                                    }
+                                                }
+                                            @endphp
                                             <div class="sherah-header__author-img">
-                                                <img src="img/profile-pic.png" alt="#">
+                                                <img src="{{ $topAvatar }}" alt="{{ optional($authUser)->name ?? 'User' }}">
                                             </div>
                                             <div class="sherah-header__author--info sherah-dflex sherah-dflex__base">
-                                                <h4
-                                                    class="sherah-header__author--title  sherah-dflex sherah-dflex__column">
-                                                    Anthony <span class="sherah-header__author--text">USA</span></h4>
-                                                <svg class="sherah-default__fill sherah-default__arrow"
-                                                    xmlns="http://www.w3.org/2000/svg" width="10.621" height="5.836"
-                                                    viewBox="0 0 10.621 5.836">
-                                                    <g id="Arrow_Icon" data-name="Arrow Icon"
-                                                        transform="translate(1599.621 7.836) rotate(180)">
-                                                        <path id="Path_193" data-name="Path 193"
-                                                            d="M607.131,421.81c-.063.06-.118.11-.171.163q-2.071,2.065-4.144,4.127a.91.91,0,0,1-.36.224.5.5,0,0,1-.553-.234.519.519,0,0,1,.042-.618,2.213,2.213,0,0,1,.171-.181l4.523-4.51c.368-.367.617-.367.987,0l4.538,4.525a1.725,1.725,0,0,1,.168.183.521.521,0,0,1-.052.7.533.533,0,0,1-.7.039,1.815,1.815,0,0,1-.166-.156l-4.112-4.1C607.249,421.919,607.193,421.869,607.131,421.81Z"
-                                                            transform="translate(987.179 -418.507)" />
+                                                <h4 class="sherah-header__author--title  sherah-dflex sherah-dflex__column">
+                                                    {{ optional($authUser)->name ?? 'Account' }} <span class="sherah-header__author--text">{{ optional($authUser)->country ?? '' }}</span>
+                                                </h4>
+                                                <svg class="sherah-default__fill sherah-default__arrow" xmlns="http://www.w3.org/2000/svg" width="10.621" height="5.836" viewBox="0 0 10.621 5.836">
+                                                    <g id="Arrow_Icon" data-name="Arrow Icon" transform="translate(1599.621 7.836) rotate(180)">
+                                                        <path id="Path_193" data-name="Path 193" d="M607.131,421.81c-.063.06-.118.11-.171.163q-2.071,2.065-4.144,4.127a.91.91,0,0,1-.36.224.5.5,0,0,1-.553-.234.519.519,0,0,1,.042-.618,2.213,2.213,0,0,1,.171-.181l4.523-4.51c.368-.367.617-.367.987,0l4.538,4.525a1.725,1.725,0,0,1,.168.183.521.521,0,0,1-.052.7.533.533,0,0,1-.7.039,1.815,1.815,0,0,1-.166-.156l-4.112-4.1C607.249,421.919,607.193,421.869,607.131,421.81Z" transform="translate(987.179 -418.507)" />
                                                     </g>
                                                 </svg>
                                             </div>
@@ -448,7 +453,7 @@
 
                                                             </div>
                                                             <h4 class="sherah-dropdown-card-name"><a
-                                                                    href="profile-info.html">My Profile</a></h4>
+    href="{{ route('admin.profile.index') }}">My Profile</a></h4>
                                                         </div>
                                                     </li>
                                                     <li>

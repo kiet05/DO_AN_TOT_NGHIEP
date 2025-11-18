@@ -122,7 +122,6 @@
                                             <col style="width:180px;"> {{-- Họ tên --}}
                                             <col style="width:220px;"> {{-- Email --}}
                                             <col style="width:130px;"> {{-- SĐT --}}
-                                            <col> {{-- Tiêu đề --}}
                                             <col style="width:130px;"> {{-- Trạng thái --}}
                                             <col style="width:160px;"> {{-- Thời gian --}}
                                             <col style="width:140px;"> {{-- Hành động --}}
@@ -134,7 +133,6 @@
                                                 <th>Họ tên</th>
                                                 <th>Email</th>
                                                 <th>SĐT</th>
-                                                <th>Tiêu đề</th>
                                                 <th class="ct-status-col">Trạng thái</th>
                                                 <th>Thời gian</th>
                                                 <th class="ct-action-col">Hành động</th>
@@ -150,9 +148,7 @@
                                                         {{ $contact->email }}
                                                     </td>
                                                     <td>{{ $contact->phone }}</td>
-                                                    <td class="ct-subject" title="{{ $contact->subject }}">
-                                                        {{ $contact->subject }}
-                                                    </td>
+                                                   
                                                     <td>
                                                         @if ($contact->status === 'new')
                                                             <span class="badge bg-danger">Mới</span>

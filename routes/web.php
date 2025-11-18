@@ -141,7 +141,13 @@ Route::prefix('admin')
 
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
+        
+// ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
+        Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])
+            ->name('profile.index'); // Tên đầy đủ sẽ là admin.profile.index
 
+        Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])
+            ->name('profile.update'); // Tên đầy đủ sẽ là admin.profile.update
         // 🧱 Banners
         Route::resource('banners', BannerController::class)->except(['show']);
         Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');

@@ -75,7 +75,7 @@
                                                 <td class="sherah-table__column-5 sherah-table__data-5">
                                                     <div class="sherah-table__product-content">
                                                         <p class="sherah-table__product-desc">
-                                                            {{ $category->created_at->format('d M, Y H:i') }}</p>
+                                                            {{ $category->created_at?->format('d M, Y H:i') }}</p>
                                                     </div>
                                                 </td>
 
@@ -83,7 +83,7 @@
                                                 <td class="sherah-table__column-6 sherah-table__data-6">
                                                     <div class="sherah-table__product-content">
                                                         <p class="sherah-table__product-desc">
-                                                            {{ $category->updated_at->format('d M, Y H:i') }}</p>
+                                                            {{ $category->updated_at?->format('d M, Y H:i') }}</p>
                                                     </div>
                                                 </td>
 

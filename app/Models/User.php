@@ -8,6 +8,14 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
+/**
+ * App\Models\User
+ *
+ * @property int $id
+ * @property string $name
+ * @property string|null $avatar
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -16,11 +24,11 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
-            'slug',   // ⚠️ thêm dòng này
-
+        'slug',   
         'password',
         'address',
         'role_id',
+        'avatar',
         'status',
         'two_factor_secret',
         'two_factor_recovery_codes',
@@ -52,6 +60,7 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class, 'role_id');
     }
+    
 
     public function orders()
     {
