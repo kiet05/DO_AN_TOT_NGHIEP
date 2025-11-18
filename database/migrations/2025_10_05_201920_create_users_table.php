@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,8 +12,9 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name', 100);
-$table->string('slug')->nullable();
+            $table->string('slug')->nullable();
             $table->string('email', 255)->unique();
+            $table->string('avatar')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('phone', 20)->nullable();
             $table->string('password', 255);
@@ -31,6 +33,11 @@ $table->string('slug')->nullable();
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::dropIfExists('users');
+
+        // Kích hoạt lại kiểm tra khóa ngoại
+        Schema::enableForeignKeyConstraints();
     }
 };
