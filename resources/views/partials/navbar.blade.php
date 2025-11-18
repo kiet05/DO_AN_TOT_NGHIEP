@@ -229,8 +229,8 @@
                             </ul>
                         </div>
                     </li>
-                    {{-- Login 
-                    <li><a class="collapsed" href="login.html"><span class="menu-bar__text">
+                    {{-- Login --}}
+                    {{-- <li><a class="collapsed" href="{{ }}"><span class="menu-bar__text">
                                 <span class="sherah-menu-icon sherah-svg-icon__v1">
                                     <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="19.103"
                                         height="23.047" viewBox="0 0 19.103 23.047">
@@ -247,9 +247,8 @@
                                         </g>
                                     </svg>
                                 </span>
-                                <span class="menu-bar__name">Login</span></span></a></span>
-                    </li>
---}}
+                                <span class="menu-bar__name">Website</span></span></a></span>
+                    </li> --}}
                 </ul>
             </div>
             <!-- End Nav Menu -->

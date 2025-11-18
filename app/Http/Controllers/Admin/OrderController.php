@@ -22,13 +22,13 @@ class OrderController extends Controller
             $query->whereIn('order_status', $this->statusSynonyms($filter));
         }
         // Lọc theo ID (chấp nhận #00087 hoặc 87)
-    if ($request->filled('id')) {
-        $raw = (string) $request->input('id');
-        $id  = preg_replace('/\D/', '', $raw); // bỏ mọi ký tự không phải số
-        if ($id !== '') {
-            $query->where('id', (int) $id);
+        if ($request->filled('id')) {
+            $raw = (string) $request->input('id');
+            $id  = preg_replace('/\D/', '', $raw); // bỏ mọi ký tự không phải số
+            if ($id !== '') {
+                $query->where('id', (int) $id);
+            }
         }
-    }
 
 
         $orders = $query->orderBy('created_at', 'desc')->paginate(10);
@@ -95,14 +95,16 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $items = method_exists($order, 'items')
-            ? $order->items()->with('product')->get()
-            : collect();
+        // nạp luôn quan hệ để view xài
+        $order->load([
+            'orderItems.product',                  // $it->product
+            'orderItems.productVariant',           // $it->productVariant
+            'orderItems.productVariant.attributeValues', // nếu muốn show phân loại
+        ]);
 
-        $from         = $this->canonicalStatus($order->order_status);
-        $allowedNext  = $this->statusMatrix()[$from] ?? [];
-
-        return view('admin.orders.show', compact('order', 'items', 'allowedNext'));
+        $from        = $this->canonicalStatus($order->order_status);
+        $allowedNext = $this->statusMatrix()[$from] ?? [];
+        return view('admin.orders.show', compact('order', 'allowedNext'));
     }
 
 
@@ -124,16 +126,16 @@ class OrderController extends Controller
 
 
     public function downloadInvoice(Order $order)
-{
-    if (method_exists($order, 'items')) {
-        $order->load(['items.product']);
+    {
+        if (method_exists($order, 'items')) {
+            $order->load(['items.product']);
+        }
+
+        // Đổi tên view ở đây
+        $pdf = Pdf::loadView('admin.orders.invoice', compact('order'));
+
+        return $pdf->download('invoice_' . $order->id . '.pdf');
     }
-
-    // Đổi tên view ở đây
-    $pdf = Pdf::loadView('admin.orders.invoice', compact('order'));
-
-    return $pdf->download('invoice_' . $order->id . '.pdf');
-}
 
 
 

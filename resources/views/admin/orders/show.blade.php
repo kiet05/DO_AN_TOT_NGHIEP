@@ -86,16 +86,19 @@
 
                     <div class="row g-3">
                         {{-- Khách hàng --}}
-                        <div class="col-lg-6">
-                            <div class="card shadow-sm border-0 h-100">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="">
                                 <div class="card-header bg-light fw-semibold">Thông tin khách hàng</div>
                                 <div class="card-body">
                                     <div class="mb-2"><span class="text-muted">Họ tên:</span>
-                                        <strong>{{ $order->receiver_name }}</strong></div>
+                                        <strong>{{ $order->receiver_name }}</strong>
+                                    </div>
                                     <div class="mb-2"><span class="text-muted">Điện thoại:</span>
-                                        <strong>{{ $order->receiver_phone }}</strong></div>
-                                    <div class="mb-0"><span class="text-muted">Địa chỉ:</span>
-                                        <strong>{{ $order->receiver_address }}</strong></div>
+                                        <strong>{{ $order->receiver_phone }}</strong>
+                                    </div>
+                                    <div class="mb-0"><span class="text-muted">Địa chỉ nhận hàng:</span>
+                                        <strong>{{ $order->receiver_address }}</strong>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -246,7 +249,7 @@
                                         <tr>
                                             <th width="64">Ảnh</th>
                                             <th>Sản phẩm</th>
-                                            <th>SKU/Variant</th>
+                                            <th>Phân loại</th>
                                             <th class="text-end">Giá</th>
                                             <th class="text-end">SL</th>
                                             <th class="text-end">Thành tiền</th>
@@ -254,17 +257,31 @@
                                     </thead>
                                     <tbody>
                                         @php $subTotal = 0; @endphp
-                                        @forelse(($order->items ?? []) as $it)
+
+                                        @forelse($order->orderItems as $it)
                                             @php
                                                 $price = (float) ($it->price ?? 0);
                                                 $qty = (int) ($it->quantity ?? 0);
                                                 $line = $price * $qty;
                                                 $subTotal += $line;
-                                                $product = $it->product ?? null;
-                                                $img =
-                                                    $product && $product->image_main
-                                                        ? asset($product->image_main)
-                                                        : 'https://placehold.co/300x300?text=IMG';
+
+                                                $product = $it->product;
+                                                $variant = $it->productVariant;
+
+                                                // Lấy chuỗi phân loại (nếu có)
+                                                $variantAttributes =
+                                                    $variant && $variant->attributeValues
+                                                        ? $variant->attributeValues->pluck('value')->join(', ')
+                                                        : null;
+
+                                                // Lấy ảnh: ưu tiên image_main, sau đó tới ảnh phụ, cuối cùng là placeholder
+                                                if ($product && $product->image_main) {
+                                                    $img = asset('storage/' . $product->image_main);
+                                                } elseif ($product && $product->images && $product->images->first()) {
+                                                    $img = asset('storage/' . $product->images->first()->image_path);
+                                                } else {
+                                                    $img = 'https://placehold.co/300x300?text=IMG';
+                                                }
                                             @endphp
                                             <tr>
                                                 <td>
@@ -272,16 +289,26 @@
                                                         class="rounded img-thumbnail" width="48" height="48">
                                                 </td>
                                                 <td>
-                                                    <div class="fw-semibold">{{ $product->name ?? 'Sản phẩm đã xoá' }}
+                                                    <div class="fw-semibold">
+                                                        {{ $product->name ?? 'Sản phẩm đã xoá' }}
                                                     </div>
-                                                    @if (!empty($it->options))
-                                                        <div class="text-muted small">{{ $it->options }}</div>
+                                                </td>
+                                                <td class="text-muted">
+                                                    @if ($variantAttributes)
+                                                        {{ $variantAttributes }}
+                                                    @else
+                                                        —
                                                     @endif
                                                 </td>
-                                                <td class="text-muted">{{ $it->sku ?? ($product->sku ?? '—') }}</td>
-                                                <td class="text-end">{{ number_format($price, 0, ',', '.') }}đ</td>
-                                                <td class="text-end">{{ $qty }}</td>
-                                                <td class="text-end fw-semibold">{{ number_format($line, 0, ',', '.') }}đ</td>
+                                                <td class="text-end">
+                                                    {{ number_format($price, 0, ',', '.') }}đ
+                                                </td>
+                                                <td class="text-end">
+                                                    {{ $qty }}
+                                                </td>
+                                                <td class="text-end fw-semibold">
+                                                    {{ number_format($line, 0, ',', '.') }}đ
+                                                </td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -295,7 +322,7 @@
                                         @endforelse
                                     </tbody>
 
-                                    @if (($order->items ?? null) && count($order->items))
+                                    @if ($order->orderItems && $order->orderItems->count())
                                         <tfoot class="table-light">
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Tạm tính</th>
@@ -303,19 +330,22 @@
                                             </tr>
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Phí ship</th>
-                                                <th class="text-end">{{ number_format($order->shipping_fee, 0, ',', '.') }}đ
+                                                <th class="text-end">
+                                                    {{ number_format($order->shipping_fee, 0, ',', '.') }}đ
                                                 </th>
                                             </tr>
                                             <tr>
                                                 <th colspan="5" class="text-end">Tổng thanh toán</th>
                                                 <th class="text-end text-primary fw-bold">
-                                                    {{ number_format($order->final_amount, 0, ',', '.') }}đ</th>
+                                                    {{ number_format($order->final_amount, 0, ',', '.') }}đ
+                                                </th>
                                             </tr>
                                         </tfoot>
                                     @endif
                                 </table>
                             </div>
                         </div>
+
 
                     </div>
                 </div>
