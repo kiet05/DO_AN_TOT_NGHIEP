@@ -38,7 +38,7 @@
                                             @endforeach
                                         </ul>
                                     </div>
-                                    <div class="sherah-product-sidebar sherah-default-bg mg-top-30">
+                                    {{-- <div class="sherah-product-sidebar sherah-default-bg mg-top-30">
                                         <h4 class="sherah-product-sidebar__title sherah-border-btm">Price Range</h4>
                                         <div class="price-filter">
                                             <div class="price-filter-inner">
@@ -51,7 +51,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <!-- Brands Sidebar -->
                                     <div class="sherah-product-sidebar sherah-default-bg mg-top-30">
                                         <h4 class="sherah-product-sidebar__title sherah-border-btm">Nhãn hàng</h4>
@@ -70,7 +70,7 @@
                                     </div>
 
                                     <!-- Sizes Sidebar -->
-                                    <div class="sherah-product-sidebar sherah-default-bg mg-top-30">
+                                    {{-- <div class="sherah-product-sidebar sherah-default-bg mg-top-30">
                                         <h4 class="sherah-product-sidebar__title sherah-border-btm">Size</h4>
                                         <ul class="sherah-product-sidebar__size">
                                             @foreach ($sizes as $size)
@@ -82,7 +82,7 @@
                                                 </li>
                                             @endforeach
                                         </ul>
-                                    </div>
+                                    </div> --}}
                                 </div>
                                 <div class="col-xxl-9 col-lg-8 col-12">
                                     <div class="sherah-breadcrumb__right mg-top-30">
@@ -124,108 +124,134 @@
                                     <div class="tab-content mt-4" id="nav-tabContent">
                                         <div class="tab-pane fade show active" id="tab_1" role="tabpanel"
                                             aria-labelledby="nav-home-tab">
-                                            <div class="row g-4"> <!-- g-4: khoảng cách giữa các cột -->
-                                                @forelse ($products as $product)
-                                                    <div class="col-xxl-4 col-lg-6 col-md-6 col-12 d-flex">
-                                                        <!-- d-flex để card full chiều cao -->
-                                                        <div
-                                                            class="sherah-product-card sherah-product-card__v2 sherah-default-bg sherah-border w-100 d-flex flex-column">
 
-                                                            <!-- Ảnh sản phẩm -->
-                                                            <div class="sherah-product-card__img" style="flex-shrink: 0;">
-                                                                @if ($product->image_main)
-                                                                    <img src="{{ asset('storage/' . $product->image_main) }}"
-                                                                        alt="{{ $product->name }}"
-                                                                        style="width: 100%; height: 300px; object-fit: cover;">
-                                                                @else
-                                                                    <img src="https://via.placeholder.com/300x300?text=No+Image"
-                                                                        alt="{{ $product->name }}"
-                                                                        style="width: 100%; height: 300px; object-fit: cover;">
-                                                                @endif
-                                                            </div>
-
-                                                            <!-- Nội dung card -->
-                                                            <div
-                                                                class="sherah-product-card__content mt-3 d-flex flex-column flex-grow-1">
-                                                                <h4 class="sherah-product-card__title mb-2">
-                                                                    <a href=""
-                                                                        class="sherah-pcolor">
-                                                                        {{ $product->name }}
-                                                                    </a>
-                                                                </h4>
-
-                                                                <div class="sherah-product__bottom--single mb-3">
-                                                                    <h5 class="sherah-product-card__price">
-                                                                        @if ($product->sale_price ?? false)
-                                                                            <del>{{ number_format($product->base_price, 0, ',', '.') }}₫</del>
+                                            <div class="sherah-default-bg sherah-border p-3">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover align-middle mb-0">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width: 80px;">Ảnh</th>
+                                                                <th>Tên sản phẩm</th>
+                                                                <th>Danh mục</th>
+                                                                <th>Thương hiệu</th>
+                                                                <th>Giá gốc</th>
+                                                                <th>Giá sale</th>
+                                                                <th>Trạng thái</th>
+                                                                <th style="width: 260px;">Hành động</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @forelse ($products as $product)
+                                                                <tr>
+                                                                    <td>
+                                                                        @if ($product->image_main)
+                                                                            <img src="{{ asset('storage/' . $product->image_main) }}"
+                                                                                alt="{{ $product->name }}"
+                                                                                style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                                                        @else
+                                                                            <img src="https://via.placeholder.com/60x60?text=No+Image"
+                                                                                alt="{{ $product->name }}"
+                                                                                style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        <strong>{{ $product->name }}</strong>
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $product->category->name ?? '—' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $product->brand->name ?? '—' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ number_format($product->base_price, 0, ',', '.') }}₫
+                                                                    </td>
+                                                                    <td>
+                                                                        @if ($product->sale_price)
                                                                             {{ number_format($product->sale_price, 0, ',', '.') }}₫
                                                                         @else
-                                                                            {{ number_format($product->base_price, 0, ',', '.') }}₫
+                                                                            <span class="text-muted">—</span>
                                                                         @endif
-                                                                    </h5>
-                                                                </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        @if ($product->status == 1)
+                                                                            <span class="badge bg-success">Hiển thị</span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">Ẩn</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex gap-2">
+                                                                            <a href="{{ route('admin.products.edit', $product->id) }}"
+                                                                                class="btn btn-sm btn-outline-primary flex-fill">
+                                                                                Sửa
+                                                                            </a>
 
-                                                                <div
-                                                                    class="sherah-product__bottom mt-auto d-flex align-items-stretch gap-2">
-                                                                    <a href="{{ route('admin.products.edit', $product->id) }}"
-                                                                        class="sherah-btn default flex-fill d-flex align-items-center justify-content-center">
-                                                                        Sửa chữa
-                                                                    </a>
+                                                                            {{-- Nếu có route xem chi tiết admin --}}
+                                                                            {{-- <a href="{{ route('admin.products.show', $product->id) }}"
+                                           class="btn btn-sm btn-outline-info flex-fill">
+                                            Xem chi tiết
+                                        </a> --}}
 
-                                                                    <a href=""
-                                                                        class="sherah-btn default flex-fill d-flex align-items-center justify-content-center">
-                                                                        Xem chi tiết
-                                                                    </a>
-
-                                                                    <form
-                                                                        action="{{ route('admin.products.destroy', $product->id) }}"
-                                                                        method="POST" class="flex-fill m-0 p-0 d-flex">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="submit"
-                                                                            class="sherah-btn default w-100 d-flex align-items-center justify-content-center">
-                                                                            Xóa
-                                                                        </button>
-                                                                    </form>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @empty
-                                                    <div class="col-12 text-center py-5">
-                                                        <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
-                                                    </div>
-                                                @endforelse
-                                            </div>
-
-                                            <div class="row mg-top-40">
-                                                <div class="sherah-pagination">
-                                                    <ul class="sherah-pagination__list">
-                                                        {{-- Trang trước --}}
-                                                        <li
-                                                            class="sherah-pagination__button {{ $products->onFirstPage() ? 'disabled' : '' }}">
-                                                            <a href="{{ $products->previousPageUrl() }}"><i
-                                                                    class="fas fa-angle-left"></i></a>
-                                                        </li>
-
-                                                        {{-- Các số trang --}}
-                                                        @for ($i = 1; $i <= $products->lastPage(); $i++)
-                                                            <li
-                                                                class="{{ $products->currentPage() == $i ? 'active' : '' }}">
-                                                                <a
-                                                                    href="{{ $products->url($i) }}">{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}</a>
-                                                            </li>
-                                                        @endfor
-
-                                                        {{-- Trang tiếp --}}
-                                                        <li
-                                                            class="sherah-pagination__button {{ $products->currentPage() == $products->lastPage() ? 'disabled' : '' }}">
-                                                            <a href="{{ $products->nextPageUrl() }}"><i
-                                                                    class="fas fa-angle-right"></i></a>
-                                                        </li>
-                                                    </ul>
+                                                                            <form
+                                                                                action="{{ route('admin.products.destroy', $product->id) }}"
+                                                                                method="POST" class="m-0 p-0 flex-fill"
+                                                                                onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                                                                @csrf
+                                                                                @method('DELETE')
+                                                                                <button type="submit"
+                                                                                    class="btn btn-sm btn-outline-danger w-100">
+                                                                                    Xóa
+                                                                                </button>
+                                                                            </form>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="8"
+                                                                        class="text-center py-4 text-muted">
+                                                                        Không có sản phẩm nào trong danh mục này.
+                                                                    </td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
+
+                                            {{-- Phân trang --}}
+                                            @if ($products->hasPages())
+                                                <div class="row mg-top-40">
+                                                    <div class="sherah-pagination">
+                                                        <ul class="sherah-pagination__list">
+                                                            {{-- Trang trước --}}
+                                                            <li
+                                                                class="sherah-pagination__button {{ $products->onFirstPage() ? 'disabled' : '' }}">
+                                                                <a href="{{ $products->previousPageUrl() }}"><i
+                                                                        class="fas fa-angle-left"></i></a>
+                                                            </li>
+
+                                                            {{-- Các số trang --}}
+                                                            @for ($i = 1; $i <= $products->lastPage(); $i++)
+                                                                <li
+                                                                    class="{{ $products->currentPage() == $i ? 'active' : '' }}">
+                                                                    <a href="{{ $products->url($i) }}">
+                                                                        {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}
+                                                                    </a>
+                                                                </li>
+                                                            @endfor
+
+                                                            {{-- Trang tiếp --}}
+                                                            <li
+                                                                class="sherah-pagination__button {{ $products->currentPage() == $products->lastPage() ? 'disabled' : '' }}">
+                                                                <a href="{{ $products->nextPageUrl() }}"><i
+                                                                        class="fas fa-angle-right"></i></a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

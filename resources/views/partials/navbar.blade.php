@@ -7,7 +7,8 @@
         <div class="logo sherah-sidebar-padding">
             <a href="{{ route('admin.dashboard') }}">
 
-                <img class="sherah-logo__main" src="{{ asset('logo-ega-horizontal.svg') }}" alt="EGA Fashion Shop" style="max-height: 50px; width: auto;">
+                <img class="sherah-logo__main" src="{{ asset('logo-ega-horizontal.svg') }}" alt="EGA Fashion Shop"
+                    style="max-height: 50px; width: auto;">
             </a>
             <div class="sherah__sicon close-icon d-xl-none">
                 <svg width="9" height="15" viewBox="0 0 9 15" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -71,6 +72,8 @@
                                                 class="menu-bar__name">Danh mục</span></span></a></li>
                                 <li><a href="{{ route('admin.products.index') }}"><span class="menu-bar__text"><span
                                                 class="menu-bar__name">Sản phẩm</span></span></a></li>
+                                <li><a href="{{ route('admin.products.create') }}"><span class="menu-bar__text"><span
+                                                class="menu-bar__name">Thêm sản phẩm</span></span></a></li>
                                 <li><a href="{{ route('admin.orders.index') }}"><span class="menu-bar__text"><span
                                                 class="menu-bar__name">Đơn hàng</span></span></a></li>
                                 <li><a href="{{ route('admin.returns.index') }}"><span class="menu-bar__text"><span
