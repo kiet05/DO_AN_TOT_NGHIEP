@@ -13,10 +13,10 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="sherah-breadcrumb mg-top-30">
-                                        <h2 class="sherah-breadcrumb__title">Upload sản phẩm</h2>
+                                        <h2 class="sherah-breadcrumb__title">Thêm sản phẩm</h2>
                                         <ul class="sherah-breadcrumb__list">
-                                            <li><a href="#">Home</a></li>
-                                            <li class="active"><a href="profile-info.html">Upload sản phẩm</a></li>
+                                            <li><a href="#">Dashboard</a></li>
+                                            <li class="active"><a href="profile-info.html">Thêm sản phẩm</a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -145,14 +145,17 @@
                                                 <div id="variants-wrapper">
                                                     <!-- Biến thể mẫu -->
                                                     <div class="variant row mb-3 g-3">
+                                                        <input type="hidden" name="variants[0][id]" value="">
+
                                                         <div class="col-lg-6 col-md-6 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">SKU</label>
                                                                 <input type="text" name="variants[0][sku]"
-                                                                    class="sherah-wc__form-input"
-                                                                    placeholder="Mã sản phẩm" required>
+                                                                    class="sherah-wc__form-input" placeholder="Mã sản phẩm"
+                                                                    required>
                                                             </div>
                                                         </div>
+
                                                         <div class="col-lg-6 col-md-6 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Số lượng</label>
@@ -161,6 +164,7 @@
                                                                     required>
                                                             </div>
                                                         </div>
+
                                                         <div class="col-lg-12 col-md-12 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Giá tiền</label>
@@ -169,14 +173,14 @@
                                                                     required>
                                                             </div>
                                                         </div>
+
                                                         <div class="col-lg-3 col-md-3 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Trạng thái</label>
-                                                                <select name="variants[0][status]"
-                                                                    class="form-group__input" required>
-                                                                    <option value="">---</option>
-                                                                    <option value="0">Hiện</option>
-                                                                    <option value="1">Ẩn</option>
+                                                                <select name="variants[0][status]" class="form-control"
+                                                                    required>
+                                                                    <option value="1">Hiện</option>
+                                                                    <option value="0">Ẩn</option>
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -185,12 +189,12 @@
                                                         <div class="col-lg-3 col-md-3 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Kích cỡ</label>
-                                                                <select name="variants[0][sizes][]"
-                                                                    class="form-group__input" require>
-                                                                    <option value="6">S</option>
-                                                                    <option value="7">M</option>
-                                                                    <option value="8">L</option>
-                                                                    <option value="9">XL</option>
+                                                                <select name="variants[0][attribute_value_ids][]"
+                                                                    class="form-control" required>
+                                                                    @foreach ($sizes as $size)
+                                                                        <option value="{{ $size->id }}">
+                                                                            {{ $size->value }}</option>
+                                                                    @endforeach
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -199,13 +203,12 @@
                                                         <div class="col-lg-3 col-md-3 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Màu sắc</label>
-                                                                <select name="variants[0][colors][]"
-                                                                    class="form-group__input" required>
-                                                                    <option value="1">Đỏ</option>
-                                                                    <option value="2">Xanh</option>
-                                                                    <option value="3">Xanh lá</option>
-                                                                    <option value="4">Đen</option>
-                                                                    <option value="5">Trắng</option>
+                                                                <select name="variants[0][attribute_value_ids][]"
+                                                                    class="form-control" required>
+                                                                    @foreach ($colors as $color)
+                                                                        <option value="{{ $color->id }}">
+                                                                            {{ $color->value }}</option>
+                                                                    @endforeach
                                                                 </select>
                                                             </div>
                                                         </div>
@@ -214,20 +217,22 @@
                                                         <div class="col-lg-3 col-md-3 col-12">
                                                             <div class="form-group">
                                                                 <label class="sherah-wc__form-label">Chất liệu</label>
-                                                                <select name="variants[0][materials][]"
-                                                                    class="form-group__input" required>
-                                                                    <option value="10">Cotton</option>
-                                                                    <option value="11">Leather</option>
-                                                                    <option value="12">Denim</option>
+                                                                <select name="variants[0][attribute_value_ids][]"
+                                                                    class="form-control" required>
+                                                                    @foreach ($materials as $material)
+                                                                        <option value="{{ $material->id }}">
+                                                                            {{ $material->value }}</option>
+                                                                    @endforeach
                                                                 </select>
                                                             </div>
                                                         </div>
-
                                                     </div>
                                                 </div>
 
                                                 <button type="button" class="sherah-btn sherah-btn__secondary"
-                                                    id="add-variant">Thêm biến thể</button>
+                                                    id="add-variant">
+                                                    Thêm biến thể
+                                                </button>
                                             </div>
                                             <!-- End Specification -->
                                         </div>
