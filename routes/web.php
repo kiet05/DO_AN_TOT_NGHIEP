@@ -46,6 +46,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
 
+
 // Liên hệ & Hỗ trợ (client)
 Route::get('/lien-he', [FrontendContactController::class, 'index'])->name('contact.index');
 Route::post('/lien-he', [FrontendContactController::class, 'store'])->name('contact.store');

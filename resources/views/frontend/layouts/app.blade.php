@@ -369,8 +369,10 @@
                 </div>
                 <div class="col-md-6">
                     <div class="search-box">
-                        <input type="text" class="form-control" placeholder="Tìm kiếm sản phẩm...">
-                        <button type="button"><i class="fas fa-search"></i></button>
+                        <form method="GET" class="search-box">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form> 
                     </div>
                 </div>
                 <div class="col-md-3 text-end header-icons">
