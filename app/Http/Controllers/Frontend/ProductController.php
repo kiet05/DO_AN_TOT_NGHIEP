@@ -55,26 +55,27 @@ class ProductController extends Controller
     }
 
     public function show($id)
-    {
-        $product = Product::with(['category', 'images', 'variants.attributes'])
-            ->where('status', 1)
-            ->findOrFail($id);
+{
+    // Load product 1 lần với các relation cần thiết
+    $product = Product::with([
+        'category',
+        'images',
+        'variants.attributes.attribute' // variants -> attribute_values -> attribute (Size/Color/...)
+    ])->where('status', 1)->findOrFail($id);
 
-        // Sản phẩm liên quan
-        $relatedProducts = Product::where('category_id', $product->category_id)
-            ->where('id', '!=', $product->id)
-            ->where('status', 1)
-            ->with(['category', 'images'])
-            ->limit(8)
-            ->get();
+    // Sản phẩm liên quan (cùng category)
+    $relatedProducts = Product::where('category_id', $product->category_id)
+        ->where('id', '!=', $product->id)
+        ->where('status', 1)
+        ->with(['category', 'images'])
+        ->limit(8)
+        ->get();
 
-        $product = Product::with(['category', 'variants', 'images'])->findOrFail($id);
+    // Tổng tồn kho tính từ variants (đã eager-load nên dùng collection sum)
+    $totalStock = $product->variants->sum('quantity');
 
-        // Tính tổng số lượng tồn từ biến thể
-        $totalStock = $product->variants->sum('quantity');
-
-        return view('frontend.products.show', compact('product', 'relatedProducts', 'totalStock'));
-    }
+    return view('frontend.products.show', compact('product', 'relatedProducts', 'totalStock'));
+}
 
 }
 
