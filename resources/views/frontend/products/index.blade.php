@@ -22,6 +22,7 @@
                                 <input class="form-check-input" type="radio" name="category" 
                                     value="{{ $category->id }}" 
                                     id="cat-{{ $category->id }}"
+                                    onchange="this.form.submit()"
                                     {{ request('category') == $category->id ? 'checked' : '' }}>
                                 <label class="form-check-label" for="cat-{{ $category->id }}">
                                     {{ $category->name }}

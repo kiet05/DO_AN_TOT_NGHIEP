@@ -64,6 +64,140 @@
             margin: 20px 0;
         }
 
+                /* Wrapper cho nhóm thuộc tính */
+        .attr-group {
+            margin-bottom: 1rem;
+        }
+
+        /* Tên thuộc tính (Size, Color, Material) */
+        .attr-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: .3rem;
+            color: #333;
+        }
+
+        /* Danh sách nút */
+        .attr-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* Nút thuộc tính */
+        .attr-btn {
+            padding: 6px 14px;
+            border: 1.6px solid #dcdcdc;
+            border-radius: 6px;
+            background: #fafafa;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Hover */
+        .attr-btn:hover {
+            border-color: #007bff;
+            background: #f0f7ff;
+            color: #007bff;
+        }
+
+        /* Khi được chọn */
+        .attr-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            box-shadow: 0 0 6px rgba(0, 123, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Nút disabled (hết hàng) */
+        .attr-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .buy-form {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+.product-price, .product-stock, .quantity-wrapper {
+    margin-bottom: 1rem;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.product-price .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ff2d2d;
+}
+
+.product-stock .value {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Quantity Box */
+.quantity-box {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    width: fit-content;
+}
+
+.qty-btn {
+    background: #f5f5f5;
+    border: none;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.qty-btn:hover {
+    background: #e2e2e2;
+}
+
+#qty {
+    width: 60px;
+    height: 36px;
+    border: none;
+    text-align: center;
+    font-size: 16px;
+}
+
+#qty:focus {
+    outline: none;
+}
+
+/* Add to Cart button */
+.add-cart-btn {
+    width: 100%;
+    padding: 12px;
+    background: #ff4d4f;
+    border-radius: 6px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.add-cart-btn:hover {
+    background: #e23d3f;
+}
+
+
         .variant-option {
             display: inline-block;
             padding: 8px 15px;
@@ -184,28 +318,118 @@
                         </div>
                     @endif
 
-                    @if ($product->variants->count() > 0)
+                    {{-- @if ($product->variants->count() > 0) --}}
+                        <div class="product-variants">
+                            {{-- <h5>Chọn biến thể</h5> --}}
+                    {{-- @if ($product->variants->count() > 0)
                         <div class="product-variants">
                             <h5>Chọn biến thể</h5>
+
                             @foreach ($product->variants as $variant)
-                                <div class="variant-option" data-variant-id="{{ $variant->id }}"
+                                @php
+                                    // Nhóm attribute_values theo tên attribute (Size, Color, ...)
+                                    $groups = $variant->attributes->groupBy(function($av) {
+                                        return optional($av->attribute)->name ?? 'Other';
+                                    });
+                                    // Tạo label ngắn gọn để hiển thị cho option
+                                    $label = $groups->map(function($values, $attrName){
+                                        return $attrName . ': ' . $values->pluck('value')->filter()->unique()->join(', ');
+                                    })->values()->join(' | ');
+                                @endphp
+
+                                <div class="variant-option"
+                                    data-variant-id="{{ $variant->id }}"
                                     data-price="{{ $variant->price }}"
                                     data-original-price="{{ $variant->original_price ?? $variant->price }}"
-                                    onclick="selectVariant({{ $variant->id }}, {{ $variant->price }}, {{ $variant->original_price ?? $variant->price }})">
-                                    {{ $variant->name ?? 'Biến thể ' . $variant->id }}
+                                    data-stock="{{ $variant->quantity }}"
+                                    onclick="selectVariant(this)"
+                                    style="cursor:pointer; padding:.4rem; border:1px solid #eee; margin-bottom:.4rem;">
+                                    {!! e($label) !!}
                                 </div>
                             @endforeach
                         </div>
-                    @endif
+                    @endif --}}
 
-                    <div class="quantity-selector">
-                        <label>Số lượng:</label>
-                        <div class="quantity-input">
-                            <button type="button" onclick="decreaseQuantity()">-</button>
-                            <input type="number" id="quantity" value="1" min="1" readonly>
-                            <button type="button" onclick="increaseQuantity()">+</button>
+                    {{-- QUANTITY + HIDDEN --}}
+                    {{-- <form method="POST" action="{{ route('cart.add', $product->id) }}">
+                        @csrf
+
+                        <input type="hidden" id="selectedVariantId" name="variant_id" value="">
+
+                        <div class="quantity-selector" style="margin-top:.8rem;">
+                            <label>Số lượng:</label>
+                            <div class="quantity-input" style="display:flex; align-items:center; gap:.5rem; margin-top:.4rem;">
+                                <button type="button" id="btnDecrease" onclick="decreaseQuantity()">-</button>
+
+                                <input type="number"
+                                    id="quantity"
+                                    name="quantity"
+                                    value="1"
+                                    min="1"
+                                    max="{{ $totalStock }}"
+                                    style="width:70px; text-align:center;">
+
+                                <button type="button" id="btnIncrease" onclick="increaseQuantity()">+</button>
+                            </div>
+
+                            <p style="margin-top:.5rem;">
+                                Còn lại: <strong id="stockDisplay">{{ $totalStock }}</strong> sản phẩm
+                            </p>
                         </div>
-                    </div>
+                    </form> 
+                                            </div>
+                    @endif --}}
+                    {{-- ATTR SELECTORS --}}
+@php
+  // build map attributeName => unique values
+  $attrGroups = collect();
+  foreach($product->variants as $v){
+    foreach($v->attributes as $av){
+      $attrGroups[$av->attribute->name ?? 'Other'] = ($attrGroups[$av->attribute->name ?? 'Other'] ?? collect())->push($av)->unique('id');
+    }
+  }
+@endphp
+
+<div class="attr-wrap">
+  @foreach($attrGroups as $name => $vals)
+    <div><strong>{{ $name }}</strong>
+      <div>
+        @foreach($vals as $val)
+          <button type="button" class="attr-btn" data-id="{{ $val->id }}" data-name="{{ $name }}">{{ $val->value }}</button>
+        @endforeach
+      </div>
+    </div>
+  @endforeach
+</div>
+
+<form method="POST" action="{{ route('cart.add', $product->id) }}" class="buy-form">
+    @csrf
+    <input type="hidden" id="variant_id" name="variant_id" value="">
+
+    {{-- PRICE --}}
+    <div class="product-price">
+        <span class="label">Giá:</span>
+        <span class="value" id="price">{{ number_format($product->base_price) }}₫</span>
+    </div>
+
+    {{-- STOCK --}}
+    <div class="product-stock">
+        <span class="label">Còn lại:</span>
+        <span class="value" id="stock">{{ $totalStock }}</span>
+    </div>
+
+    {{-- QUANTITY --}}
+    <div class="quantity-wrapper">
+        <span class="label">Số lượng:</span>
+        <div class="quantity-box">
+            <button type="button" class="qty-btn" id="dec">–</button>
+            <input type="number" id="qty" name="quantity"
+                   value="1" min="1" max="{{ $totalStock }}">
+            <button type="button" class="qty-btn" id="inc">+</button>
+        </div>
+    </div>
+</form>
+
 
                     <div class="d-flex gap-3">
                         <button class="btn btn-dark btn-lg flex-fill" onclick="addToCart({{ $product->id }})">
@@ -360,5 +584,165 @@
             // TODO: Implement quick view modal
             window.location.href = '/products/' + productId;
         }
+
+
+// document.addEventListener('DOMContentLoaded', function () {
+//     const qtyInput = document.getElementById('quantity');
+//     const btnInc = document.getElementById('btnIncrease');
+//     const btnDec = document.getElementById('btnDecrease');
+//     const stockDisplay = document.getElementById('stockDisplay');
+//     const selectedVariantIdInput = document.getElementById('selectedVariantId');
+//     const addToCartBtn = document.getElementById('addToCartBtn');
+
+//     // safety: nếu không có qtyInput -> exit
+//     if (!qtyInput) return;
+
+//     function updateButtons() {
+//         const val = parseInt(qtyInput.value || 0, 10);
+//         const min = parseInt(qtyInput.min || 1, 10);
+//         const max = parseInt(qtyInput.max || 0, 10);
+//         btnDec.disabled = val <= min;
+//         btnInc.disabled = val >= max || max === 0;
+//         addToCartBtn.disabled = (max === 0); // disable add to cart khi hết hàng
+//     }
+
+//     // selectVariant nhận DOM element .variant-option
+//     window.selectVariant = function(element) {
+//         const variantId = element.dataset.variantId;
+//         const stock = parseInt(element.dataset.stock || 0, 10);
+
+//         // set hidden input để gửi form
+//         selectedVariantIdInput.value = variantId;
+
+//         // update stock display and max
+//         stockDisplay.textContent = stock;
+//         qtyInput.max = stock;
+
+//         // nếu value > stock thì set lại
+//         let curVal = parseInt(qtyInput.value || 0, 10);
+//         if (isNaN(curVal) || curVal < parseInt(qtyInput.min || 1, 10)) {
+//             curVal = parseInt(qtyInput.min || 1, 10);
+//         }
+//         if (curVal > stock) {
+//             qtyInput.value = stock > 0 ? stock : 0;
+//         } else {
+//             qtyInput.value = curVal;
+//         }
+
+//         // highlight active option
+//         document.querySelectorAll('.variant-option').forEach(el => el.classList.remove('active'));
+//         element.classList.add('active');
+
+//         updateButtons();
+//     }
+
+//     window.increaseQuantity = function() {
+//         const max = parseInt(qtyInput.max || 0, 10);
+//         let val = parseInt(qtyInput.value || 0, 10);
+//         if (isNaN(val)) val = parseInt(qtyInput.min || 1, 10);
+//         if (val < max) {
+//             qtyInput.value = val + 1;
+//         }
+//         updateButtons();
+//     }
+
+//     window.decreaseQuantity = function() {
+//         const min = parseInt(qtyInput.min || 1, 10);
+//         let val = parseInt(qtyInput.value || 0, 10);
+//         if (isNaN(val)) val = min;
+//         if (val > min) {
+//             qtyInput.value = val - 1;
+//         }
+//         updateButtons();
+//     }
+
+//     // cho phép gõ thủ công nhưng clamp
+//     qtyInput.addEventListener('input', function () {
+//         const min = parseInt(qtyInput.min || 1, 10);
+//         const max = parseInt(qtyInput.max || 0, 10);
+//         let v = parseInt(qtyInput.value || 0, 10);
+//         if (isNaN(v)) v = min;
+//         if (v < min) v = min;
+//         if (v > max) v = max;
+//         qtyInput.value = v;
+//         updateButtons();
+//     });
+
+//     // init: chọn variant đầu tiên nếu có
+//     const firstOption = document.querySelector('.variant-option');
+//     if (firstOption) {
+//         selectVariant(firstOption);
+//     } else {
+//         // nếu ko có variant: dùng tổng totalStock
+//         stockDisplay.textContent = qtyInput.max;
+//         updateButtons();
+//     }
+// });
+
+    const VARIANTS = [
+    @foreach($product->variants as $v)
+        {id:{{ $v->id }},price:{{ $v->price }},stock:{{ $v->quantity }},attrs:[{!! $v->attributes->pluck('id')->join(',') !!}] }@if(!$loop->last),@endif
+    @endforeach
+    ];
+
+    document.addEventListener('click', e => {
+    if (!e.target.classList.contains('attr-btn')) return;
+    const btn = e.target;
+    const name = btn.dataset.name;
+    // toggle active
+    document.querySelectorAll('.attr-btn[data-name="'+name+'"]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    applySelection();
+    });
+
+    function getSelectedIds(){
+    return Array.from(document.querySelectorAll('.attr-btn.active')).map(b=>Number(b.dataset.id));
+    }
+
+    function arraysInclude(all, part){
+    return part.every(p => all.includes(p));
+    }
+
+    function applySelection(){
+    const sel = getSelectedIds();
+    if (sel.length === 0) { resetBase(); return; }
+    // find variant that includes all selected attr ids (prefer smallest extra attrs)
+    let match = null;
+    for (const v of VARIANTS){
+        if (arraysInclude(v.attrs, sel)){
+        if (!match || v.attrs.length < match.attrs.length) match = v;
+        }
+    }
+    if (match){ applyVariant(match); } else { noVariant(); }
+    }
+
+    function applyVariant(v){
+    document.getElementById('variant_id').value = v.id;
+    document.getElementById('price').textContent = v.price;
+    document.getElementById('stock').textContent = v.stock;
+    const qty = document.getElementById('qty'); qty.max = v.stock; if(Number(qty.value)>v.stock) qty.value = v.stock||0;
+    document.getElementById('addBtn').disabled = v.stock===0;
+    }
+    function resetBase(){
+    document.getElementById('variant_id').value = '';
+    document.getElementById('price').textContent = '{{ $product->base_price }}';
+    document.getElementById('stock').textContent = '{{ $totalStock }}';
+    document.getElementById('qty').max = {{ $totalStock }};
+    document.getElementById('addBtn').disabled = false;
+    }
+    function noVariant(){
+    document.getElementById('variant_id').value = '';
+    document.getElementById('price').textContent = '—';
+    document.getElementById('stock').textContent = 0;
+    document.getElementById('qty').value = 0; document.getElementById('qty').max = 0;
+    document.getElementById('addBtn').disabled = true;
+    }
+
+    // qty buttons
+    document.getElementById('inc').addEventListener('click', ()=>{ const q=document.getElementById('qty'); if(Number(q.value)<Number(q.max)) q.value=Number(q.value)+1;});
+    document.getElementById('dec').addEventListener('click', ()=>{ const q=document.getElementById('qty'); if(Number(q.value)>Number(q.min)) q.value=Number(q.value)-1;});
+
+    // init
+    resetBase();
     </script>
 @endpush

@@ -397,24 +397,41 @@
         <nav class="main-nav">
             <div class="container">
                 <div class="d-flex">
-                    <a href="{{ route('home') }}" class="nav-link">Trang chủ</a>
-                    <a href="{{ route('products.index') }}" class="nav-link">Sản phẩm</a>
+                            <a href="{{ route('home') }}" class="nav-link">Trang chủ</a>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
+                                Sản phẩm
+                            </a>
+                            <ul class="dropdown-menu">
+                                @php
+                                    $navCategories = \App\Models\Category::whereNull('parent_id')
+                                        ->where('status', 1)
+                                        ->limit(6)
+                                        ->get();
+                                @endphp
+                                @foreach($navCategories as $category)
+                                    <a href="{{ route('products.index', ['category' => $category->id]) }}" class="nav-link">{{ $category->name }}</a>
+                                @endforeach
+                            </ul>
+                        </li>
+                    </ul>
 
+                    
                     {{-- Link Liên hệ & Hỗ trợ trên menu chính --}}
                     <a href="{{ route('contact.index') }}" class="nav-link">Liên hệ &amp; Hỗ trợ</a>
                     {{-- Thêm dòng này --}}
                     <a href="{{ route('blog.index') }}" class="nav-link">Tin tức / Blog</a>
 
-                    @php
+                    {{-- @php
                         $navCategories = \App\Models\Category::whereNull('parent_id')
                             ->where('status', 1)
                             ->limit(6)
                             ->get();
                     @endphp
-
                     @foreach($navCategories as $category)
                         <a href="{{ route('products.index', ['category' => $category->id]) }}" class="nav-link">{{ $category->name }}</a>
-                    @endforeach
+                    @endforeach --}}
                 </div>
             </div>
         </nav>
