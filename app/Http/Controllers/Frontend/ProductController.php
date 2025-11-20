@@ -68,7 +68,12 @@ class ProductController extends Controller
             ->limit(8)
             ->get();
 
-        return view('frontend.products.show', compact('product', 'relatedProducts'));
+        $product = Product::with(['category', 'variants', 'images'])->findOrFail($id);
+
+        // Tính tổng số lượng tồn từ biến thể
+        $totalStock = $product->variants->sum('quantity');
+
+        return view('frontend.products.show', compact('product', 'relatedProducts', 'totalStock'));
     }
 
 }

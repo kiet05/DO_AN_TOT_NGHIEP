@@ -184,7 +184,7 @@
                         </div>
                     @endif
 
-                    @if ($product->variants->count() > 0)
+                    {{-- @if ($product->variants->count() > 0)
                         <div class="product-variants">
                             <h5>Chọn biến thể</h5>
                             @foreach ($product->variants as $variant)
@@ -202,10 +202,59 @@
                         <label>Số lượng:</label>
                         <div class="quantity-input">
                             <button type="button" onclick="decreaseQuantity()">-</button>
-                            <input type="number" id="quantity" value="1" min="1" readonly>
+                            <input type="number"
+                                id="quantity"
+                                value="1"
+                                min="1"
+                                max="{{ $totalStock }}"
+                                readonly>
                             <button type="button" onclick="increaseQuantity()">+</button>
                         </div>
+                        <p>Còn lại: <strong>{{ $totalStock }}</strong> sản phẩm</p>
+
+                        @foreach ($product->variants as $v)
+                            <p>{{ $v->name }}: còn {{ $v->quantity }}</p>
+                        @endforeach
+                    </div> --}}
+
+                    @if ($product->variants->count() > 0)
+                        <div class="product-variants">
+                            <h5>Chọn biến thể</h5>
+
+                            {{-- mỗi variant có data-stock để JS đọc --}}
+                            @foreach ($product->variants as $variant)
+                                <div class="variant-option"
+                                    data-variant-id="{{ $variant->id }}"
+                                    data-price="{{ $variant->price }}"
+                                    data-original-price="{{ $variant->original_price ?? $variant->price }}"
+                                    data-stock="{{ $variant->quantity }}"
+                                    onclick="selectVariant(this)">
+                                    {{ $variant->name ?? 'Biến thể ' . $variant->id }}
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div class="quantity-selector">
+                        <label>Số lượng:</label>
+                        <div class="quantity-input">
+                            <button type="button" id="btnDecrease" onclick="decreaseQuantity()">-</button>
+
+                            {{-- Bỏ readonly nếu muốn cho phép gõ --}}
+                            <input type="number"
+                                id="quantity"
+                                value="1"
+                                min="1"
+                                max="{{ $totalStock }}"
+                            >
+
+                            <button type="button" id="btnIncrease" onclick="increaseQuantity()">+</button>
+                        </div>
+
+                        {{-- Hiển thị tồn kho hiện thời (theo variant được chọn) --}}
+                        <p>Còn lại: <strong id="stockDisplay">{{ $totalStock }}</strong> sản phẩm</p>
                     </div>
+
 
                     <div class="d-flex gap-3">
                         <button class="btn btn-dark btn-lg flex-fill" onclick="addToCart({{ $product->id }})">
@@ -360,5 +409,100 @@
             // TODO: Implement quick view modal
             window.location.href = '/products/' + productId;
         }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const qtyInput = document.getElementById('quantity');
+    const btnInc = document.getElementById('btnIncrease');
+    const btnDec = document.getElementById('btnDecrease');
+    const stockDisplay = document.getElementById('stockDisplay');
+
+    // Biến lưu variant hiện tại (id + stock)
+    let currentVariant = {
+        id: null,
+        stock: parseInt(qtyInput.max || 0, 10) || 0
+    };
+
+    // Hàm chọn variant (được gọi khi click .variant-option)
+    window.selectVariant = function(element) {
+        // nếu gọi bằng selectVariant(this) -> element is DOM node
+        const variantId = element.dataset.variantId;
+        const stock = parseInt(element.dataset.stock || 0, 10);
+
+        currentVariant.id = variantId;
+        currentVariant.stock = stock;
+
+        // Cập nhật hiển thị tồn kho và max của input
+        stockDisplay.textContent = stock;
+        qtyInput.max = stock;
+
+        // Nếu giá trị hiện tại > stock -> set về stock (nếu stock = 0 thì value = 0)
+        let curVal = parseInt(qtyInput.value || 0, 10);
+        if (isNaN(curVal) || curVal < parseInt(qtyInput.min || 1, 10)) {
+            curVal = parseInt(qtyInput.min || 1, 10);
+        }
+        if (curVal > stock) {
+            qtyInput.value = stock > 0 ? stock : 0;
+        } else {
+            qtyInput.value = curVal;
+        }
+
+        updateButtons();
+        // (tùy bạn) highlight option chọn
+        document.querySelectorAll('.variant-option').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // Hàm tăng giảm
+    window.increaseQuantity = function() {
+        const max = parseInt(qtyInput.max || 0, 10);
+        let val = parseInt(qtyInput.value || 0, 10);
+        if (isNaN(val)) val = parseInt(qtyInput.min || 1, 10);
+        if (val < max) {
+            qtyInput.value = val + 1;
+        }
+        updateButtons();
+    }
+
+    window.decreaseQuantity = function() {
+        const min = parseInt(qtyInput.min || 1, 10);
+        let val = parseInt(qtyInput.value || 0, 10);
+        if (isNaN(val)) val = min;
+        if (val > min) {
+            qtyInput.value = val - 1;
+        }
+        updateButtons();
+    }
+
+    // Cho phép gõ thủ công nhưng clamp theo min/max
+    qtyInput.addEventListener('input', function () {
+        const min = parseInt(qtyInput.min || 1, 10);
+        const max = parseInt(qtyInput.max || 0, 10);
+        let v = parseInt(qtyInput.value || 0, 10);
+        if (isNaN(v)) v = min;
+        if (v < min) v = min;
+        if (v > max) v = max;
+        qtyInput.value = v;
+        updateButtons();
+    });
+
+    function updateButtons() {
+        const val = parseInt(qtyInput.value || 0, 10);
+        const min = parseInt(qtyInput.min || 1, 10);
+        const max = parseInt(qtyInput.max || 0, 10);
+
+        btnDec.disabled = val <= min;
+        btnInc.disabled = val >= max || max === 0;
+    }
+
+    // --- INIT: nếu có variant-option thì chọn variant đầu tiên mặc định ---
+    const firstOption = document.querySelector('.variant-option');
+    if (firstOption) {
+        selectVariant(firstOption);
+    } else {
+        // không có variant => dùng totalStock đã có trong max
+        stockDisplay.textContent = qtyInput.max;
+        updateButtons();
+    }
+});
     </script>
 @endpush

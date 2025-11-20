@@ -194,7 +194,7 @@ class ProductController extends Controller
 
         return view('admin.products.show', compact('product'));
     }
-
+    
     /**
      * Show the form for editing the specified resource.
      */
