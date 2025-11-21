@@ -260,6 +260,14 @@
 </style>
 
 @section('content')
+    @php
+        $subtotal = $cart->total_price;
+        $initialShippingFee = $shippingFee ?? 0;
+        $initialTotal = $subtotal + $initialShippingFee;
+        $currentCity = $selectedCity ?? array_key_first($locations ?? []);
+        $currentDistrict = $selectedDistrict ?? null;
+        $districtOptions = $locations[$currentCity]['districts'] ?? [];
+    @endphp
     <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-option">
         <div class="container">
@@ -310,12 +318,48 @@
                                 </div>
                             </div>
 
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="checkout__input">
+                                        <p>Thành phố<span>*</span></p>
+                                        <select name="receiver_city" id="receiver_city" class="form-select">
+                                            @foreach ($locations as $code => $city)
+                                                <option value="{{ $code }}"
+                                                    @selected(old('receiver_city', $currentCity) === $code)>
+                                                    {{ $city['name'] }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('receiver_city')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="checkout__input">
+                                        <p>Quận / Huyện<span>*</span></p>
+                                        <select name="receiver_district" id="receiver_district" class="form-select"
+                                            data-selected="{{ old('receiver_district', $currentDistrict) }}">
+                                            @foreach ($districtOptions as $code => $name)
+                                                <option value="{{ $code }}"
+                                                    @selected(old('receiver_district', $currentDistrict) === $code)>
+                                                    {{ $name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('receiver_district')
+                                            <span class="text-danger small">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="checkout__input">
-                                <p>Địa chỉ nhận hàng<span>*</span></p>
-                                <input type="text" name="receiver_address" class="checkout__input__add"
-                                    placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
-                                    value="{{ old('receiver_address', $user->address ?? '') }}">
-                                @error('receiver_address')
+                                <p>Địa chỉ cụ thể<span>*</span></p>
+                                <input type="text" name="receiver_address_detail" class="checkout__input__add"
+                                    placeholder="Số nhà, đường, phường/xã..."
+                                    value="{{ old('receiver_address_detail') }}">
+                                @error('receiver_address_detail')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -375,10 +419,20 @@
                                 </ul>
 
                                 <ul class="checkout__total__all">
-                                    <li>Tạm tính <span>{{ number_format($cart->total_price, 0, ',', '.') }}₫</span></li>
-                                    <li>Phí vận chuyển <span>0₫</span></li>
+                                    <li>Tạm tính
+                                        <span id="checkout-subtotal" data-value="{{ $subtotal }}">
+                                            {{ number_format($subtotal, 0, ',', '.') }}₫
+                                        </span>
+                                    </li>
+                                    <li>Phí vận chuyển
+                                        <span id="checkout-shipping" data-value="{{ $initialShippingFee }}">
+                                            {{ number_format($initialShippingFee, 0, ',', '.') }}₫
+                                        </span>
+                                    </li>
                                     <li>Tổng cộng
-                                        <span>{{ number_format($cart->total_price, 0, ',', '.') }}₫</span>
+                                        <span id="checkout-total">
+                                            {{ number_format($initialTotal, 0, ',', '.') }}₫
+                                        </span>
                                     </li>
                                 </ul>
 
@@ -432,4 +486,71 @@
         </div>
     </section>
     <!-- Checkout Section End -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const citySelect = document.querySelector('select[name="receiver_city"]');
+            const districtSelect = document.querySelector('select[name="receiver_district"]');
+            const subtotalEl = document.getElementById('checkout-subtotal');
+            const shippingEl = document.getElementById('checkout-shipping');
+            const totalEl = document.getElementById('checkout-total');
+            const locationMap = @json($locations);
+
+            if (!citySelect || !districtSelect || !subtotalEl || !shippingEl || !totalEl) {
+                return;
+            }
+
+            const baseSubtotal = Number(subtotalEl.dataset.value || 0);
+            const originalDistrict = districtSelect.dataset.selected;
+
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('vi-VN').format(value) + '₫';
+            };
+
+            const calculateFeeFromCity = (cityCode) => {
+                if (!cityCode) {
+                    return 0;
+                }
+                return cityCode === 'hanoi' ? 30000 : 40000;
+            };
+
+            const populateDistricts = (cityCode, preset) => {
+                const districts = locationMap[cityCode]?.districts || {};
+                districtSelect.innerHTML = '';
+                let firstOptionValue = null;
+
+                Object.entries(districts).forEach(([code, name], index) => {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    option.textContent = name;
+                    if (index === 0) {
+                        firstOptionValue = code;
+                    }
+                    if (preset && preset === code) {
+                        option.selected = true;
+                    }
+                    districtSelect.appendChild(option);
+                });
+
+                if (!districtSelect.value && firstOptionValue) {
+                    districtSelect.value = firstOptionValue;
+                }
+            };
+
+            const updateTotals = () => {
+                const fee = calculateFeeFromCity(citySelect.value);
+                shippingEl.dataset.value = fee;
+                shippingEl.textContent = formatCurrency(fee);
+                totalEl.textContent = formatCurrency(baseSubtotal + fee);
+            };
+
+            populateDistricts(citySelect.value, originalDistrict);
+            updateTotals();
+
+            citySelect.addEventListener('change', () => {
+                populateDistricts(citySelect.value);
+                updateTotals();
+            });
+        });
+    </script>
 @endsection

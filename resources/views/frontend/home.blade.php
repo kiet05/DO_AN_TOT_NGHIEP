@@ -3,6 +3,34 @@
 @section('title', 'Trang chủ - ' . config('app.name'))
 
 @section('content')
+    @if(!empty($searchTerm ?? ''))
+        <section class="py-5 bg-light border-bottom">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-1">Kết quả cho "{{ $searchTerm }}"</h2>
+                        <p class="text-muted mb-0">{{ $searchResults->count() }} sản phẩm phù hợp</p>
+                    </div>
+                    <a href="{{ route('home') }}" class="btn btn-outline-dark">Xóa tìm kiếm</a>
+                </div>
+
+                @if($searchResults->count())
+                    <div class="row g-4">
+                        @foreach($searchResults as $product)
+                            <div class="col-6 col-md-3">
+                                @include('frontend.partials.product-card', ['product' => $product])
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="alert alert-warning mb-0">
+                        Không tìm thấy sản phẩm nào. Hãy thử từ khóa khác.
+                    </div>
+                @endif
+            </div>
+        </section>
+    @endif
+
     <!-- Hero Banner -->
     @if(isset($banners) && $banners->count() > 0)
     <section class="hero-banner mb-5">

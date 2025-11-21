@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Lấy banners active
         $banners = Banner::where('status', true)
@@ -46,7 +46,27 @@ class HomeController extends Controller
             ->limit(12)
             ->get();
 
-        return view('frontend.home', compact('banners', 'categories', 'newProducts', 'saleProducts', 'featuredProducts'));
+        $searchTerm = trim($request->get('search', ''));
+        $searchResults = collect();
+
+        if ($searchTerm !== '') {
+            $searchResults = Product::where('status', 1)
+                ->with(['category', 'images'])
+                ->where('name', 'like', '%' . $searchTerm . '%')
+                ->orderByDesc('created_at')
+                ->limit(12)
+                ->get();
+        }
+
+        return view('frontend.home', compact(
+            'banners',
+            'categories',
+            'newProducts',
+            'saleProducts',
+            'featuredProducts',
+            'searchResults',
+            'searchTerm'
+        ));
     }
 
 }

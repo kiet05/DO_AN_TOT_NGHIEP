@@ -17,14 +17,24 @@
             $discount = round((($originalPrice - $salePrice) / $originalPrice) * 100);
         }
     }
+
+    $availableVariant = $product->variants()
+        ->where('quantity', '>', 0)
+        ->where('status', 1)
+        ->orderBy('price', 'asc')
+        ->first();
+
+    $isSoldOut = !$availableVariant;
 @endphp
 
-<div class="product-card">
+<div class="product-card {{ $isSoldOut ? 'product-card--soldout' : '' }}">
     <div class="product-image">
         <a href="{{ route('products.show', $product->id) }}">
             <img src="{{ $mainImage }}" alt="{{ $product->name }}">
         </a>
-        @if($product->is_new)
+        @if($isSoldOut)
+            <span class="product-badge product-badge--soldout">Hết hàng</span>
+        @elseif($product->is_new)
             <span class="product-badge">Mới</span>
         @elseif($discount > 0)
             <span class="product-badge">-{{ $discount }}%</span>
@@ -44,13 +54,6 @@
             @endif
         </div>
         <div class="product-actions">
-            @php
-                $availableVariant = $product->variants()
-                    ->where('quantity', '>', 0)
-                    ->where('status', 1)
-                    ->orderBy('price', 'asc')
-                    ->first();
-            @endphp
             @if($availableVariant)
                 <button class="btn-add-cart" onclick="addToCartFromCard({{ $product->id }}, {{ $availableVariant->id }}, event)">
                     <i class="fas fa-shopping-bag me-1"></i> Thêm vào giỏ

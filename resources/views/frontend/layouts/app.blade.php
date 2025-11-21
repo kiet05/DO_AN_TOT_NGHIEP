@@ -165,6 +165,10 @@
             font-weight: 600;
         }
 
+        .product-badge--soldout {
+            background: #c53030;
+        }
+
         
         .product-info {
             padding: 15px;
@@ -370,7 +374,7 @@
                 <div class="col-md-6">
                     <div class="search-box">
                         <form method="GET" class="search-box">
-                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm...">
+                        <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="{{ request('search') }}">
                         <button type="submit"><i class="fas fa-search"></i></button>
                     </form> 
                     </div>
