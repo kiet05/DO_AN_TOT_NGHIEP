@@ -73,6 +73,8 @@ Route::prefix('cart')->name('cart.')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('index');
         Route::put('/{id}/update', [CartController::class, 'update'])->name('update');
         Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
+        Route::post('/apply-voucher', [CartController::class, 'applyVoucher'])->name('apply-voucher');
+        Route::post('/remove-voucher', [CartController::class, 'removeVoucher'])->name('remove-voucher');
     });
 });
 

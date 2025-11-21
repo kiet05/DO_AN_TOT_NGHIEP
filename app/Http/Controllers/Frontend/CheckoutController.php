@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\VoucherUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,7 @@ class CheckoutController extends Controller
 
         $cart = Cart::where('user_id', $user->id)
             ->where('status', 1)
-            ->with(['items.productVariant.product', 'items.productVariant.attributeValues'])
+            ->with(['items.productVariant.product', 'items.productVariant.attributeValues', 'voucher'])
             ->first();
 
         if (!$cart || $cart->items->count() === 0) {
@@ -115,7 +116,8 @@ class CheckoutController extends Controller
         // 🔹 Tính phí ship theo thành phố (Hà Nội nội thành: 30k, tỉnh/thành khác: 40k)
         $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
         $totalPrice  = $cart->total_price;
-        $finalAmount = $totalPrice + $shippingFee;
+        $discountAmount = $cart->discount_amount ?? 0;
+        $finalAmount = $totalPrice - $discountAmount + $shippingFee;
 
         // Ghép lại địa chỉ đầy đủ để lưu vào đơn
         $cityName      = $locations[$request->receiver_city]['name'] ?? '';
@@ -138,7 +140,7 @@ class CheckoutController extends Controller
                 'shipping_fee'    => $shippingFee,
                 'total_price'     => $totalPrice,
                 'final_amount'    => $finalAmount,
-                'voucher_id'      => null,
+                'voucher_id'      => $cart->voucher_id,
                 'payment_method_id' => $method->id,
                 'payment_method'  => $method->slug,
                 'payment_status'  => 'unpaid',   // hoặc 'pending_cod' với COD
@@ -206,6 +208,17 @@ class CheckoutController extends Controller
                 'message' => 'Payment record created from checkout.',
                 'payload' => null,
             ]);
+
+            // 🔹 Lưu VoucherUsage nếu có voucher
+            if ($cart->voucher_id && $discountAmount > 0) {
+                VoucherUsage::create([
+                    'voucher_id'     => $cart->voucher_id,
+                    'order_id'       => $order->id,
+                    'user_id'        => $user->id,
+                    'discount_amount' => $discountAmount,
+                    'used_at'        => now(),
+                ]);
+            }
 
             DB::commit();
 

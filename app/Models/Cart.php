@@ -14,10 +14,13 @@ class Cart extends Model
         'user_id',
         'status',
         'total_price',
+        'voucher_id',
+        'discount_amount',
     ];
 
     protected $casts = [
         'total_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     public function user()
@@ -28,6 +31,11 @@ class Cart extends Model
     public function items()
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
     }
 
     /**

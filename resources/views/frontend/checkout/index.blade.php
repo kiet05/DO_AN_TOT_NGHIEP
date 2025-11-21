@@ -262,8 +262,9 @@
 @section('content')
     @php
         $subtotal = $cart->total_price;
+        $discountAmount = $cart->discount_amount ?? 0;
         $initialShippingFee = $shippingFee ?? 0;
-        $initialTotal = $subtotal + $initialShippingFee;
+        $initialTotal = $subtotal - $discountAmount + $initialShippingFee;
         $currentCity = $selectedCity ?? array_key_first($locations ?? []);
         $currentDistrict = $selectedDistrict ?? null;
         $districtOptions = $locations[$currentCity]['districts'] ?? [];
@@ -296,13 +297,20 @@
                     <div class="row">
                         {{-- ================== CỘT TRÁI: THÔNG TIN GIAO HÀNG ================== --}}
                         <div class="col-lg-8 col-md-6">
-                            {{-- Nếu sau dùng voucher thì bật đoạn này --}}
-                            {{-- 
-                            <h6 class="coupon__code">
-                                <span class="icon_tag_alt"></span>
-                                Bạn có mã giảm giá? <a href="#">Nhấn vào đây</a> để nhập mã
-                            </h6>
-                            --}}
+                            @if ($cart->voucher)
+                                <div class="alert alert-success mb-3" style="padding: 12px 15px; border-radius: 6px; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-tag me-2"></i>
+                                            <strong>Mã giảm giá đã áp dụng: {{ $cart->voucher->code }}</strong>
+                                            <small class="d-block text-muted mt-1">{{ $cart->voucher->name }} - Giảm {{ number_format($discountAmount, 0, ',', '.') }}₫</small>
+                                        </div>
+                                        <a href="{{ route('cart.index') }}" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;">
+                                            <i class="fas fa-edit me-1"></i>Thay đổi
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
                             <h6 class="checkout__title">Thông tin người nhận</h6>
 
                             <div class="row">
@@ -424,6 +432,19 @@
                                             {{ number_format($subtotal, 0, ',', '.') }}₫
                                         </span>
                                     </li>
+                                    @if ($cart->voucher && $discountAmount > 0)
+                                        <li style="color: #28a745;">
+                                            Giảm giá ({{ $cart->voucher->code }})
+                                            <span id="checkout-discount" data-value="{{ $discountAmount }}" style="color: #28a745;">
+                                                -{{ number_format($discountAmount, 0, ',', '.') }}₫
+                                            </span>
+                                        </li>
+                                    @else
+                                        <li style="display: none;">
+                                            Giảm giá
+                                            <span id="checkout-discount" data-value="0" style="color: #28a745;">0₫</span>
+                                        </li>
+                                    @endif
                                     <li>Phí vận chuyển
                                         <span id="checkout-shipping" data-value="{{ $initialShippingFee }}">
                                             {{ number_format($initialShippingFee, 0, ',', '.') }}₫
@@ -541,7 +562,14 @@
                 const fee = calculateFeeFromCity(citySelect.value);
                 shippingEl.dataset.value = fee;
                 shippingEl.textContent = formatCurrency(fee);
-                totalEl.textContent = formatCurrency(baseSubtotal + fee);
+                
+                // Lấy discount amount từ element hoặc từ PHP
+                const discountEl = document.getElementById('checkout-discount');
+                const discountAmount = discountEl ? Number(discountEl.dataset.value || 0) : 0;
+                
+                // Tính tổng: subtotal - discount + shipping
+                const finalTotal = baseSubtotal - discountAmount + fee;
+                totalEl.textContent = formatCurrency(finalTotal);
             };
 
             populateDistricts(citySelect.value, originalDistrict);

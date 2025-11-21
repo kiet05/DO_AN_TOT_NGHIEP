@@ -212,7 +212,8 @@
 
             <div class="thankyou-actions">
                 <a href="{{ route('products.index') }}" class="thankyou-btn thankyou-btn--primary">Tiếp tục mua sắm</a>
-                <a href="#order-detail" class="thankyou-btn thankyou-btn--outline">Xem lại đơn hàng đã đặt</a>
+                <a href="{{ route('checkout.success', ['order' => $order->id]) }}#order-detail"
+                    class="thankyou-btn thankyou-btn--outline">Xem lại đơn hàng đã đặt</a>
             </div>
         </div>
     </section>
