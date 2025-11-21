@@ -314,9 +314,12 @@ class CartController extends Controller
 
         if (!$cart || $cart->items->isEmpty()) {
             return response()->json([
-                'html' => '<p class="text-center text-muted">Chưa có sản phẩm trong giỏ hàng</p>'
+                'html' => '<p class="text-center text-muted py-4">Chưa có sản phẩm trong giỏ hàng</p>'
             ]);
         }
+
+        // Tính lại tổng tiền để đảm bảo chính xác
+        $cart->calculateTotal();
 
         $html = '<div class="cart-sidebar-items" style="max-height: 400px; overflow-y: auto;">';
         foreach ($cart->items->take(5) as $item) {
@@ -327,13 +330,16 @@ class CartController extends Controller
                     ? asset('storage/' . $product->images->first()->image_path) 
                     : asset('img/no-image.png'));
             
-            $html .= '<div class="d-flex align-items-center mb-3 pb-3 border-bottom">';
+            $html .= '<div class="d-flex align-items-center mb-3 pb-3 border-bottom cart-sidebar-item" data-item-id="' . $item->id . '">';
             $html .= '<img src="' . $mainImage . '" alt="' . $product->name . '" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px;">';
             $html .= '<div class="flex-grow-1">';
             $html .= '<h6 class="mb-1" style="font-size: 14px;">' . $product->name . '</h6>';
             $html .= '<p class="mb-0" style="font-size: 12px; color: #666;">Số lượng: ' . $item->quantity . '</p>';
             $html .= '<p class="mb-0" style="font-size: 14px; font-weight: 600; color: var(--secondary-color);">' . number_format($item->subtotal, 0, ',', '.') . '₫</p>';
             $html .= '</div>';
+            $html .= '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2 remove-cart-item" data-item-id="' . $item->id . '" style="font-size: 16px; line-height: 1;" title="Xóa sản phẩm">';
+            $html .= '<i class="fas fa-times"></i>';
+            $html .= '</button>';
             $html .= '</div>';
         }
         

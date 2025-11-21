@@ -272,6 +272,28 @@
         }
         
         /* Cart Sidebar */
+        .cart-sidebar-item {
+            position: relative;
+            transition: opacity 0.2s ease;
+        }
+
+        .remove-cart-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            opacity: 0.6;
+            min-width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .remove-cart-item:hover {
+            opacity: 1;
+            transform: scale(1.1);
+            color: #dc3545 !important;
+        }
+
         .cart-sidebar {
             position: fixed;
             right: -400px;
@@ -529,11 +551,84 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('cart-content').innerHTML = data.html;
+                    // Attach remove event listeners after loading
+                    attachRemoveItemListeners();
                 })
                 .catch(error => {
                     console.error('Error loading cart sidebar:', error);
 
                     document.getElementById('cart-content').innerHTML = '<p class="text-center text-muted">Có lỗi xảy ra khi tải giỏ hàng</p>';
+                });
+        }
+
+        // Attach remove item event listeners
+        function attachRemoveItemListeners() {
+            document.querySelectorAll('.remove-cart-item').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const itemId = this.getAttribute('data-item-id');
+                    removeItemFromSidebar(itemId);
+                });
+            });
+        }
+
+        // Remove item from sidebar
+        function removeItemFromSidebar(itemId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?')) {
+                return;
+            }
+
+            const itemElement = document.querySelector(`.cart-sidebar-item[data-item-id="${itemId}"]`);
+            const removeButton = document.querySelector(`.remove-cart-item[data-item-id="${itemId}"]`);
+            
+            if (itemElement) {
+                itemElement.style.opacity = '0.5';
+                itemElement.style.pointerEvents = 'none';
+            }
+            
+            if (removeButton) {
+                removeButton.disabled = true;
+                removeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            fetch(`{{ url('cart') }}/${itemId}/remove`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload sidebar to update content (will show empty message if cart is empty)
+                        loadCartSidebar();
+                        // Update cart count
+                        loadCartCount();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra');
+                        if (itemElement) {
+                            itemElement.style.opacity = '1';
+                            itemElement.style.pointerEvents = 'auto';
+                        }
+                        if (removeButton) {
+                            removeButton.disabled = false;
+                            removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi xóa sản phẩm');
+                    if (itemElement) {
+                        itemElement.style.opacity = '1';
+                        itemElement.style.pointerEvents = 'auto';
+                    }
+                    if (removeButton) {
+                        removeButton.disabled = false;
+                        removeButton.innerHTML = '<i class="fas fa-times"></i>';
+                    }
                 });
         }
         
