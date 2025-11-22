@@ -49,6 +49,58 @@ class Voucher extends Model
     {
         return $this->end_at && $this->end_at->isPast();
     }
+
+    /**
+     * Lấy số lần đã sử dụng voucher
+     */
+    public function getUsedCountAttribute(): int
+    {
+        return $this->usages()->count();
+    }
+
+    /**
+     * Lấy số lần còn lại có thể sử dụng
+     */
+    public function getRemainingCountAttribute(): ?int
+    {
+        if (!$this->usage_limit) {
+            return null; // Không giới hạn
+        }
+        return max(0, $this->usage_limit - $this->used_count);
+    }
+
+    /**
+     * Kiểm tra voucher còn có thể sử dụng không
+     */
+    public function isUsable(): bool
+    {
+        if (!$this->is_active) {
+            return false;
+        }
+
+        if ($this->end_at && $this->end_at->isPast()) {
+            return false;
+        }
+
+        if ($this->start_at && $this->start_at->isFuture()) {
+            return false;
+        }
+
+        if ($this->usage_limit && $this->used_count >= $this->usage_limit) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Kiểm tra user đã sử dụng voucher này chưa
+     */
+    public function isUsedByUser($userId): bool
+    {
+        return $this->usages()->where('user_id', $userId)->exists();
+    }
+
     /** @use HasFactory<\Database\Factories\VoucherFactory> */
     use HasFactory;
 }

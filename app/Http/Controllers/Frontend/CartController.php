@@ -460,15 +460,25 @@ class CartController extends Controller
             ], 400);
         }
 
-        // Kiểm tra giới hạn sử dụng
-        $usageCount = VoucherUsage::where('voucher_id', $voucher->id)
+        // Kiểm tra tổng số lần voucher đã được sử dụng (tất cả users)
+        $totalUsageCount = VoucherUsage::where('voucher_id', $voucher->id)->count();
+        
+        if ($voucher->usage_limit && $totalUsageCount >= $voucher->usage_limit) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mã giảm giá đã hết lượt sử dụng'
+            ], 400);
+        }
+
+        // Kiểm tra user đã sử dụng voucher này chưa (không cho dùng lại)
+        $userUsageCount = VoucherUsage::where('voucher_id', $voucher->id)
             ->where('user_id', $user->id)
             ->count();
 
-        if ($voucher->usage_limit && $usageCount >= $voucher->usage_limit) {
+        if ($userUsageCount > 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn đã sử dụng hết số lần áp dụng mã giảm giá này'
+                'message' => 'Bạn đã sử dụng mã giảm giá này rồi. Mỗi mã chỉ được sử dụng một lần.'
             ], 400);
         }
 

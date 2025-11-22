@@ -247,6 +247,25 @@
         background: #e53637;
     }
 
+    /* ===== Saved Addresses ===== */
+    .saved-address-item {
+        transition: all 0.2s ease;
+    }
+
+    .saved-address-item:hover {
+        background: #f8f9fa !important;
+        border-color: #28a745 !important;
+    }
+
+    .saved-address-item input[type="radio"] {
+        margin-top: 4px;
+        cursor: pointer;
+    }
+
+    .address-radio {
+        cursor: pointer;
+    }
+
     /* ===== Responsive nhỏ nhỏ ===== */
     @media (max-width: 991.98px) {
         .checkout__form form {
@@ -313,12 +332,54 @@
                             @endif
                             <h6 class="checkout__title">Thông tin người nhận</h6>
 
+                            {{-- Danh sách địa chỉ đã lưu --}}
+                            @if ($savedAddresses && $savedAddresses->count() > 0)
+                                <div class="mb-4">
+                                    <p class="mb-2" style="font-size: 14px; font-weight: 600;">Địa chỉ đã lưu:</p>
+                                    <div class="saved-addresses" style="max-height: 200px; overflow-y: auto;">
+                                        @foreach ($savedAddresses as $address)
+                                            <div class="saved-address-item mb-2 p-3 border rounded" 
+                                                style="cursor: pointer; transition: all 0.2s; {{ $address->is_default ? 'border-color: #28a745; background: #f8fff9;' : '' }}"
+                                                onclick="selectAddress({{ $address->id }})">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <strong style="font-size: 14px;">{{ $address->receiver_name }}</strong>
+                                                            @if ($address->is_default)
+                                                                <span class="badge bg-success ms-2" style="font-size: 11px;">Mặc định</span>
+                                                            @endif
+                                                        </div>
+                                                        <p class="mb-1" style="font-size: 13px; color: #666;">
+                                                            {{ $address->receiver_phone }}
+                                                        </p>
+                                                        <p class="mb-0" style="font-size: 13px; color: #666;">
+                                                            {{ $address->receiver_address_detail }}, 
+                                                            {{ $locations[$address->receiver_city]['districts'][$address->receiver_district] ?? $address->receiver_district }}, 
+                                                            {{ $locations[$address->receiver_city]['name'] ?? $address->receiver_city }}
+                                                        </p>
+                                                    </div>
+                                                    <input type="radio" name="selected_address_id" value="{{ $address->id }}" 
+                                                        id="address_{{ $address->id }}" 
+                                                        class="address-radio" 
+                                                        {{ $address->is_default ? 'checked' : '' }}
+                                                        style="margin-top: 4px;">
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="showNewAddressForm()">
+                                        <i class="fas fa-plus me-1"></i>Thêm địa chỉ mới
+                                    </button>
+                                </div>
+                            @endif
+
+                            <div id="address-form" style="{{ $savedAddresses && $savedAddresses->count() > 0 ? 'display: none;' : '' }}">
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="checkout__input">
                                         <p>Họ và tên<span>*</span></p>
-                                        <input type="text" name="receiver_name"
-                                            value="{{ old('receiver_name', $user->full_name ?? $user->name) }}">
+                                        <input type="text" name="receiver_name" id="receiver_name"
+                                            value="{{ old('receiver_name', $defaultAddress ? $defaultAddress->receiver_name : ($user->full_name ?? $user->name)) }}">
                                         @error('receiver_name')
                                             <span class="text-danger small">{{ $message }}</span>
                                         @enderror
@@ -364,9 +425,9 @@
 
                             <div class="checkout__input">
                                 <p>Địa chỉ cụ thể<span>*</span></p>
-                                <input type="text" name="receiver_address_detail" class="checkout__input__add"
+                                <input type="text" name="receiver_address_detail" id="receiver_address_detail" class="checkout__input__add"
                                     placeholder="Số nhà, đường, phường/xã..."
-                                    value="{{ old('receiver_address_detail') }}">
+                                    value="{{ old('receiver_address_detail', $defaultAddress ? $defaultAddress->receiver_address_detail : '') }}">
                                 @error('receiver_address_detail')
                                     <span class="text-danger small">{{ $message }}</span>
                                 @enderror
@@ -376,8 +437,8 @@
                                 <div class="col-lg-6">
                                     <div class="checkout__input">
                                         <p>Số điện thoại<span>*</span></p>
-                                        <input type="text" name="receiver_phone"
-                                            value="{{ old('receiver_phone', $user->phone ?? '') }}">
+                                        <input type="text" name="receiver_phone" id="receiver_phone"
+                                            value="{{ old('receiver_phone', $defaultAddress ? $defaultAddress->receiver_phone : ($user->phone ?? '')) }}">
                                         @error('receiver_phone')
                                             <span class="text-danger small">{{ $message }}</span>
                                         @enderror
@@ -396,6 +457,24 @@
                                 <input type="text" name="note"
                                     placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."
                                     value="{{ old('note') }}">
+                            </div>
+
+                            {{-- Checkbox lưu địa chỉ --}}
+                            <div class="checkout__input__checkbox mb-3">
+                                <label for="save_address">
+                                    <input type="checkbox" id="save_address" name="save_address" value="1">
+                                    <span class="checkmark"></span>
+                                    Lưu địa chỉ này để sử dụng sau
+                                </label>
+                            </div>
+
+                            <div class="checkout__input__checkbox mb-3" id="set_default_wrapper" style="display: none;">
+                                <label for="set_as_default">
+                                    <input type="checkbox" id="set_as_default" name="set_as_default" value="1">
+                                    <span class="checkmark"></span>
+                                    Đặt làm địa chỉ mặc định
+                                </label>
+                            </div>
                             </div>
                         </div>
 
@@ -509,13 +588,71 @@
     <!-- Checkout Section End -->
 
     <script>
+        const savedAddresses = @json($savedAddresses);
+        const locations = @json($locations);
+
+        // Xử lý chọn địa chỉ đã lưu
+        function selectAddress(addressId) {
+            const address = savedAddresses.find(a => a.id === addressId);
+            if (!address) return;
+
+            // Cập nhật form với thông tin địa chỉ đã chọn
+            document.getElementById('receiver_name').value = address.receiver_name;
+            document.getElementById('receiver_phone').value = address.receiver_phone;
+            document.getElementById('receiver_address_detail').value = address.receiver_address_detail;
+            
+            // Cập nhật thành phố và quận
+            const citySelect = document.querySelector('select[name="receiver_city"]');
+            const districtSelect = document.querySelector('select[name="receiver_district"]');
+            
+            citySelect.value = address.receiver_city;
+            populateDistricts(address.receiver_city, address.receiver_district);
+            
+            // Đánh dấu radio button đã chọn
+            document.getElementById('address_' + addressId).checked = true;
+            
+            // Hiển thị form
+            document.getElementById('address-form').style.display = 'block';
+            
+            // Cập nhật phí ship
+            updateTotals();
+        }
+
+        // Hiển thị form nhập địa chỉ mới
+        function showNewAddressForm() {
+            document.getElementById('address-form').style.display = 'block';
+            // Bỏ chọn tất cả radio button
+            document.querySelectorAll('.address-radio').forEach(radio => {
+                radio.checked = false;
+            });
+            // Reset form
+            document.getElementById('receiver_name').value = '';
+            document.getElementById('receiver_phone').value = '';
+            document.getElementById('receiver_address_detail').value = '';
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const citySelect = document.querySelector('select[name="receiver_city"]');
             const districtSelect = document.querySelector('select[name="receiver_district"]');
             const subtotalEl = document.getElementById('checkout-subtotal');
             const shippingEl = document.getElementById('checkout-shipping');
             const totalEl = document.getElementById('checkout-total');
-            const locationMap = @json($locations);
+            const locationMap = locations;
+            
+            // Xử lý checkbox "Lưu địa chỉ"
+            const saveAddressCheckbox = document.getElementById('save_address');
+            const setDefaultWrapper = document.getElementById('set_default_wrapper');
+            
+            if (saveAddressCheckbox) {
+                saveAddressCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        setDefaultWrapper.style.display = 'block';
+                    } else {
+                        setDefaultWrapper.style.display = 'none';
+                        document.getElementById('set_as_default').checked = false;
+                    }
+                });
+            }
 
             if (!citySelect || !districtSelect || !subtotalEl || !shippingEl || !totalEl) {
                 return;
@@ -557,6 +694,9 @@
                     districtSelect.value = firstOptionValue;
                 }
             };
+            
+            // Export function để dùng trong selectAddress
+            window.populateDistricts = populateDistricts;
 
             const updateTotals = () => {
                 const fee = calculateFeeFromCity(citySelect.value);
@@ -579,6 +719,11 @@
                 populateDistricts(citySelect.value);
                 updateTotals();
             });
+            
+            // Nếu có địa chỉ mặc định, tự động chọn
+            @if ($defaultAddress)
+                selectAddress({{ $defaultAddress->id }});
+            @endif
         });
     </script>
 @endsection

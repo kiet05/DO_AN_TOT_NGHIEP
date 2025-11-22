@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\Voucher;
 use App\Models\VoucherUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,11 +42,28 @@ class CheckoutController extends Controller
         // 🔹 Lấy các phương thức thanh toán đang active
         $paymentMethods = PaymentMethod::active()->get();
 
+        // 🔹 Lấy danh sách địa chỉ đã lưu của user
+        $savedAddresses = Address::where('user_id', $user->id)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 🔹 Lấy địa chỉ mặc định
+        $defaultAddress = Address::getDefaultForUser($user->id);
+
         // 🔹 Cấu hình thành phố / quận, dùng để tính phí ship
         $locations = $this->locationConfig();
-        $selectedCity = session()->getOldInput('receiver_city', array_key_first($locations));
+        
+        // Nếu có địa chỉ mặc định, dùng nó; nếu không dùng old input hoặc giá trị đầu tiên
+        if ($defaultAddress) {
+            $selectedCity = $defaultAddress->receiver_city;
+            $selectedDistrict = $defaultAddress->receiver_district;
+        } else {
+            $selectedCity = session()->getOldInput('receiver_city', array_key_first($locations));
+            $selectedDistrict = session()->getOldInput('receiver_district', array_key_first($locations[$selectedCity]['districts'] ?? []));
+        }
+        
         $districtsOfCity = $locations[$selectedCity]['districts'] ?? [];
-        $selectedDistrict = session()->getOldInput('receiver_district', array_key_first($districtsOfCity));
 
         return view('frontend.checkout.index', [
             'cart'             => $cart,
@@ -54,6 +73,8 @@ class CheckoutController extends Controller
             'selectedCity'     => $selectedCity,
             'selectedDistrict' => $selectedDistrict,
             'shippingFee'      => $this->calculateShippingFeeByCity($selectedCity),
+            'savedAddresses'   => $savedAddresses,
+            'defaultAddress'   => $defaultAddress,
         ]);
     }
 
@@ -73,6 +94,8 @@ class CheckoutController extends Controller
             'note'                   => 'nullable|string',
             // 🔹 validate theo slug trong bảng payment_methods
             'payment_method'         => 'required|string|exists:payment_methods,slug',
+            'save_address'           => 'nullable|boolean',
+            'set_as_default'         => 'nullable|boolean',
         ]);
 
         // validate quận/huyện thuộc đúng thành phố
@@ -107,6 +130,45 @@ class CheckoutController extends Controller
         }
 
         $cart->calculateTotal();
+
+        // 🔹 Kiểm tra lại voucher trước khi checkout (đảm bảo voucher vẫn hợp lệ)
+        if ($cart->voucher_id) {
+            $voucher = Voucher::find($cart->voucher_id);
+            
+            if (!$voucher || !$voucher->is_active) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Mã giảm giá không còn hợp lệ. Vui lòng thử lại.');
+            }
+
+            // Kiểm tra thời gian hiệu lực
+            $now = now();
+            if ($voucher->start_at && $voucher->start_at->isFuture()) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Mã giảm giá chưa có hiệu lực.');
+            }
+
+            if ($voucher->end_at && $voucher->end_at->isPast()) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Mã giảm giá đã hết hạn.');
+            }
+
+            // Kiểm tra tổng số lần đã sử dụng
+            $totalUsageCount = VoucherUsage::where('voucher_id', $voucher->id)->count();
+            if ($voucher->usage_limit && $totalUsageCount >= $voucher->usage_limit) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Mã giảm giá đã hết lượt sử dụng.');
+            }
+
+            // Kiểm tra user đã dùng voucher này chưa
+            $userUsageCount = VoucherUsage::where('voucher_id', $voucher->id)
+                ->where('user_id', $user->id)
+                ->count();
+
+            if ($userUsageCount > 0) {
+                return redirect()->route('cart.index')
+                    ->with('error', 'Bạn đã sử dụng mã giảm giá này rồi.');
+            }
+        }
 
         // 🔹 Lấy thông tin phương thức thanh toán
         $method = PaymentMethod::active()
@@ -218,6 +280,24 @@ class CheckoutController extends Controller
                     'discount_amount' => $discountAmount,
                     'used_at'        => now(),
                 ]);
+            }
+
+            // 🔹 Lưu địa chỉ giao hàng nếu user chọn
+            if ($request->has('save_address') && $request->save_address) {
+                $address = Address::create([
+                    'user_id'              => $user->id,
+                    'receiver_name'        => $request->receiver_name,
+                    'receiver_phone'       => $request->receiver_phone,
+                    'receiver_city'        => $request->receiver_city,
+                    'receiver_district'    => $request->receiver_district,
+                    'receiver_address_detail' => $request->receiver_address_detail,
+                    'is_default'           => $request->has('set_as_default') && $request->set_as_default,
+                ]);
+
+                // Nếu đặt làm mặc định, cập nhật các địa chỉ khác
+                if ($address->is_default) {
+                    $address->setAsDefault();
+                }
             }
 
             DB::commit();
