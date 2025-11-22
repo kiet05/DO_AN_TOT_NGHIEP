@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
+use App\Models\ProductVariant;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
 use Illuminate\Http\Request;
@@ -121,6 +122,7 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
         }
 
+        // Kiểm tra sơ bộ số lượng (không lock, chỉ để tránh request không cần thiết)
         foreach ($cart->items as $item) {
             $variant = $item->productVariant;
             if (!$variant || $item->quantity > $variant->quantity) {
@@ -192,6 +194,38 @@ class CheckoutController extends Controller
         DB::beginTransaction();
 
         try {
+            // 🔹 Lấy danh sách variant IDs cần lock
+            $variantIds = $cart->items->pluck('product_variant_id')->toArray();
+
+            // 🔹 Lock các product variants để tránh race condition
+            // Sử dụng lockForUpdate để đảm bảo không có transaction khác có thể cập nhật cùng lúc
+            $lockedVariants = ProductVariant::whereIn('id', $variantIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            // 🔹 Kiểm tra lại số lượng sau khi lock (quan trọng để tránh race condition)
+            $outOfStockItems = [];
+            foreach ($cart->items as $item) {
+                $variant = $lockedVariants->get($item->product_variant_id);
+                
+                if (!$variant) {
+                    $outOfStockItems[] = $item->productVariant->product->name ?? 'Sản phẩm không tồn tại';
+                    continue;
+                }
+
+                // Kiểm tra số lượng thực tế sau khi lock
+                if ($item->quantity > $variant->quantity) {
+                    $outOfStockItems[] = $variant->product->name . ' (Còn lại: ' . $variant->quantity . ' sản phẩm)';
+                }
+            }
+
+            if (!empty($outOfStockItems)) {
+                DB::rollBack();
+                return redirect()->route('cart.index')
+                    ->with('error', 'Một số sản phẩm không còn đủ số lượng: ' . implode(', ', $outOfStockItems) . '. Vui lòng cập nhật lại giỏ hàng.');
+            }
+
             // 🔹 Tạo Order
             $order = Order::create([
                 'user_id'         => $user->id,
@@ -210,9 +244,21 @@ class CheckoutController extends Controller
                 'status'          => 'pending',
             ]);
 
-            // 🔹 Tạo OrderItems + trừ tồn kho
+            // 🔹 Tạo OrderItems + trừ tồn kho (atomic operation)
             foreach ($cart->items as $item) {
-                $variant = $item->productVariant;
+                $variant = $lockedVariants->get($item->product_variant_id);
+                
+                if (!$variant) {
+                    DB::rollBack();
+                    return redirect()->route('cart.index')
+                        ->with('error', 'Có lỗi xảy ra khi xử lý đơn hàng. Vui lòng thử lại.');
+                }
+
+                // Load relationship nếu chưa có
+                if (!$variant->relationLoaded('product')) {
+                    $variant->load('product');
+                }
+                
                 $product = $variant->product;
 
                 $lineSubtotal = $item->subtotal;
@@ -243,8 +289,8 @@ class CheckoutController extends Controller
                     'status'            => 'pending',
                 ]);
 
-                $variant->quantity -= $item->quantity;
-                $variant->save();
+                // Trừ số lượng tồn kho (atomic operation trong transaction)
+                $variant->decrement('quantity', $item->quantity);
             }
 
             // 🔹 Đóng giỏ hàng
