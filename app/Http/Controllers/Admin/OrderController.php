@@ -35,22 +35,47 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
-    private function statusMatrix(): array
-    {
-        return [
-            'pending'   => ['shipping', 'cancelled'],
-            'shipping'  => ['completed', 'cancelled'],
-            'completed' => [],
-            'cancelled' => [],
-        ];
-    }
+ private function statusMatrix(): array
+{
+    return [
+        'pending'    => ['confirmed', 'cancelled'],      // Chờ xử lý -> Xác nhận / Hủy
+        'confirmed'  => ['processing', 'cancelled'],     // Xác nhận   -> Chuẩn bị / Hủy
+        'processing' => ['shipping', 'cancelled'],       // Chuẩn bị   -> Đang giao / Hủy
+
+        // ĐANG GIAO: chỉ cho phép sang ĐÃ GIAO hoặc HỦY
+        'shipping'   => ['shipped', 'cancelled'],
+
+        // ĐÃ GIAO: có thể sang HOÀN THÀNH hoặc HOÀN HÀNG
+        'shipped'    => ['completed', 'returned'],
+
+        // HOÀN THÀNH: trạng thái cuối (nếu muốn cho phép hoàn sau hoàn thành
+        // thì đổi thành ['returned'])
+        'completed'  => [],
+
+        // 2 trạng thái cuối còn lại
+        'cancelled'  => [],
+        'returned'   => [],
+    ];
+}
+
+
 
 
     // Trạng thái CHUẨN dùng để hiển thị/validate chính
-    private function allowedStatuses(): array
-    {
-        return ['pending', 'shipping', 'completed', 'cancelled'];
-    }
+private function allowedStatuses(): array
+{
+    return [
+        'pending',    // Chờ xử lý
+        'confirmed',  // Xác nhận
+        'processing', // Chuẩn bị
+        'shipping',   // Đang giao
+        'shipped',    // Đã giao
+        'completed',  // Hoàn thành
+        'cancelled',  // Hủy
+        'returned',   // Hoàn hàng
+    ];
+}
+
 
 
     // Cập nhật trạng thái đơn hàng
@@ -147,14 +172,18 @@ class OrderController extends Controller
     }
     // Thêm vào trong class OrderController
 
-    /** Map các tên cũ -> tên chuẩn dùng trong view */
-    private function legacyAliases(): array
-    {
-        return [
-            'success'  => 'completed',
-            'canceled' => 'cancelled',
-        ];
-    }
+   /** Map các tên cũ -> tên chuẩn dùng trong view */
+private function legacyAliases(): array
+{
+    return [
+        'success'  => 'completed',
+        'canceled' => 'cancelled',
+
+        // Nếu trước đây bạn có ghi kiểu khác thì thêm vào đây
+        // 'processing_old' => 'processing',
+    ];
+}
+
 
     /** Trả về tên trạng thái chuẩn */
     private function canonicalStatus(string $status): string
@@ -174,4 +203,5 @@ class OrderController extends Controller
         }
         return array_values(array_unique($syn));
     }
+    
 }

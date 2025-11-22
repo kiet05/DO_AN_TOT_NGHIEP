@@ -15,7 +15,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Settings\Appearance;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\PostController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserController as AdminUserController; // admin
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ReportController;
@@ -35,9 +35,11 @@ use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReturnRequestController;
-use App\Http\Controllers\Admin\ContactController as AdminContactController;
-use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
+
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
+use App\Http\Controllers\Frontend\UserController;
+use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
+use App\Http\Controllers\Admin\ContactController as AdminContactController;
 
 
 // ============================
@@ -58,7 +60,6 @@ Route::get('/blog/{id}', [BlogController::class, 'show'])->name('blog.show');
 Route::post('/blog/{id}/comments', [BlogController::class, 'storeComment'])
     ->middleware('auth')
     ->name('blog.comments.store');
-
 
 // Giỏ hàng
 Route::prefix('cart')->name('cart.')->group(function () {
@@ -139,7 +140,20 @@ Route::middleware(['auth'])->group(function () {
             )
         )
         ->name('two-factor.show');
+    // 👤 Profile User Khách hàng (Sử dụng ProfileController cho các chức năng cốt lõi)
+    // Trang tổng quan profile user
+    Route::get('/profile', [UserController::class, 'index'])->name('profile.index');
+
+    // Cập nhật thông tin cơ bản
+    Route::put('/profile/update-info', [UserController::class, 'update'])->name('profile.update');
+
+    // Cập nhật Ảnh đại diện
+    Route::put('profile/update-avatar', [UserController::class, 'updateAvatar'])->name('profile.avatar.update');
+
+    // Đổi mật khẩu
+    Route::put('/profile/change-password', [UserController::class, 'updatePassword'])->name('profile.password.update');
 });
+
 
 
 // ==================================================
@@ -152,18 +166,18 @@ Route::prefix('admin')
 
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
-        
-// ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
-        Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])
-            ->name('profile.index'); // Tên đầy đủ sẽ là admin.profile.index
+        Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
 
-        Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])
-            ->name('profile.update'); // Tên đầy đủ sẽ là admin.profile.update
+        // ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
+        Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile.index');
+        Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
         // 🧱 Banners
         Route::resource('banners', BannerController::class)->except(['show']);
         Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
         Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
+        // 🔔 Notifications admin
+       
 
         // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
@@ -228,9 +242,9 @@ Route::prefix('admin')
         });
 
         // 👥 Users
-        Route::get('users', [UserController::class, 'index'])->name('users.index');
-        Route::get('users/{id}', [UserController::class, 'show'])->name('users.show');
-        Route::delete('users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('users', [AdminUserController::class, 'index'])->name('admin.users.index');
+        Route::get('users/{id}', [AdminUserController::class, 'show'])->name('admin.users.show');
+        Route::delete('users/{id}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
 
         // 🧑‍💼 Admin accounts
         Route::resource('accounts', AdminAccountController::class);

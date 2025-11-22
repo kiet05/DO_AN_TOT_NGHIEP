@@ -401,19 +401,35 @@
                     </form> 
                     </div>
                 </div>
-                <div class="col-md-3 text-end header-icons">
-                    @auth
-                        <a href="{{ url('/admin') }}"><i class="fas fa-user"></i></a>
-                    @else
-                        <a href="{{ route('login') }}"><i class="fas fa-user"></i></a>
-                    @endauth
+                <div class="col-md-3 d-flex justify-content-end align-items-center header-icons">
+    @auth
+        <div class="dropdown me-3">
+            <a href="#" class="dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user fa-lg"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                @if(auth()->user()->role == 'admin') 
+                    <li><a class="dropdown-item" href="{{ url('/admin') }}">Dashboard Admin</a></li>
+                @endif
+                <li><a class="dropdown-item" href="{{ route('profile.index') }}">Profile</a></li>
+                <li>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button class="dropdown-item" type="submit">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    @else
+        <a href="{{ route('login') }}" class="me-3"><i class="fas fa-user fa-lg"></i></a>
+    @endauth
 
+    <a href="#" id="cart-toggle" class="position-relative">
+        <i class="fas fa-shopping-bag fa-lg"></i>
+        <span class="cart-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">0</span>
+    </a>
+</div>
 
-                    <a href="#" id="cart-toggle">
-                        <i class="fas fa-shopping-bag"></i>
-                        <span class="cart-count">0</span>
-                    </a>
-                </div>
 
 
             </div>

@@ -34,7 +34,7 @@ class Register extends Component
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['role_id'] = 3; // Customer role
+        $validated['role_id'] = 5; // Customer role
 
         event(new Registered(($user = User::create($validated))));
 
