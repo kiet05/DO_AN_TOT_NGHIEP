@@ -13,6 +13,89 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom Pagination CSS - Load sau Bootstrap để override -->
+    <style>
+        /* CSS pagination với specificity cao để override Bootstrap */
+        body .pagination,
+        body ul.pagination {
+            justify-content: center;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        body .pagination .page-link,
+        body .pagination li a {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.25;
+            min-width: 32px;
+            max-width: 40px;
+            width: auto;
+            height: 32px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            background-color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        
+        body .pagination .page-item:first-child .page-link,
+        body .pagination .page-item:last-child .page-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            min-width: 32px;
+            max-width: 40px;
+            height: 32px;
+        }
+        
+        body .pagination .page-item.disabled .page-link {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #e9ecef;
+        }
+        
+        body .pagination .page-item.active .page-link {
+            background-color: var(--secondary-color, #d4af37);
+            border-color: var(--secondary-color, #d4af37);
+            color: #fff;
+            z-index: 1;
+        }
+        
+        body .pagination .page-link:hover:not(.disabled) {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+            color: #495057;
+        }
+        
+        body .pagination .page-item.active .page-link:hover {
+            background-color: var(--secondary-color, #d4af37);
+            border-color: var(--secondary-color, #d4af37);
+            color: #fff;
+        }
+        
+        /* Giảm kích thước icon trong pagination */
+        body .pagination .page-link svg,
+        body .pagination .page-link i {
+            width: 0.875rem;
+            height: 0.875rem;
+            font-size: 0.875rem;
+            max-width: 0.875rem;
+            max-height: 0.875rem;
+        }
+        
+        /* Đảm bảo các nút Previous/Next không quá to */
+        body .pagination .page-item:first-child,
+        body .pagination .page-item:last-child {
+            font-size: 0.875rem;
+        }
+    </style>
 
     <style>
         :root {

@@ -20,7 +20,7 @@ use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
@@ -33,12 +33,34 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
         }
 
+        // 🔹 Lọc các sản phẩm đã chọn từ query parameter
+        $selectedItemIds = [];
+        if ($request->has('selected_items') && $request->selected_items) {
+            $selectedItemIds = explode(',', $request->selected_items);
+            $selectedItemIds = array_filter(array_map('intval', $selectedItemIds));
+        }
+
+        // Nếu có danh sách đã chọn, chỉ lấy những items đó
+        if (!empty($selectedItemIds)) {
+            $cart->setRelation('items', $cart->items->whereIn('id', $selectedItemIds));
+        }
+
+        if ($cart->items->count() === 0) {
+            return redirect()->route('cart.index')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán');
+        }
+
         if ($cart->items->contains(fn($item) => $item->isOutOfStock())) {
             return redirect()->route('cart.index')
                 ->with('error', 'Vui lòng cập nhật lại số lượng sản phẩm trong giỏ trước khi thanh toán');
         }
 
-        $cart->calculateTotal();
+        // Tính lại tổng tiền chỉ cho các sản phẩm đã chọn
+        // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        $selectedSubtotal = 0;
+        foreach ($cart->items as $item) {
+            $selectedSubtotal += $item->quantity * $item->price_at_time;
+        }
+        $cart->total_price = $selectedSubtotal;
 
         // 🔹 Lấy các phương thức thanh toán đang active
         $paymentMethods = PaymentMethod::active()->get();
@@ -76,6 +98,7 @@ class CheckoutController extends Controller
             'shippingFee'      => $this->calculateShippingFeeByCity($selectedCity),
             'savedAddresses'   => $savedAddresses,
             'defaultAddress'   => $defaultAddress,
+            'selectedItemIds'  => $selectedItemIds,
         ]);
     }
 
@@ -120,6 +143,21 @@ class CheckoutController extends Controller
 
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
+        }
+
+        // 🔹 Lọc các sản phẩm đã chọn từ request (nếu có)
+        $selectedItemIds = [];
+        if ($request->has('selected_items') && $request->selected_items) {
+            $selectedItemIds = explode(',', $request->selected_items);
+            $selectedItemIds = array_filter(array_map('intval', $selectedItemIds));
+            
+            if (!empty($selectedItemIds)) {
+                $cart->setRelation('items', $cart->items->whereIn('id', $selectedItemIds));
+            }
+        }
+
+        if ($cart->items->count() === 0) {
+            return redirect()->route('cart.index')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán');
         }
 
         // Kiểm tra sơ bộ số lượng (không lock, chỉ để tránh request không cần thiết)
@@ -179,7 +217,12 @@ class CheckoutController extends Controller
 
         // 🔹 Tính phí ship theo thành phố (Hà Nội nội thành: 30k, tỉnh/thành khác: 40k)
         $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
-        $totalPrice  = $cart->total_price;
+        // Tính tổng tiền chỉ cho các sản phẩm đã chọn
+        // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        $totalPrice = 0;
+        foreach ($cart->items as $item) {
+            $totalPrice += $item->quantity * $item->price_at_time;
+        }
         $discountAmount = $cart->discount_amount ?? 0;
         $finalAmount = $totalPrice - $discountAmount + $shippingFee;
 
@@ -261,7 +304,8 @@ class CheckoutController extends Controller
                 
                 $product = $variant->product;
 
-                $lineSubtotal = $item->subtotal;
+                // Tính lại subtotal để đảm bảo chính xác
+                $lineSubtotal = $item->quantity * $item->price_at_time;
 
                 OrderItem::create([
                     'order_id'          => $order->id,

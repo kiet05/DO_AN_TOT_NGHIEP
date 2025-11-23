@@ -51,11 +51,11 @@ class CartItem extends Model
     }
 
     /**
-     * Tính lại subtotal
+     * Tính lại subtotal và làm tròn thành số nguyên
      */
     public function calculateSubtotal()
     {
-        $this->subtotal = $this->quantity * $this->price_at_time;
+        $this->subtotal = round($this->quantity * $this->price_at_time);
         $this->save();
         return $this->subtotal;
     }

@@ -38,6 +38,24 @@
             padding: 20px 0;
             border-bottom: 1px solid #e9ecef;
             transition: background 0.3s;
+            position: relative;
+        }
+
+        .cart-item-checkbox {
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .cart-item-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--secondary-color);
+        }
+
+        .cart-item-checkbox label {
+            display: none;
         }
 
         .cart-item:last-child {
@@ -367,9 +385,29 @@
             </div>
 
             @if ($cart && $cart->items->count() > 0)
+                @php
+                    // Tính lại tổng tiền từ các sản phẩm không bị out of stock (mặc định được chọn)
+                    // Làm tròn từng item và tổng để đảm bảo không có số thập phân
+                    $initialSubtotal = 0;
+                    foreach ($cart->items as $item) {
+                        if (!$item->isOutOfStock()) {
+                            $itemSubtotal = round($item->quantity * $item->price_at_time);
+                            $initialSubtotal += $itemSubtotal;
+                        }
+                    }
+                    // Làm tròn tổng cuối cùng
+                    $initialSubtotal = round($initialSubtotal);
+                @endphp
                 <div class="row">
                     <div class="col-lg-8">
                         <div class="cart-items">
+                            {{-- Checkbox chọn tất cả --}}
+                            <div class="select-all-section mb-3 p-3 bg-light rounded">
+                                <label style="cursor: pointer; display: flex; align-items: center; margin: 0;">
+                                    <input type="checkbox" id="select-all-items" onchange="toggleSelectAll(this)" style="width: 18px; height: 18px; margin-right: 10px; accent-color: var(--secondary-color);">
+                                    <strong>Chọn tất cả sản phẩm</strong>
+                                </label>
+                            </div>
                             @foreach ($cart->items as $item)
                                 @php
                                     $product = $item->productVariant->product;
@@ -383,10 +421,24 @@
                                             : asset('img/no-image.png'));
 
                                     $variantAttributes = $variant->attributeValues->pluck('value')->join(', ');
+                                    
+                                    // Tính lại subtotal và làm tròn thành số nguyên
+                                    $itemSubtotal = round($item->quantity * $item->price_at_time);
                                 @endphp
 
                                 <div class="cart-item {{ $isOutOfStock ? 'out-of-stock' : '' }}"
                                     data-item-id="{{ $item->id }}">
+                                    <div class="cart-item-checkbox">
+                                        <input type="checkbox" 
+                                            class="item-checkbox" 
+                                            id="item_{{ $item->id }}" 
+                                            data-item-id="{{ $item->id }}"
+                                            data-price="{{ $itemSubtotal }}"
+                                            {{ !$isOutOfStock ? 'checked' : '' }}
+                                            {{ $isOutOfStock ? 'disabled' : '' }}
+                                            onchange="updateSelectedItems()">
+                                        <label for="item_{{ $item->id }}"></label>
+                                    </div>
                                     <img src="{{ $mainImage }}" alt="{{ $product->name }}" class="cart-item-image">
 
                                     <div class="cart-item-info">
@@ -438,7 +490,7 @@
                                         </div>
 
                                         <div class="cart-item-subtotal" id="subtotal-{{ $item->id }}">
-                                            {{ number_format($item->subtotal, 0, ',', '.') }}₫
+                                            {{ number_format($itemSubtotal, 0, ',', '.') }}₫
                                         </div>
 
                                         <button type="button" class="btn-remove-item"
@@ -458,7 +510,7 @@
                             <div class="summary-row">
                                 <span class="summary-label">Tạm tính:</span>
                                 <span class="summary-value" id="cart-subtotal">
-                                    {{ number_format($cart->total_price, 0, ',', '.') }}₫
+                                    {{ number_format($initialSubtotal, 0, ',', '.') }}₫
                                 </span>
                             </div>
 
@@ -499,14 +551,14 @@
                             <div class="summary-row">
                                 <span class="summary-label">Giảm giá:</span>
                                 <span class="summary-value" id="cart-discount">
-                                    {{ number_format($cart->discount_amount ?? 0, 0, ',', '.') }}₫
+                                    {{ number_format(round($cart->discount_amount ?? 0), 0, ',', '.') }}₫
                                 </span>
                             </div>
 
                             <div class="summary-row">
                                 <span class="summary-label summary-total">Tổng cộng:</span>
                                 <span class="summary-value summary-total" id="cart-total">
-                                    {{ number_format($cart->total_price - ($cart->discount_amount ?? 0), 0, ',', '.') }}₫
+                                    {{ number_format(round($initialSubtotal - ($cart->discount_amount ?? 0)), 0, ',', '.') }}₫
                                 </span>
                             </div>
 
@@ -516,9 +568,7 @@
                             @endphp
 
                             <button type="button" class="btn-checkout" id="btn-checkout"
-                                @if ($hasOutOfStock) disabled
-                                @else
-                                onclick="window.location.href='{{ route('checkout.index') }}'" @endif>
+                                onclick="proceedToCheckout()">
                                 Tiến hành thanh toán
                             </button>
 
@@ -592,12 +642,19 @@
                         // Update subtotal
                         document.getElementById(`subtotal-${itemId}`).textContent = data.subtotal;
 
-                        // Update cart total
-                        document.getElementById('cart-subtotal').textContent = data.cart_total;
+                        // Cập nhật giá của item trong checkbox
+                        const checkbox = document.querySelector(`.item-checkbox[data-item-id="${itemId}"]`);
+                        if (checkbox) {
+                            // Parse từ chuỗi đã format (có dấu phẩy và " đ" hoặc "₫") và làm tròn
+                            const newSubtotal = Math.round(parseFloat(data.subtotal.replace(/[^\d]/g, '')) || 0);
+                            checkbox.setAttribute('data-price', newSubtotal);
+                        }
+
+                        // Update cart total (chỉ tính sản phẩm đã chọn)
                         if (data.discount_amount) {
                             document.getElementById('cart-discount').textContent = data.discount_amount;
                         }
-                        updateCartTotal();
+                        updateSelectedItems();
 
                         // Update cart count in header
                         updateCartCount(data.cart_count);
@@ -674,12 +731,17 @@
                     if (data.success) {
                         item.remove();
 
-                        // Update cart total
-                        document.getElementById('cart-subtotal').textContent = data.cart_total;
+                        // Xóa checkbox của item đã xóa
+                        const checkbox = document.querySelector(`.item-checkbox[data-item-id="${itemId}"]`);
+                        if (checkbox) {
+                            checkbox.remove();
+                        }
+
+                        // Update cart total (chỉ tính sản phẩm đã chọn)
                         if (data.discount_amount) {
                             document.getElementById('cart-discount').textContent = data.discount_amount;
                         }
-                        updateCartTotal();
+                        updateSelectedItems();
 
                         // Update cart count
                         updateCartCount(data.cart_count);
@@ -712,11 +774,119 @@
             });
         }
 
+        // Cập nhật tổng tiền theo sản phẩm đã chọn
+        function updateSelectedItems() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            let selectedTotal = 0;
+
+            checkboxes.forEach(checkbox => {
+                // Lấy giá từ data-price (đã là số thuần từ PHP)
+                const priceStr = checkbox.getAttribute('data-price') || '0';
+                // Parse trực tiếp vì data-price đã là số thuần
+                const price = parseFloat(priceStr) || 0;
+                selectedTotal += price;
+            });
+
+            // Làm tròn tổng thành số nguyên
+            selectedTotal = Math.round(selectedTotal);
+
+            // Cập nhật tổng tiền
+            const discountText = document.getElementById('cart-discount').textContent;
+            // Parse discount từ text đã format (có dấu phẩy) và làm tròn
+            const discount = Math.round(parseFloat(discountText.replace(/[^\d]/g, '')) || 0);
+            const finalTotal = Math.round(Math.max(0, selectedTotal - discount));
+
+            // Cập nhật hiển thị (format không có số thập phân)
+            document.getElementById('cart-subtotal').textContent = 
+                new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(selectedTotal) + '₫';
+            document.getElementById('cart-total').textContent = 
+                new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(finalTotal) + '₫';
+
+            // Cập nhật trạng thái nút checkout
+            checkCheckoutButton();
+
+            // Cập nhật checkbox "Chọn tất cả"
+            updateSelectAllCheckbox();
+        }
+
+        // Chọn/bỏ chọn tất cả
+        function toggleSelectAll(checkbox) {
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox:not(:disabled)');
+            itemCheckboxes.forEach(cb => {
+                const itemElement = document.querySelector(`.cart-item[data-item-id="${cb.getAttribute('data-item-id')}"]`);
+                if (!itemElement || !itemElement.classList.contains('out-of-stock')) {
+                    cb.checked = checkbox.checked;
+                }
+            });
+            updateSelectedItems();
+        }
+
+        // Cập nhật trạng thái checkbox "Chọn tất cả"
+        function updateSelectAllCheckbox() {
+            const allCheckboxes = document.querySelectorAll('.item-checkbox:not(:disabled)');
+            const checkedCheckboxes = document.querySelectorAll('.item-checkbox:checked:not(:disabled)');
+            const selectAllCheckbox = document.getElementById('select-all-items');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length;
+            }
+        }
+
+        // Xử lý thanh toán với sản phẩm đã chọn
+        function proceedToCheckout() {
+            const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
+            const selectedItemIds = [];
+
+            selectedCheckboxes.forEach(checkbox => {
+                selectedItemIds.push(checkbox.getAttribute('data-item-id'));
+            });
+
+            if (selectedItemIds.length === 0) {
+                alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán');
+                return;
+            }
+
+            // Kiểm tra sản phẩm hết hàng
+            let hasOutOfStock = false;
+            selectedCheckboxes.forEach(checkbox => {
+                const itemId = checkbox.getAttribute('data-item-id');
+                const itemElement = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+                if (itemElement && itemElement.classList.contains('out-of-stock')) {
+                    hasOutOfStock = true;
+                }
+            });
+
+            if (hasOutOfStock) {
+                alert('Vui lòng xử lý các sản phẩm hết hàng trước khi thanh toán');
+                return;
+            }
+
+            // Chuyển đến trang checkout với danh sách item IDs đã chọn
+            const itemIdsParam = selectedItemIds.join(',');
+            window.location.href = '{{ route("checkout.index") }}?selected_items=' + itemIdsParam;
+        }
+
         function checkCheckoutButton() {
-            const outOfStockItems = document.querySelectorAll('.cart-item.out-of-stock');
+            const selectedCheckboxes = document.querySelectorAll('.item-checkbox:checked');
             const checkoutBtn = document.getElementById('btn-checkout');
 
-            if (outOfStockItems.length > 0) {
+            if (selectedCheckboxes.length === 0) {
+                checkoutBtn.disabled = true;
+                checkoutBtn.title = 'Vui lòng chọn ít nhất một sản phẩm để thanh toán';
+                return;
+            }
+
+            // Kiểm tra sản phẩm hết hàng trong danh sách đã chọn
+            let hasOutOfStock = false;
+            selectedCheckboxes.forEach(checkbox => {
+                const itemId = checkbox.getAttribute('data-item-id');
+                const itemElement = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+                if (itemElement && itemElement.classList.contains('out-of-stock')) {
+                    hasOutOfStock = true;
+                }
+            });
+
+            if (hasOutOfStock) {
                 checkoutBtn.disabled = true;
                 checkoutBtn.title = 'Vui lòng xử lý các sản phẩm hết hàng trước khi thanh toán';
             } else {
@@ -726,15 +896,8 @@
         }
 
         function updateCartTotal() {
-            const subtotalText = document.getElementById('cart-subtotal').textContent;
-            const discountText = document.getElementById('cart-discount').textContent;
-            
-            const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, '')) || 0;
-            const discount = parseFloat(discountText.replace(/[^\d]/g, '')) || 0;
-            const total = subtotal - discount;
-            
-            document.getElementById('cart-total').textContent = 
-                new Intl.NumberFormat('vi-VN').format(total) + '₫';
+            // Gọi updateSelectedItems thay vì tính từ text
+            updateSelectedItems();
         }
 
         // Initialize
@@ -744,6 +907,8 @@
                 input.setAttribute('data-original-value', input.value);
             });
 
+            // Khởi tạo tổng tiền theo sản phẩm đã chọn
+            updateSelectedItems();
             checkCheckoutButton();
         });
 

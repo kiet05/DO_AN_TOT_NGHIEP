@@ -280,7 +280,13 @@
 
 @section('content')
     @php
-        $subtotal = $cart->total_price;
+        // Tính tổng tiền chỉ cho các sản phẩm đã chọn
+        // Đảm bảo tính lại subtotal từ quantity * price_at_time để chính xác
+        $subtotal = 0;
+        foreach ($cart->items as $item) {
+            $itemSubtotal = $item->quantity * $item->price_at_time;
+            $subtotal += $itemSubtotal;
+        }
         $discountAmount = $cart->discount_amount ?? 0;
         $initialShippingFee = $shippingFee ?? 0;
         $initialTotal = $subtotal - $discountAmount + $initialShippingFee;
@@ -313,6 +319,9 @@
             <div class="checkout__form">
                 <form action="{{ route('checkout.store') }}" method="POST">
                     @csrf
+                    @if (!empty($selectedItemIds))
+                        <input type="hidden" name="selected_items" value="{{ implode(',', $selectedItemIds) }}">
+                    @endif
                     <div class="row">
                         {{-- ================== CỘT TRÁI: THÔNG TIN GIAO HÀNG ================== --}}
                         <div class="col-lg-8 col-md-6">
@@ -492,6 +501,8 @@
                                             $product = $item->productVariant->product;
                                             $variant = $item->productVariant;
                                             $variantAttributes = $variant->attributeValues->pluck('value')->join(', ');
+                                            // Tính lại subtotal để đảm bảo chính xác
+                                            $itemSubtotal = $item->quantity * $item->price_at_time;
                                         @endphp
                                         <li>
                                             {{ sprintf('%02d.', $index + 1) }}
@@ -500,7 +511,7 @@
                                                 ({{ $variantAttributes }})
                                             @endif
                                             x{{ $item->quantity }}
-                                            <span>{{ number_format($item->subtotal, 0, ',', '.') }}₫</span>
+                                            <span>{{ number_format($itemSubtotal, 0, ',', '.') }}₫</span>
                                         </li>
                                     @endforeach
                                 </ul>
@@ -658,7 +669,10 @@
                 return;
             }
 
-            const baseSubtotal = Number(subtotalEl.dataset.value || 0);
+            // Lấy giá trị subtotal từ data-value (đã được format từ PHP)
+            const baseSubtotalText = subtotalEl.dataset.value || '0';
+            // Chuyển đổi từ chuỗi số có dấu phẩy thành số thuần
+            const baseSubtotal = parseFloat(baseSubtotalText.toString().replace(/[^\d]/g, '')) || 0;
             const originalDistrict = districtSelect.dataset.selected;
 
             const formatCurrency = (value) => {
@@ -703,12 +717,18 @@
                 shippingEl.dataset.value = fee;
                 shippingEl.textContent = formatCurrency(fee);
                 
-                // Lấy discount amount từ element hoặc từ PHP
+                // Lấy discount amount từ element
                 const discountEl = document.getElementById('checkout-discount');
-                const discountAmount = discountEl ? Number(discountEl.dataset.value || 0) : 0;
+                let discountAmount = 0;
+                if (discountEl) {
+                    const discountValue = discountEl.dataset.value || '0';
+                    // Chuyển đổi từ chuỗi số có dấu phẩy thành số thuần
+                    discountAmount = parseFloat(discountValue.toString().replace(/[^\d]/g, '')) || 0;
+                }
                 
                 // Tính tổng: subtotal - discount + shipping
-                const finalTotal = baseSubtotal - discountAmount + fee;
+                // Đảm bảo tính toán chính xác với số nguyên
+                const finalTotal = Math.round(baseSubtotal - discountAmount + fee);
                 totalEl.textContent = formatCurrency(finalTotal);
             };
 

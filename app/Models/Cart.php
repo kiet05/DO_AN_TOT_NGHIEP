@@ -40,10 +40,16 @@ class Cart extends Model
 
     /**
      * Tính lại tổng tiền của giỏ hàng
+     * Tính lại từ quantity * price_at_time và làm tròn thành số nguyên
      */
     public function calculateTotal()
     {
-        $total = $this->items()->sum('subtotal');
+        $total = 0;
+        foreach ($this->items as $item) {
+            $itemSubtotal = round($item->quantity * $item->price_at_time);
+            $total += $itemSubtotal;
+        }
+        $total = round($total);
         $this->update(['total_price' => $total]);
         return $total;
     }

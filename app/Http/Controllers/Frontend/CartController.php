@@ -193,7 +193,7 @@ class CartController extends Controller
             DB::commit();
 
             $cart->refresh();
-            $finalTotal = $cart->total_price - ($cart->discount_amount ?? 0);
+            $finalTotal = round($cart->total_price - ($cart->discount_amount ?? 0));
 
             return response()->json([
                 'success' => true,
@@ -201,7 +201,7 @@ class CartController extends Controller
                 'subtotal' => number_format($cartItem->subtotal, 0, ',', '.') . ' đ',
                 'cart_total' => number_format($cart->total_price, 0, ',', '.') . ' đ',
                 'cart_count' => $cart->items()->sum('quantity'),
-                'discount_amount' => number_format($cart->discount_amount ?? 0, 0, ',', '.') . ' đ',
+                'discount_amount' => number_format(round($cart->discount_amount ?? 0), 0, ',', '.') . ' đ',
                 'final_total' => number_format($finalTotal, 0, ',', '.') . ' đ'
             ]);
 
@@ -249,14 +249,14 @@ class CartController extends Controller
             DB::commit();
 
             $cart->refresh();
-            $finalTotal = $cart->total_price - ($cart->discount_amount ?? 0);
+            $finalTotal = round($cart->total_price - ($cart->discount_amount ?? 0));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng',
                 'cart_total' => number_format($cart->total_price, 0, ',', '.') . ' đ',
                 'cart_count' => $cart->items()->sum('quantity'),
-                'discount_amount' => number_format($cart->discount_amount ?? 0, 0, ',', '.') . ' đ',
+                'discount_amount' => number_format(round($cart->discount_amount ?? 0), 0, ',', '.') . ' đ',
                 'final_total' => number_format($finalTotal, 0, ',', '.') . ' đ'
             ]);
 
@@ -519,7 +519,7 @@ class CartController extends Controller
             ], 400);
         }
 
-        // Tính số tiền giảm
+        // Tính số tiền giảm và làm tròn
         $discountAmount = 0;
         if ($voucher->discount_type === 'percentage') {
             $discountAmount = ($subtotal * $voucher->discount_value) / 100;
@@ -532,6 +532,7 @@ class CartController extends Controller
                 $discountAmount = $subtotal;
             }
         }
+        $discountAmount = round($discountAmount);
 
         DB::beginTransaction();
         try {
@@ -541,7 +542,7 @@ class CartController extends Controller
 
             DB::commit();
 
-            $finalTotal = $subtotal - $discountAmount;
+            $finalTotal = round($subtotal - $discountAmount);
 
             return response()->json([
                 'success' => true,
