@@ -148,6 +148,44 @@
             border: none;
             font-size: 16px;
         }
+
+        /* Sao dánh giá */
+        .rating-stars {
+        font-size: 22px;
+        }
+
+        .rating-stars label {
+        cursor: pointer;
+        margin-right: 4px;
+        }
+
+        .rating-stars .star {
+        cursor: pointer;
+        color: #ddd; /* sao chưa chọn */
+        transition: transform 0.1s ease-in-out, color 0.1s ease-in-out;
+        margin-right: 4px;
+        }
+        .rating-stars .star.active {
+        color: #ffc107; /* sao đã chọn */
+        }
+
+        .rating-stars .star:hover {
+        transform: scale(1.1);
+        }
+
+        .review-card {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        }
+
+        .review-card img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 4px;
+        }
     </style>
 @endpush
 
@@ -283,6 +321,125 @@
         </div>
 
     </div>
+
+
+     {{-- ĐÁNH GIÁ SẢN PHẨM --}}
+    @if (session('success'))
+        <div class="alert alert-success mt-4">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="mt-5" id="product-reviews">
+        <h3 class="mb-3">Đánh giá sản phẩm</h3>
+
+        {{-- Tổng quan sao --}}
+        <div class="mb-4">
+            @php $rounded = round($avgRating, 1); @endphp
+            <strong>Điểm trung bình:</strong>
+            <span class="text-warning ms-2">
+                @for ($i = 1; $i <= 5; $i++)
+                    @if ($i <= floor($avgRating))
+                        ★
+                    @else
+                        ☆
+                    @endif
+                @endfor
+            </span>
+            <span class="ms-2">({{ $rounded }}/5 từ {{ $reviewsCount }} đánh giá)</span>
+        </div>
+
+        {{-- FORM ĐÁNH GIÁ --}}
+        @auth
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Viết đánh giá của bạn</h5>
+
+                    <form action="{{ route('products.reviews.store', $product->id) }}"
+                          method="POST" enctype="multipart/form-data">
+                        @csrf
+
+                        {{-- Sao --}}
+                        <div class="mb-3">
+                            <label class="form-label d-block">Đánh giá sản phẩm này</label>
+                            <div class="rating-stars">
+                                <input type="hidden" name="rating" id="ratingInput" value="{{ old('rating', 0) }}">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        <span class="star {{ old('rating') >= $i ? 'active' : '' }}"
+                                            data-value="{{ $i }}">★</span>
+                                    @endfor
+                            </div>
+                            @error('rating')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Nội dung --}}
+                        <div class="mb-3">
+                            <label class="form-label">Nội dung đánh giá</label>
+                            <textarea name="comment" rows="4"
+                                      class="form-control @error('comment') is-invalid @enderror"
+                                      required>{{ old('comment') }}</textarea>
+                            @error('comment')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Ảnh --}}
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh sản phẩm (tùy chọn)</label>
+                            <input type="file" name="image" class="form-control" accept="image/*">
+                            <small class="text-muted">Tối đa 2MB, jpg/png/webp.</small>
+                            @error('image')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <button type="submit" class="btn btn-dark">Gửi</button>
+                    </form>
+                </div>
+            </div>
+        @else
+            <p>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đánh giá sản phẩm.</p>
+        @endauth
+
+        {{-- DANH SÁCH ĐÁNH GIÁ --}}
+        <h5 class="mb-3">Đánh giá của khách hàng khác</h5>
+
+        @forelse ($reviews as $review)
+            <div class="review-card">
+                <div class="d-flex justify-content-between mb-1">
+                    <strong>{{ $review->user->name ?? 'Khách hàng' }}</strong>
+                    <small class="text-muted">
+                        {{ optional($review->created_at)->format('d/m/Y H:i') }}
+                    </small>
+                </div>
+
+                <div class="text-warning mb-1">
+                    @for ($i = 1; $i <= 5; $i++)
+                        @if ($i <= $review->rating)
+                            ★
+                        @else
+                            ☆
+                        @endif
+                    @endfor
+                </div>
+
+                <p class="mb-2">{{ $review->comment }}</p>
+
+                @if ($review->image)
+                    <a href="{{ asset('storage/' . $review->image) }}" target="_blank">
+                        <img src="{{ asset('storage/' . $review->image) }}" alt="Ảnh đánh giá">
+                    </a>
+                @endif
+            </div>
+        @empty
+            <p>Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên!</p>
+        @endforelse
+    </div>
+    {{-- ĐÁNH GIÁ SẢN PHẨM --}}
+
+
     <!-- Related Products -->
     @if (isset($relatedProducts) && $relatedProducts->count() > 0)
         <div class="mt-5">
@@ -535,5 +692,35 @@
                 })
             }).then(() => window.location.href = "{{ route('checkout.index') }}");
         }
+
+
+        // sao đánh giá
+    document.addEventListener('DOMContentLoaded', function () {
+        const stars = document.querySelectorAll('.rating-stars .star');
+        const ratingInput = document.getElementById('ratingInput');
+
+        if (!stars.length || !ratingInput) return;
+
+        function setRating(value) {
+            ratingInput.value = value;
+            stars.forEach(star => {
+                const v = Number(star.dataset.value);
+                star.classList.toggle('active', v <= value);
+            });
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const value = Number(this.dataset.value);
+                setRating(value);
+            });
+        });
+
+        // nếu có old('rating') thì tô lại
+        if (ratingInput.value) {
+            setRating(Number(ratingInput.value));
+        }
+    });
+
     </script>
 @endpush

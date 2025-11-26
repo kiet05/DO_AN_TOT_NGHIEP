@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -56,6 +57,18 @@ class ProductController extends Controller
 
     public function show($id)
 {
+    $product = Product::findOrFail($id);
+
+    $reviews = Review::with('user')
+            ->where('product_id', $product->id)
+            ->where('status', 1)
+            ->latest()
+            ->get();
+
+        $avgRating = $reviews->avg('rating') ?? 0;
+        $reviewsCount = $reviews->count();
+
+
     // Load product 1 lần với các relation cần thiết
     $product = Product::with([
         'category',
@@ -74,7 +87,7 @@ class ProductController extends Controller
     // Tổng tồn kho tính từ variants (đã eager-load nên dùng collection sum)
     $totalStock = $product->variants->sum('quantity');
 
-    return view('frontend.products.show', compact('product', 'relatedProducts', 'totalStock'));
+    return view('frontend.products.show', compact('product', 'reviews', 'avgRating', 'reviewsCount', 'relatedProducts', 'totalStock'));
 }
 
 }
