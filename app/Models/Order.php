@@ -52,4 +52,48 @@ class Order extends Model
     {
         return $this->belongsTo(Payment::class);
     }
+    public function getPaymentStatusLabelAttribute()
+{
+    return match ($this->payment_status) {
+        'unpaid'  => 'Chưa thanh toán',
+        'pending' => 'Đang chờ thanh toán',
+        'paid'    => 'Đã thanh toán',
+        'failed'   => 'Thanh toán thất bại',
+        'canceled' => 'Đã hủy thanh toán',
+        default   => $this->payment_status,
+    };
+}
+
+   public function getStatusLabelAttribute(): string
+    {
+        // Chuẩn hoá lại status (đổi success -> completed, canceled -> cancelled...)
+        $key = $this->normalizeStatus($this->order_status);
+
+        $map = [
+            'pending'    => 'Chờ xử lý',
+            'confirmed'  => 'Xác nhận',
+            'processing' => 'Chuẩn bị',
+            'shipping'   => 'Đang giao',
+            'shipped'    => 'Đã giao',
+            'completed'  => 'Hoàn thành',
+            'cancelled'  => 'Hủy',
+            'returned'   => 'Hoàn hàng',
+        ];
+
+        return $map[$key] ?? ucfirst($key);
+    }
+
+    /**
+     * Chuẩn hoá status về tên chuẩn
+     */
+    private function normalizeStatus(string $status): string
+    {
+        $aliases = [
+            'success'  => 'completed',  // dữ liệu cũ
+            'canceled' => 'cancelled',  // kiểu Mỹ -> kiểu Anh
+        ];
+
+        return $aliases[$status] ?? $status;
+    }
+
 }

@@ -2,6 +2,24 @@
 
 @section('title', 'Trang chủ - ' . config('app.name'))
 
+@push('styles')
+<style>
+    /* Banner hiển thị full ảnh theo đúng tỉ lệ gốc, không crop */
+    .hero-banner .carousel-item img.hero-banner-img {
+        width: 100%;
+        height: auto;           /* tự co theo tỉ lệ ảnh */
+        display: block;
+    }
+
+    /* Nếu muốn giới hạn chiều cao tối đa (tuỳ bạn, có thể bỏ) */
+    @media (min-width: 992px) {
+        .hero-banner .carousel-item img.hero-banner-img {
+            max-height: 520px;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
     @if(!empty($searchTerm ?? ''))
         <section class="py-5 bg-light border-bottom">
@@ -39,7 +57,17 @@
                 @foreach($banners as $index => $banner)
                 <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
                     <a href="{{ $banner->link ?? '#' }}">
-                        <img src="{{ asset('storage/' . $banner->image) }}" class="d-block w-100" alt="{{ $banner->title }}" style="height: 500px; object-fit: cover;">
+                        {{-- CODE CŨ (để tham khảo)
+                        <img src="{{ asset('storage/' . $banner->image) }}"
+                             class="d-block w-100"
+                             alt="{{ $banner->title }}"
+                             style="height: 500px; object-fit: cover;">
+                        --}}
+
+                        {{-- CODE MỚI: bỏ height cố định + object-fit để không bị crop --}}
+                        <img src="{{ asset('storage/' . $banner->image) }}"
+                             class="d-block w-100 hero-banner-img"
+                             alt="{{ $banner->title }}">
                     </a>
                 </div>
                 @endforeach
@@ -128,4 +156,3 @@
         @endif
     </div>
 @endsection
-

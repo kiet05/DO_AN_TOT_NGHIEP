@@ -67,22 +67,78 @@
                         <div class="collapse sherah__dropdown" id="menu-product-management"
                             data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
-
-                                <li><a href="{{ route('admin.categories.index') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Danh mục</span></span></a></li>
-                                <li><a href="{{ route('admin.products.index') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Sản phẩm</span></span></a></li>
-                                <li><a href="{{ route('admin.products.create') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Thêm sản phẩm</span></span></a></li>
-                                <li><a href="{{ route('admin.orders.index') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Đơn hàng</span></span></a></li>
-                                <li><a href="{{ route('admin.returns.index') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Hoàn hàng</span></span></a></li>
-                                <li><a href="{{ route('admin.vouchers.index') }}"><span class="menu-bar__text"><span
-                                                class="menu-bar__name">Vouchers</span></span></a></li>
+                                <li>
+                                    <a href="{{ route('admin.categories.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Danh mục</span>
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.products.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Sản phẩm</span>
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.products.create') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Thêm sản phẩm</span>
+                                        </span>
+                                    </a>
+                                </li>
+                               
                             </ul>
                         </div>
                     </li>
+
+                    {{-- QUẢN LÝ ĐƠN HÀNG --}}
+                    <li>
+                        <a href="#!" class="collapsed" data-bs-toggle="collapse"
+                            data-bs-target="#menu-order-management">
+                            <span class="menu-bar__text">
+                                <span class="sherah-menu-icon sherah-svg-icon__v1">
+                                    <svg class="sherah-svg-icon" xmlns="http://www.w3.org/2000/svg" width="20"
+                                        height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="9" cy="21" r="1"></circle>
+                                        <circle cx="20" cy="21" r="1"></circle>
+                                        <path d="M1 1h3l3.6 7.6a1 1 0 0 0 .9.6H19a1 1 0 0 0 .96-.74L22 4H6"></path>
+                                    </svg>
+                                </span>
+                                <span class="menu-bar__name">Quản lý đơn hàng</span>
+                            </span>
+                            <span class="sherah__toggle"></span>
+                        </a>
+
+                        <div class="collapse sherah__dropdown" id="menu-order-management" data-bs-parent="#sherahMenu">
+                            <ul class="menu-bar__one-dropdown">
+                                <li>
+                                    <a href="{{ route('admin.orders.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Đơn hàng</span>
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{{ route('admin.returns.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Hoàn hàng</span>
+                                        </span>
+                                    </a>
+                                </li>
+                                 <li>
+                                    <a href="{{ route('admin.vouchers.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Vouchers</span>
+                                        </span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
 
                     <li>
                         <a href="#!" class="collapsed" data-bs-toggle="collapse"
@@ -150,9 +206,7 @@
                                 <li><a href="{{ route('admin.payment-methods.index') }}"><span
                                             class="menu-bar__text"><span class="menu-bar__name">Danh sách phương
                                                 thức</span></span></a></li>
-                                <li><a href="{{ route('admin.payment-methods.create') }}"><span
-                                            class="menu-bar__text"><span class="menu-bar__name">Thêm phương thức
-                                                mới</span></span></a></li>
+
                             </ul>
                         </div>
                     </li>
@@ -204,7 +258,7 @@
                                 <li>
                                     <a href="{{ route('admin.posts.index') }}">
                                         <span class="menu-bar__text">
-                                            <span class="menu-bar__name">Post</span>
+                                            <span class="menu-bar__name">Bài viết</span>
                                         </span>
                                     </a>
                                 </li>
@@ -224,6 +278,7 @@
                                         </span>
                                     </a>
                                 </li>
+                                
 
 
                             </ul>
