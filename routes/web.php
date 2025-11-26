@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Admin\ReviewController;
 
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -40,6 +41,9 @@ use App\Http\Controllers\Frontend\ProductController as FrontendProductController
 use App\Http\Controllers\Frontend\UserController;
 use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
+use App\Http\Controllers\Frontend\ReviewController as FrontendReviewController;
+
+
 
 
 // ============================
@@ -49,7 +53,9 @@ use App\Http\Controllers\Admin\ContactController as AdminContactController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
 Route::get('/products/{id}', [FrontendProductController::class, 'show'])->name('products.show');
-
+Route::post('/products/{id}/reviews', [FrontendReviewController::class, 'store'])
+    ->middleware('auth')
+    ->name('products.reviews.store');
 
 // Liên hệ & Hỗ trợ (client)
 Route::get('/lien-he', [FrontendContactController::class, 'index'])->name('contact.index');
@@ -177,7 +183,7 @@ Route::prefix('admin')
         Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
 
         // 🔔 Notifications admin
-       
+
 
         // 📰 Posts
         Route::prefix('posts')->name('posts.')->group(function () {
