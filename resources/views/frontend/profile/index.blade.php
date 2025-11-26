@@ -17,8 +17,8 @@
         <div class="alert-box success">
             <span>{{ session('success') }}</span>
         </div>
-    @endif
 
+    @endif
     {{-- ALERT ERROR --}}
     @if (session('error'))
         <div class="alert-box error">

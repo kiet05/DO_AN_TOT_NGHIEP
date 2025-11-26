@@ -404,7 +404,8 @@
                             {{-- Checkbox chọn tất cả --}}
                             <div class="select-all-section mb-3 p-3 bg-light rounded">
                                 <label style="cursor: pointer; display: flex; align-items: center; margin: 0;">
-                                    <input type="checkbox" id="select-all-items" onchange="toggleSelectAll(this)" style="width: 18px; height: 18px; margin-right: 10px; accent-color: var(--secondary-color);">
+                                    <input type="checkbox" id="select-all-items" onchange="toggleSelectAll(this)"
+                                        style="width: 18px; height: 18px; margin-right: 10px; accent-color: var(--secondary-color);">
                                     <strong>Chọn tất cả sản phẩm</strong>
                                 </label>
                             </div>
@@ -414,32 +415,35 @@
                                     $variant = $item->productVariant;
                                     $isOutOfStock = $item->isOutOfStock();
 
-                                    $mainImage = $product->image_main
+                                    // Ảnh gốc của product
+                                    $baseImage = $product->image_main
                                         ? asset('storage/' . $product->image_main)
                                         : ($product->images->first()
                                             ? asset('storage/' . $product->images->first()->image_path)
                                             : asset('img/no-image.png'));
 
+                                    // ƯU TIÊN ẢNH BIẾN THỂ
+                                    $displayImage = $variant->image_url
+                                        ? asset('storage/' . $variant->image_url)
+                                        : $baseImage;
+
                                     $variantAttributes = $variant->attributeValues->pluck('value')->join(', ');
-                                    
+
                                     // Tính lại subtotal và làm tròn thành số nguyên
                                     $itemSubtotal = round($item->quantity * $item->price_at_time);
                                 @endphp
 
+
                                 <div class="cart-item {{ $isOutOfStock ? 'out-of-stock' : '' }}"
                                     data-item-id="{{ $item->id }}">
                                     <div class="cart-item-checkbox">
-                                        <input type="checkbox" 
-                                            class="item-checkbox" 
-                                            id="item_{{ $item->id }}" 
-                                            data-item-id="{{ $item->id }}"
-                                            data-price="{{ $itemSubtotal }}"
-                                            {{ !$isOutOfStock ? 'checked' : '' }}
-                                            {{ $isOutOfStock ? 'disabled' : '' }}
+                                        <input type="checkbox" class="item-checkbox" id="item_{{ $item->id }}"
+                                            data-item-id="{{ $item->id }}" data-price="{{ $itemSubtotal }}"
+                                            {{ !$isOutOfStock ? 'checked' : '' }} {{ $isOutOfStock ? 'disabled' : '' }}
                                             onchange="updateSelectedItems()">
                                         <label for="item_{{ $item->id }}"></label>
                                     </div>
-                                    <img src="{{ $mainImage }}" alt="{{ $product->name }}" class="cart-item-image">
+                                    <img src="{{ $displayImage }}" alt="{{ $product->name }}" class="cart-item-image">
 
                                     <div class="cart-item-info">
                                         <div class="cart-item-name">
@@ -473,7 +477,7 @@
                                     <div class="cart-item-actions">
                                         <div class="quantity-control">
                                             <button type="button" class="btn-decrease" data-item-id="{{ $item->id }}"
-                                                onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
+                                                onclick="changeQuantity({{ $item->id }}, -1)"
                                                 {{ $item->quantity <= 1 ? 'disabled' : '' }}>
                                                 <i class="fas fa-minus"></i>
                                             </button>
@@ -483,11 +487,12 @@
                                                 onchange="updateQuantity({{ $item->id }}, this.value)"
                                                 onblur="validateQuantity({{ $item->id }}, {{ $variant->quantity }})">
                                             <button type="button" class="btn-increase" data-item-id="{{ $item->id }}"
-                                                onclick="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
+                                                onclick="changeQuantity({{ $item->id }}, 1)"
                                                 {{ $item->quantity >= $variant->quantity ? 'disabled' : '' }}>
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
+
 
                                         <div class="cart-item-subtotal" id="subtotal-{{ $item->id }}">
                                             {{ number_format($itemSubtotal, 0, ',', '.') }}₫
@@ -529,7 +534,8 @@
                                                 <strong>{{ $cart->voucher->code }}</strong>
                                                 <small class="d-block text-muted">{{ $cart->voucher->name }}</small>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeVoucher()">
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                                onclick="removeVoucher()">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
@@ -537,9 +543,10 @@
                                 @else
                                     <div class="voucher-input-group">
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="voucher-code-input" 
+                                            <input type="text" class="form-control" id="voucher-code-input"
                                                 placeholder="Nhập mã giảm giá" maxlength="50">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="applyVoucher()" id="btn-apply-voucher">
+                                            <button type="button" class="btn btn-outline-secondary"
+                                                onclick="applyVoucher()" id="btn-apply-voucher">
                                                 <i class="fas fa-check"></i> Áp dụng
                                             </button>
                                         </div>
@@ -564,11 +571,10 @@
 
 
                             @php
-                            $hasOutOfStock = $cart->items->filter(fn($item) => $item->isOutOfStock())->count() > 0;
+                                $hasOutOfStock = $cart->items->filter(fn($item) => $item->isOutOfStock())->count() > 0;
                             @endphp
 
-                            <button type="button" class="btn-checkout" id="btn-checkout"
-                                onclick="proceedToCheckout()">
+                            <button type="button" class="btn-checkout" id="btn-checkout" onclick="proceedToCheckout()">
                                 Tiến hành thanh toán
                             </button>
 
@@ -607,17 +613,42 @@
 
 @push('scripts')
     <script>
-        function updateQuantity(itemId, quantity) {
-            if (quantity < 1) {
-                quantity = 1;
-            }
+        function changeQuantity(itemId, delta) {
+            const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
+            if (!input) return;
 
+            const max = parseInt(input.getAttribute('max')) || 9999;
+            let current = parseInt(input.value) || 1;
+
+            let next = current + delta;
+            if (next < 1) next = 1;
+            if (next > max) next = max;
+
+            // Nếu không thay đổi thì khỏi gọi API
+            if (next === current) return;
+
+            updateQuantity(itemId, next);
+        }
+
+        function updateQuantity(itemId, quantity) {
             const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
             const item = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+            if (!input || !item) return;
+
             const btnDecrease = item.querySelector('.btn-decrease');
             const btnIncrease = item.querySelector('.btn-increase');
 
-            // Disable buttons while loading
+            let qty = parseInt(quantity);
+            if (isNaN(qty) || qty < 1) {
+                qty = 1;
+            }
+
+            const maxQuantity = parseInt(input.getAttribute('max')) || 9999;
+            if (qty > maxQuantity) {
+                qty = maxQuantity;
+            }
+
+            // Disable trong lúc gọi API
             btnDecrease.disabled = true;
             btnIncrease.disabled = true;
             input.disabled = true;
@@ -630,52 +661,46 @@
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        quantity: parseInt(quantity)
+                        quantity: qty
                     })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Update quantity input
-                        input.value = quantity;
+                        // Cập nhật qty hiển thị
+                        input.value = qty;
 
-                        // Update subtotal
+                        // Subtotal từng item
                         document.getElementById(`subtotal-${itemId}`).textContent = data.subtotal;
 
-                        // Cập nhật giá của item trong checkbox
+                        // Cập nhật data-price cho checkbox (dùng để tính tổng)
                         const checkbox = document.querySelector(`.item-checkbox[data-item-id="${itemId}"]`);
                         if (checkbox) {
-                            // Parse từ chuỗi đã format (có dấu phẩy và " đ" hoặc "₫") và làm tròn
                             const newSubtotal = Math.round(parseFloat(data.subtotal.replace(/[^\d]/g, '')) || 0);
                             checkbox.setAttribute('data-price', newSubtotal);
                         }
 
-                        // Update cart total (chỉ tính sản phẩm đã chọn)
+                        // Cập nhật giảm giá / tổng
                         if (data.discount_amount) {
                             document.getElementById('cart-discount').textContent = data.discount_amount;
                         }
                         updateSelectedItems();
-
-                        // Update cart count in header
                         updateCartCount(data.cart_count);
 
-                        // Check stock and update buttons
-                        const maxQuantity = parseInt(input.getAttribute('max'));
-                        btnDecrease.disabled = quantity <= 1;
-                        btnIncrease.disabled = quantity >= maxQuantity;
+                        // Enable / disable +/- theo qty mới
+                        btnDecrease.disabled = qty <= 1;
+                        btnIncrease.disabled = qty >= maxQuantity;
 
-                        // Check if out of stock
-                        if (quantity > maxQuantity) {
+                        // Hết hàng thì thêm class
+                        if (qty > maxQuantity) {
                             item.classList.add('out-of-stock');
                         } else {
                             item.classList.remove('out-of-stock');
                         }
 
-                        // Check checkout button
                         checkCheckoutButton();
                     } else {
                         alert(data.message || 'Có lỗi xảy ra');
-                        // Reset input
                         input.value = input.getAttribute('data-original-value') || 1;
                     }
                 })
@@ -686,10 +711,11 @@
                 })
                 .finally(() => {
                     input.disabled = false;
-                    btnDecrease.disabled = false;
-                    btnIncrease.disabled = false;
+                    btnDecrease.disabled = qty <= 1;
+                    btnIncrease.disabled = qty >= maxQuantity;
                 });
         }
+
 
         function validateQuantity(itemId, maxQuantity) {
             const input = document.querySelector(`.quantity-input[data-item-id="${itemId}"]`);
@@ -797,10 +823,14 @@
             const finalTotal = Math.round(Math.max(0, selectedTotal - discount));
 
             // Cập nhật hiển thị (format không có số thập phân)
-            document.getElementById('cart-subtotal').textContent = 
-                new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(selectedTotal) + '₫';
-            document.getElementById('cart-total').textContent = 
-                new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(finalTotal) + '₫';
+            document.getElementById('cart-subtotal').textContent =
+                new Intl.NumberFormat('vi-VN', {
+                    maximumFractionDigits: 0
+                }).format(selectedTotal) + '₫';
+            document.getElementById('cart-total').textContent =
+                new Intl.NumberFormat('vi-VN', {
+                    maximumFractionDigits: 0
+                }).format(finalTotal) + '₫';
 
             // Cập nhật trạng thái nút checkout
             checkCheckoutButton();
@@ -813,7 +843,8 @@
         function toggleSelectAll(checkbox) {
             const itemCheckboxes = document.querySelectorAll('.item-checkbox:not(:disabled)');
             itemCheckboxes.forEach(cb => {
-                const itemElement = document.querySelector(`.cart-item[data-item-id="${cb.getAttribute('data-item-id')}"]`);
+                const itemElement = document.querySelector(
+                    `.cart-item[data-item-id="${cb.getAttribute('data-item-id')}"]`);
                 if (!itemElement || !itemElement.classList.contains('out-of-stock')) {
                     cb.checked = checkbox.checked;
                 }
@@ -826,7 +857,7 @@
             const allCheckboxes = document.querySelectorAll('.item-checkbox:not(:disabled)');
             const checkedCheckboxes = document.querySelectorAll('.item-checkbox:checked:not(:disabled)');
             const selectAllCheckbox = document.getElementById('select-all-items');
-            
+
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length;
             }
@@ -863,7 +894,7 @@
 
             // Chuyển đến trang checkout với danh sách item IDs đã chọn
             const itemIdsParam = selectedItemIds.join(',');
-            window.location.href = '{{ route("checkout.index") }}?selected_items=' + itemIdsParam;
+            window.location.href = '{{ route('checkout.index') }}?selected_items=' + itemIdsParam;
         }
 
         function checkCheckoutButton() {
@@ -926,7 +957,7 @@
             btnApply.innerHTML = '<span class="loading-spinner"></span> Đang xử lý...';
             messageDiv.innerHTML = '';
 
-            fetch('{{ route("cart.apply-voucher") }}', {
+            fetch('{{ route('cart.apply-voucher') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -943,7 +974,8 @@
                         // Reload page to show updated voucher
                         location.reload();
                     } else {
-                        messageDiv.innerHTML = '<div class="alert-danger">' + (data.message || 'Có lỗi xảy ra') + '</div>';
+                        messageDiv.innerHTML = '<div class="alert-danger">' + (data.message || 'Có lỗi xảy ra') +
+                            '</div>';
                         btnApply.disabled = false;
                         btnApply.innerHTML = '<i class="fas fa-check"></i> Áp dụng';
                     }
@@ -961,7 +993,7 @@
                 return;
             }
 
-            fetch('{{ route("cart.remove-voucher") }}', {
+            fetch('{{ route('cart.remove-voucher') }}', {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -985,12 +1017,12 @@
         function updateCartTotal() {
             const subtotalText = document.getElementById('cart-subtotal').textContent;
             const discountText = document.getElementById('cart-discount').textContent;
-            
+
             const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, '')) || 0;
             const discount = parseFloat(discountText.replace(/[^\d]/g, '')) || 0;
             const total = subtotal - discount;
-            
-            document.getElementById('cart-total').textContent = 
+
+            document.getElementById('cart-total').textContent =
                 new Intl.NumberFormat('vi-VN').format(total) + '₫';
         }
 

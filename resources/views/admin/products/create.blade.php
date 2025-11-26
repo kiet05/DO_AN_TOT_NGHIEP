@@ -53,6 +53,7 @@
                                                         </div>
                                                     </div>
 
+
                                                     <div class="col-12">
                                                         <div class="form-group">
                                                             <label class="sherah-wc__form-label">Mô tả sản phẩm</label>
@@ -173,6 +174,14 @@
                                                                     required>
                                                             </div>
                                                         </div>
+                                                        <div class="col-lg-12 col-md-12 col-12">
+                                                            <div class="form-group">
+                                                                <label class="sherah-wc__form-label">Ảnh biến thể </label>
+                                                                <input type="file" name="variants[0][image]"
+                                                                    class="form-control" accept="image/*">
+                                                            </div>
+                                                        </div>
+
 
                                                         <div class="col-lg-3 col-md-3 col-12">
                                                             <div class="form-group">

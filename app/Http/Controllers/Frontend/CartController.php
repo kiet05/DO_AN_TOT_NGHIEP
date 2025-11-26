@@ -22,7 +22,7 @@ class CartController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         if (!$user) {
             return redirect()->route('login')->with('error', 'Vui lòng đăng nhập để xem giỏ hàng');
         }
@@ -60,7 +60,7 @@ class CartController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -102,7 +102,7 @@ class CartController extends Controller
             if ($cartItem) {
                 // Cập nhật số lượng
                 $newQuantity = $cartItem->quantity + $request->quantity;
-                
+
                 if ($variant->quantity < $newQuantity) {
                     DB::rollBack();
                     return response()->json([
@@ -135,14 +135,13 @@ class CartController extends Controller
                 'cart_count' => $cart->items()->sum('quantity'),
                 'cart_total' => number_format($cart->total_price, 0, ',', '.') . ' đ'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Cart add error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng. Vui lòng thử lại sau.'
@@ -168,7 +167,7 @@ class CartController extends Controller
         }
 
         $cartItem = CartItem::with(['cart', 'productVariant'])
-            ->whereHas('cart', function($query) use ($user) {
+            ->whereHas('cart', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
             ->findOrFail($id);
@@ -186,7 +185,7 @@ class CartController extends Controller
         try {
             $cartItem->quantity = $request->quantity;
             $cartItem->calculateSubtotal();
-            
+
             $cart = $cartItem->cart;
             $cart->calculateTotal();
 
@@ -204,7 +203,6 @@ class CartController extends Controller
                 'discount_amount' => number_format(round($cart->discount_amount ?? 0), 0, ',', '.') . ' đ',
                 'final_total' => number_format($finalTotal, 0, ',', '.') . ' đ'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Cart update error: ' . $e->getMessage(), [
@@ -212,7 +210,7 @@ class CartController extends Controller
                 'item_id' => $id,
                 'request' => $request->all()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi cập nhật số lượng. Vui lòng thử lại sau.'
@@ -234,7 +232,7 @@ class CartController extends Controller
         }
 
         $cartItem = CartItem::with('cart')
-            ->whereHas('cart', function($query) use ($user) {
+            ->whereHas('cart', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
             ->findOrFail($id);
@@ -243,7 +241,7 @@ class CartController extends Controller
         try {
             $cart = $cartItem->cart;
             $cartItem->delete();
-            
+
             $cart->calculateTotal();
 
             DB::commit();
@@ -259,14 +257,13 @@ class CartController extends Controller
                 'discount_amount' => number_format(round($cart->discount_amount ?? 0), 0, ',', '.') . ' đ',
                 'final_total' => number_format($finalTotal, 0, ',', '.') . ' đ'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Cart remove error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'item_id' => $id
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi xóa sản phẩm. Vui lòng thử lại sau.'
@@ -297,10 +294,13 @@ class CartController extends Controller
     /**
      * Lấy nội dung giỏ hàng cho sidebar (mini cart)
      */
+    /**
+     * Lấy nội dung giỏ hàng cho sidebar (mini cart)
+     */
     public function sidebar()
     {
         $user = Auth::user();
-        
+
         if (!$user) {
             return response()->json([
                 'html' => '<p class="text-center text-muted">Vui lòng <a href="' . route('login') . '">đăng nhập</a> để xem giỏ hàng</p>'
@@ -309,7 +309,10 @@ class CartController extends Controller
 
         $cart = Cart::where('user_id', $user->id)
             ->where('status', 1)
-            ->with(['items.productVariant.product.images', 'items.productVariant.attributeValues'])
+            ->with([
+                'items.productVariant.product.images',
+                'items.productVariant.attributeValues.attribute', // load kèm attribute để lấy tên (Color, Size…)
+            ])
             ->first();
 
         if (!$cart || $cart->items->isEmpty()) {
@@ -322,32 +325,88 @@ class CartController extends Controller
         $cart->calculateTotal();
 
         $html = '<div class="cart-sidebar-items" style="max-height: 400px; overflow-y: auto;">';
+
         foreach ($cart->items->take(5) as $item) {
-            $product = $item->productVariant->product;
-            $mainImage = $product->image_main 
-                ? asset('storage/' . $product->image_main) 
-                : ($product->images->first() 
-                    ? asset('storage/' . $product->images->first()->image_path) 
-                    : asset('img/no-image.png'));
-            
+            $variant = $item->productVariant;
+            $product = $variant->product ?? null;
+
+            // ====== CHỌN ẢNH HIỂN THỊ ======
+            $imageUrl = null;
+
+            // 1. Ưu tiên ảnh của biến thể
+            if ($variant && $variant->image_url) {
+                $imageUrl = asset('storage/' . $variant->image_url);
+            }
+            // 2. Ảnh chính của product
+            elseif ($product && $product->image_main) {
+                $imageUrl = asset('storage/' . $product->image_main);
+            }
+            // 3. Ảnh phụ đầu tiên
+            elseif ($product && $product->images->first()) {
+                $imageUrl = asset('storage/' . $product->images->first()->image_url);
+            }
+            // 4. Fallback
+            else {
+                $imageUrl = asset('img/no-image.png');
+            }
+
+            $productName = $product->name ?? 'Sản phẩm';
+
+            // ====== GHÉP DÒNG THUỘC TÍNH (Color / Size / Material…) ======
+            $variantLine = '';
+            if ($variant && $variant->attributeValues && $variant->attributeValues->count()) {
+
+                // nếu muốn dạng "Color: Xanh da trời nhạt / Size: S / Material: Cotton"
+                $parts = $variant->attributeValues->map(function ($val) {
+                    $attrName = $val->attribute->name ?? null; // cần quan hệ attribute() trong AttributeValue
+                    return $attrName
+                        ? $attrName . ': ' . $val->value
+                        : $val->value;
+                })->toArray();
+
+                // nếu chỉ muốn "Xanh da trời nhạt / S / Cotton" thì dùng:
+                // $parts = $variant->attributeValues->pluck('value')->toArray();
+
+                $variantLine = implode(' / ', $parts);
+            }
+
+            // ====== HTML 1 ITEM ======
             $html .= '<div class="d-flex align-items-center mb-3 pb-3 border-bottom cart-sidebar-item" data-item-id="' . $item->id . '">';
-            $html .= '<img src="' . $mainImage . '" alt="' . $product->name . '" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px;">';
+
+            // ẢNH
+            $html .= '<img src="' . $imageUrl . '" alt="' . e($productName) . '" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-right: 10px;">';
+
+            // THÔNG TIN BÊN PHẢI
             $html .= '<div class="flex-grow-1">';
-            $html .= '<h6 class="mb-1" style="font-size: 14px;">' . $product->name . '</h6>';
-            $html .= '<p class="mb-0" style="font-size: 12px; color: #666;">Số lượng: ' . $item->quantity . '</p>';
-            $html .= '<p class="mb-0" style="font-size: 14px; font-weight: 600; color: var(--secondary-color);">' . number_format($item->subtotal, 0, ',', '.') . '₫</p>';
-            $html .= '</div>';
+            $html .= '<h6 class="mb-1" style="font-size: 14px;">' . e($productName) . '</h6>';
+
+            // dòng thuộc tính
+            if ($variantLine !== '') {
+                $html .= '<p class="mb-1" style="font-size: 12px; color: #666;">' . e($variantLine) . '</p>';
+            }
+
+
+            // giá
+            $html .= '<p class="mb-0" style="font-size: 14px; font-weight: 600; color: var(--secondary-color);">'
+                . number_format($item->subtotal, 0, ',', '.') . '₫</p>';
+
+            $html .= '</div>'; // end flex-grow-1
+
+            // nút xóa
             $html .= '<button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2 remove-cart-item" data-item-id="' . $item->id . '" style="font-size: 16px; line-height: 1;" title="Xóa sản phẩm">';
             $html .= '<i class="fas fa-times"></i>';
             $html .= '</button>';
-            $html .= '</div>';
+
+            $html .= '</div>'; // end item wrapper
         }
-        
+
         if ($cart->items->count() > 5) {
             $html .= '<p class="text-center text-muted" style="font-size: 12px;">Và ' . ($cart->items->count() - 5) . ' sản phẩm khác...</p>';
         }
-        
-        $html .= '</div>';
+
+        $html .= '</div>'; // end cart-sidebar-items
+
+        // Tổng & nút xem giỏ
         $html .= '<div class="mt-3 pt-3 border-top">';
         $html .= '<div class="d-flex justify-content-between mb-2">';
         $html .= '<strong>Tổng cộng:</strong>';
@@ -369,7 +428,7 @@ class CartController extends Controller
         }
 
         // Lấy các category_id từ sản phẩm trong giỏ
-        $categoryIds = $cart->items->map(function($item) {
+        $categoryIds = $cart->items->map(function ($item) {
             return $item->productVariant->product->category_id;
         })->unique()->filter()->toArray();
 
@@ -378,7 +437,7 @@ class CartController extends Controller
         }
 
         // Lấy các product_id đã có trong giỏ để loại trừ
-        $productIdsInCart = $cart->items->map(function($item) {
+        $productIdsInCart = $cart->items->map(function ($item) {
             return $item->productVariant->product_id;
         })->unique()->toArray();
 
@@ -386,15 +445,15 @@ class CartController extends Controller
         $similarProducts = Product::whereIn('category_id', $categoryIds)
             ->whereNotIn('id', $productIdsInCart)
             ->where('status', 1)
-            ->whereHas('variants', function($query) {
+            ->whereHas('variants', function ($query) {
                 $query->where('quantity', '>', 0)
-                      ->where('status', 1);
+                    ->where('status', 1);
             })
-            ->with(['variants' => function($query) {
+            ->with(['variants' => function ($query) {
                 $query->where('quantity', '>', 0)
-                      ->where('status', 1)
-                      ->orderBy('price', 'asc')
-                      ->limit(1);
+                    ->where('status', 1)
+                    ->orderBy('price', 'asc')
+                    ->limit(1);
             }, 'images'])
             ->inRandomOrder()
             ->limit(8)
@@ -462,7 +521,7 @@ class CartController extends Controller
 
         // Kiểm tra tổng số lần voucher đã được sử dụng (tất cả users)
         $totalUsageCount = VoucherUsage::where('voucher_id', $voucher->id)->count();
-        
+
         if ($voucher->usage_limit && $totalUsageCount >= $voucher->usage_limit) {
             return response()->json([
                 'success' => false,
@@ -498,17 +557,17 @@ class CartController extends Controller
         $canApply = true;
         if ($voucher->apply_type === 'products') {
             $productIds = $voucher->products->pluck('id')->toArray();
-            $cartProductIds = $cart->items->map(function($item) {
+            $cartProductIds = $cart->items->map(function ($item) {
                 return $item->productVariant->product_id;
             })->unique()->toArray();
-            
+
             $canApply = !empty(array_intersect($productIds, $cartProductIds));
         } elseif ($voucher->apply_type === 'categories') {
             $categoryIds = $voucher->categories->pluck('id')->toArray();
-            $cartCategoryIds = $cart->items->map(function($item) {
+            $cartCategoryIds = $cart->items->map(function ($item) {
                 return $item->productVariant->product->category_id;
             })->unique()->toArray();
-            
+
             $canApply = !empty(array_intersect($categoryIds, $cartCategoryIds));
         }
 
@@ -556,11 +615,10 @@ class CartController extends Controller
                 'discount' => number_format($discountAmount, 0, ',', '.') . '₫',
                 'total' => number_format($finalTotal, 0, ',', '.') . '₫',
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Apply voucher error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi áp dụng mã giảm giá'
@@ -608,18 +666,14 @@ class CartController extends Controller
                 'message' => 'Đã xóa mã giảm giá',
                 'total' => number_format($total, 0, ',', '.') . '₫',
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Remove voucher error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Có lỗi xảy ra khi xóa mã giảm giá'
             ], 500);
         }
     }
-
 }
-
-
