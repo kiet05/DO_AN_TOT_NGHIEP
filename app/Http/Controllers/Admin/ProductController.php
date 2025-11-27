@@ -117,9 +117,11 @@ class ProductController extends Controller
             'variants.*.quantity' => 'required|integer|min:0',
             'variants.*.status' => 'nullable|in:0,1',
             'variants.*.attribute_value_ids' => 'nullable|array',
+            'variants.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // ✅ thêm
 
             'images' => 'nullable|array',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+
         ]);
 
         DB::transaction(function () use ($request, $validated) {
@@ -154,8 +156,10 @@ class ProductController extends Controller
             }
 
             // Biến thể
+            // Biến thể
             if (!empty($validated['variants'])) {
-                foreach ($validated['variants'] as $variantData) {
+                foreach ($validated['variants'] as $index => $variantData) {
+
                     // SKU unique
                     $sku = $variantData['sku'] ?? null;
                     if (empty($sku) || ProductVariant::where('sku', $sku)->exists()) {
@@ -166,12 +170,20 @@ class ProductController extends Controller
                         ? (int) $variantData['status']   // 1 = Hiện, 0 = Ẩn
                         : 1;
 
+                    // ✅ XỬ LÝ ẢNH BIẾN THỂ
+                    $variantImagePath = null;
+                    if ($request->hasFile("variants.$index.image")) {
+                        $file = $request->file("variants.$index.image");
+                        $variantImagePath = $file->store('products/variants', 'public');
+                    }
+
                     $productVariant = ProductVariant::create([
                         'product_id' => $product->id,
                         'sku' => $sku,
                         'price' => $variantData['price'],
                         'quantity' => $variantData['quantity'],
                         'status' => $status,
+                        'image_url' => $variantImagePath,   // ✅ GÁN ẢNH
                     ]);
 
                     // Gắn thuộc tính (size, màu, chất liệu...)
@@ -194,7 +206,7 @@ class ProductController extends Controller
 
         return view('admin.products.show', compact('product'));
     }
-    
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -249,6 +261,7 @@ class ProductController extends Controller
             'variants.*.quantity' => 'required|integer|min:0',
             'variants.*.status' => 'nullable|in:0,1',
             'variants.*.attribute_value_ids' => 'nullable|array',
+            'variants.*.image' => 'nullable|file|image|max:2048', // ✅ thêm
 
             'images' => 'nullable|array',
             'images.*' => 'nullable|file|image|max:2048',
@@ -289,8 +302,9 @@ class ProductController extends Controller
             }
 
             // Biến thể
+            // Biến thể
             if (!empty($validated['variants'])) {
-                foreach ($validated['variants'] as $variantData) {
+                foreach ($validated['variants'] as $index => $variantData) {
                     $sku = $variantData['sku'] ?? null;
 
                     // SKU unique (không trùng variant khác)
@@ -304,19 +318,34 @@ class ProductController extends Controller
                     }
 
                     $status = isset($variantData['status'])
-                        ? (int) $variantData['status']   // 1 = Hiện, 0 = Ẩn
+                        ? (int) $variantData['status']
                         : 1;
+
+                    // ✅ LẤY FILE ẢNH (NẾU CÓ)
+                    $variantImagePath = null;
+                    if ($request->hasFile("variants.$index.image")) {
+                        $file = $request->file("variants.$index.image");
+                        $variantImagePath = $file->store('products/variants', 'public');
+                    }
 
                     if (!empty($variantData['id'])) {
                         // Cập nhật biến thể cũ
                         $variant = ProductVariant::find($variantData['id']);
                         if ($variant && $variant->product_id == $product->id) {
-                            $variant->update([
+
+                            $updateVariant = [
                                 'sku' => $sku,
                                 'price' => $variantData['price'] ?? $variant->price,
                                 'quantity' => $variantData['quantity'] ?? $variant->quantity,
                                 'status' => $status,
-                            ]);
+                            ];
+
+                            // ✅ chỉ overwrite image_url khi upload mới
+                            if ($variantImagePath) {
+                                $updateVariant['image_url'] = $variantImagePath;
+                            }
+
+                            $variant->update($updateVariant);
                             $variant->attributes()->sync($variantData['attribute_value_ids'] ?? []);
                         }
                     } else {
@@ -327,6 +356,7 @@ class ProductController extends Controller
                             'price' => $variantData['price'] ?? $product->base_price,
                             'quantity' => $variantData['quantity'] ?? 0,
                             'status' => $status,
+                            'image_url' => $variantImagePath, // ✅ có thì lưu, không thì null
                         ]);
                         $newVariant->attributes()->sync($variantData['attribute_value_ids'] ?? []);
                     }

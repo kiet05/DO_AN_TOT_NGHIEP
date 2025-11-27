@@ -164,6 +164,26 @@
                                                                         class="form-control" value="{{ $variant->price }}"
                                                                         required>
                                                                 </div>
+                                                                <div class="col-lg-12 col-md-12 col-12">
+                                                                    <div class="form-group">
+                                                                        <label class="sherah-wc__form-label">Ảnh biến thể
+                                                                        </label>
+
+                                                                        @if (!empty($variant->image_url))
+                                                                            <div class="variant-image-preview mb-2">
+                                                                                <img src="{{ asset('storage/' . $variant->image_url) }}"
+                                                                                    alt="Ảnh biến thể"
+                                                                                    style="max-width: 120px; height:auto; border-radius:4px; border:1px solid #eee;">
+                                                                            </div>
+                                                                        @endif
+
+                                                                        <input type="file"
+                                                                            name="variants[{{ $index }}][image]"
+                                                                            class="form-control" accept="image/*">
+                                                                        <small class="text-muted">Nếu không chọn ảnh mới, hệ
+                                                                            thống giữ ảnh cũ.</small>
+                                                                    </div>
+                                                                </div>
 
                                                                 <div class="col-lg-3 col-md-3 col-12">
                                                                     <label>Trạng thái</label>
@@ -245,6 +265,11 @@
                                                                 <label>Giá</label>
                                                                 <input type="number" name="variants[0][price]"
                                                                     class="form-control" value="" required>
+                                                            </div>
+                                                            <div class="col-lg-12 col-md-12 col-12">
+                                                                <label>Ảnh biến thể</label>
+                                                                <input type="file" name="variants[0][image]"
+                                                                    class="form-control" accept="image/*">
                                                             </div>
 
                                                             <div class="col-lg-3 col-md-3 col-12">
@@ -393,9 +418,11 @@
 
                     const newVariant = template.cloneNode(true);
 
+                    // bỏ id cũ (nếu có) để không update nhầm
                     const hiddenId = newVariant.querySelector('input[type="hidden"][name^="variants"]');
                     if (hiddenId) hiddenId.remove();
 
+                    // cập nhật lại name + reset value cho tất cả input (kể cả file input)
                     newVariant.querySelectorAll('input').forEach(input => {
                         const oldName = input.getAttribute('name');
                         if (!oldName) return;
@@ -405,6 +432,7 @@
                         input.setAttribute('name', newName);
                     });
 
+                    // cập nhật lại name + reset cho select
                     newVariant.querySelectorAll('select').forEach(select => {
                         const oldName = select.getAttribute('name');
                         if (!oldName) return;
@@ -413,6 +441,9 @@
                         const newName = oldName.replace(/\[(\d+)\]/, '[' + variantIndex + ']');
                         select.setAttribute('name', newName);
                     });
+
+                    // ✅ xóa preview ảnh biến thể cũ trong bản clone (nếu có)
+                    newVariant.querySelectorAll('.variant-image-preview').forEach(el => el.remove());
 
                     variantsWrapper.appendChild(newVariant);
                     variantIndex++;
