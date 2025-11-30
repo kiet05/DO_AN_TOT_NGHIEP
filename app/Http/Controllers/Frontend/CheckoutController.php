@@ -12,6 +12,7 @@ use App\Models\PaymentMethod;
 use App\Models\ProductVariant;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
+use App\Services\VoucherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,20 @@ class CheckoutController extends Controller
             ->where('status', 1)
             ->with(['items.productVariant.product', 'items.productVariant.attributeValues', 'voucher'])
             ->first();
+
+        // 🔹 Tự động áp dụng voucher tốt nhất nếu chưa có voucher hoặc muốn tìm voucher tốt hơn
+        if ($cart && $cart->items->count() > 0) {
+            $voucherService = app(VoucherService::class);
+            $bestVoucherData = $voucherService->findBestVoucher($cart, $user->id);
+            
+            if ($bestVoucherData && (!$cart->voucher_id || $bestVoucherData['discount_amount'] > ($cart->discount_amount ?? 0))) {
+                $voucherService->applyToCart($bestVoucherData['voucher'], $cart, $user->id);
+            }
+            
+            // Reload cart để lấy voucher mới
+            $cart->refresh();
+            $cart->load('voucher');
+        }
 
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
@@ -172,41 +187,26 @@ class CheckoutController extends Controller
         $cart->calculateTotal();
 
         // 🔹 Kiểm tra lại voucher trước khi checkout (đảm bảo voucher vẫn hợp lệ)
+        $voucher = null;
+        $discountAmount = 0;
+        $voucherService = app(VoucherService::class);
+        
         if ($cart->voucher_id) {
-            $voucher = Voucher::find($cart->voucher_id);
+            $voucher = Voucher::with(['products', 'categories'])->find($cart->voucher_id);
             
-            if (!$voucher || !$voucher->is_active) {
+            if (!$voucher) {
+                // Reset voucher trong cart nếu không tồn tại
+                $voucherService->removeFromCart($cart);
                 return redirect()->route('cart.index')
                     ->with('error', 'Mã giảm giá không còn hợp lệ. Vui lòng thử lại.');
             }
 
-            // Kiểm tra thời gian hiệu lực
-            $now = now();
-            if ($voucher->start_at && $voucher->start_at->isFuture()) {
+            // Validate voucher
+            $validation = $voucherService->validateVoucher($voucher, $user->id);
+            if (!$validation['valid']) {
+                $voucherService->removeFromCart($cart);
                 return redirect()->route('cart.index')
-                    ->with('error', 'Mã giảm giá chưa có hiệu lực.');
-            }
-
-            if ($voucher->end_at && $voucher->end_at->isPast()) {
-                return redirect()->route('cart.index')
-                    ->with('error', 'Mã giảm giá đã hết hạn.');
-            }
-
-            // Kiểm tra tổng số lần đã sử dụng
-            $totalUsageCount = VoucherUsage::where('voucher_id', $voucher->id)->count();
-            if ($voucher->usage_limit && $totalUsageCount >= $voucher->usage_limit) {
-                return redirect()->route('cart.index')
-                    ->with('error', 'Mã giảm giá đã hết lượt sử dụng.');
-            }
-
-            // Kiểm tra user đã dùng voucher này chưa
-            $userUsageCount = VoucherUsage::where('voucher_id', $voucher->id)
-                ->where('user_id', $user->id)
-                ->count();
-
-            if ($userUsageCount > 0) {
-                return redirect()->route('cart.index')
-                    ->with('error', 'Bạn đã sử dụng mã giảm giá này rồi.');
+                    ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
             }
         }
 
@@ -223,7 +223,30 @@ class CheckoutController extends Controller
         foreach ($cart->items as $item) {
             $totalPrice += $item->quantity * $item->price_at_time;
         }
-        $discountAmount = $cart->discount_amount ?? 0;
+        
+        // 🔹 Tính lại discount_amount dựa trên voucher hiện tại (nếu có)
+        if ($voucher) {
+            // Validate với subtotal
+            $validation = $voucherService->validateVoucher($voucher, $user->id, $totalPrice);
+            if (!$validation['valid']) {
+                $voucherService->removeFromCart($cart);
+                return redirect()->route('cart.index')
+                    ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
+            }
+            
+            // Kiểm tra có áp dụng được cho cart không
+            if (!$voucherService->canApplyToCart($voucher, $cart)) {
+                $voucherService->removeFromCart($cart);
+                return redirect()->route('cart.index')
+                    ->with('error', 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng.');
+            }
+            
+            // Tính lại số tiền giảm
+            $discountAmount = $voucherService->calculateDiscount($voucher, $totalPrice);
+        } else {
+            $discountAmount = 0;
+        }
+        
         $finalAmount = $totalPrice - $discountAmount + $shippingFee;
 
         // Ghép lại địa chỉ đầy đủ để lưu vào đơn
@@ -237,6 +260,42 @@ class CheckoutController extends Controller
         DB::beginTransaction();
 
         try {
+            // 🔹 Kiểm tra lại voucher TRONG transaction để tránh race condition
+            if ($voucher) {
+                // Lock voucher để kiểm tra lại
+                $lockedVoucher = Voucher::where('id', $voucher->id)->lockForUpdate()->first();
+                
+                if (!$lockedVoucher) {
+                    DB::rollBack();
+                    $voucherService->removeFromCart($cart);
+                    return redirect()->route('cart.index')
+                        ->with('error', 'Mã giảm giá không còn hợp lệ. Vui lòng thử lại.');
+                }
+                
+                // Validate lại voucher trong transaction
+                $validation = $voucherService->validateVoucher($lockedVoucher, $user->id, $totalPrice);
+                if (!$validation['valid']) {
+                    DB::rollBack();
+                    $voucherService->removeFromCart($cart);
+                    return redirect()->route('cart.index')
+                        ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
+                }
+                
+                // Kiểm tra lại có áp dụng được cho cart không
+                if (!$voucherService->canApplyToCart($lockedVoucher, $cart)) {
+                    DB::rollBack();
+                    $voucherService->removeFromCart($cart);
+                    return redirect()->route('cart.index')
+                        ->with('error', 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng.');
+                }
+                
+                // Tính lại discount với voucher đã lock
+                $discountAmount = $voucherService->calculateDiscount($lockedVoucher, $totalPrice);
+                $finalAmount = $totalPrice - $discountAmount + $shippingFee;
+                
+                $voucher = $lockedVoucher; // Sử dụng voucher đã lock
+            }
+            
             // 🔹 Lấy danh sách variant IDs cần lock
             $variantIds = $cart->items->pluck('product_variant_id')->toArray();
 
@@ -279,7 +338,7 @@ class CheckoutController extends Controller
                 'shipping_fee'    => $shippingFee,
                 'total_price'     => $totalPrice,
                 'final_amount'    => $finalAmount,
-                'voucher_id'      => $cart->voucher_id,
+                'voucher_id'      => $voucher ? $voucher->id : null,
                 'payment_method_id' => $method->id,
                 'payment_method'  => $method->slug,
                 'payment_status'  => 'unpaid',   // hoặc 'pending_cod' với COD
@@ -361,10 +420,10 @@ class CheckoutController extends Controller
                 'payload' => null,
             ]);
 
-            // 🔹 Lưu VoucherUsage nếu có voucher
-            if ($cart->voucher_id && $discountAmount > 0) {
+            // 🔹 Lưu VoucherUsage nếu có voucher hợp lệ
+            if ($voucher && $discountAmount > 0) {
                 VoucherUsage::create([
-                    'voucher_id'     => $cart->voucher_id,
+                    'voucher_id'     => $voucher->id,
                     'order_id'       => $order->id,
                     'user_id'        => $user->id,
                     'discount_amount' => $discountAmount,
@@ -392,13 +451,26 @@ class CheckoutController extends Controller
 
             DB::commit();
 
+            // 🔹 Đảm bảo session được set trước khi redirect
             session(['checkout_order_id' => $order->id]);
+            session()->save(); // Force save session
 
-            return redirect()
-                ->route('checkout.success')
-                ->with('success', 'Đặt hàng thành công!');
+            // 🔹 Redirect đến trang success
+            try {
+                return redirect()
+                    ->route('checkout.success')
+                    ->with('success', 'Đặt hàng thành công!');
+            } catch (\Throwable $redirectError) {
+                // Nếu redirect lỗi, vẫn log nhưng không rollback vì đã commit
+                \Log::error('Checkout redirect error: ' . $redirectError->getMessage());
+                // Fallback: redirect với query parameter
+                return redirect()
+                    ->route('checkout.success', ['order_id' => $order->id])
+                    ->with('success', 'Đặt hàng thành công!');
+            }
         } catch (\Throwable $e) {
             DB::rollBack();
+            \Log::error('Checkout error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             // dd($e->getMessage()); // bật khi cần debug
             return redirect()->route('checkout.index')
                 ->with('error', 'Có lỗi xảy ra khi đặt hàng, vui lòng thử lại sau.');
@@ -532,6 +604,7 @@ class CheckoutController extends Controller
             ],
         ];
     }
+
 
     public function success(Request $request)
     {

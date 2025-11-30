@@ -101,6 +101,53 @@ class Voucher extends Model
         return $this->usages()->where('user_id', $userId)->exists();
     }
 
+    /**
+     * Kiểm tra voucher có trong thời gian hiệu lực không
+     */
+    public function isInValidTime(): bool
+    {
+        $now = now();
+        
+        if ($this->start_at && $this->start_at->isFuture()) {
+            return false;
+        }
+
+        if ($this->end_at && $this->end_at->isPast()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Kiểm tra voucher còn lượt sử dụng không
+     */
+    public function hasRemainingUsage(): bool
+    {
+        if (!$this->usage_limit) {
+            return true; // Không giới hạn
+        }
+
+        return $this->used_count < $this->usage_limit;
+    }
+
+    /**
+     * Scope: Lấy các voucher đang active và trong thời gian hiệu lực
+     */
+    public function scopeActive($query)
+    {
+        $now = now();
+        return $query->where('is_active', true)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('start_at')
+                  ->orWhere('start_at', '<=', $now);
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('end_at')
+                  ->orWhere('end_at', '>=', $now);
+            });
+    }
+
     /** @use HasFactory<\Database\Factories\VoucherFactory> */
     use HasFactory;
 }
