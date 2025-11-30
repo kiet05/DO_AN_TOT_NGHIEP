@@ -25,7 +25,7 @@
 
               {{-- Tabs Reports --}}
               
-          <!-- <div class="mg-top-10 mg-bottom-10"> -->
+          {{-- <!-- <div class="mg-top-10 mg-bottom-10"> -->
             <!-- <ul class="nav nav-pills">
               <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.reports.index') ? 'active' : '' }}"
@@ -52,7 +52,7 @@
                 </a>
               </li>
             </ul>
-          </div> -->
+          </div> --> --}}
 
 
               {{-- Bộ lọc thời gian --}}

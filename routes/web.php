@@ -125,6 +125,12 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
+// ====================
+// Route AI tư vấn sản phẩm
+// ====================
+Route::post('/ai/chat', [\App\Http\Controllers\AiChatController::class, 'chat']);
+
+
 
 // ============================
 // 🔹 CÀI ĐẶT NGƯỜI DÙNG
