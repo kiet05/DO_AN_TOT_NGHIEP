@@ -82,6 +82,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
         Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
         Route::post('/apply-voucher', [CartController::class, 'applyVoucher'])->name('apply-voucher');
         Route::post('/remove-voucher', [CartController::class, 'removeVoucher'])->name('remove-voucher');
+        Route::get('/suggest-vouchers', [CartController::class, 'suggestVouchers'])->name('suggest-vouchers');
     });
 });
 

@@ -526,6 +526,16 @@
 
                             <!-- Mã giảm giá -->
                             <div class="voucher-section mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="summary-label">Mã giảm giá</span>
+                                    @if (!empty($suggestedVouchers))
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-primary"
+                                            onclick="openVoucherModal()">
+                                            <i class="fas fa-ticket-alt me-1"></i> Chọn ưu đãi
+                                        </button>
+                                    @endif
+                                </div>
+
                                 @if ($cart->voucher)
                                     <div class="alert alert-success alert-sm mb-2" id="voucher-applied">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -548,6 +558,13 @@
                                             <button type="button" class="btn btn-outline-secondary"
                                                 onclick="applyVoucher()" id="btn-apply-voucher">
                                                 <i class="fas fa-check"></i> Áp dụng
+                                            </button>
+                                        </div>
+                                        <div class="mt-2 small text-muted">
+                                            Hoặc
+                                            <button type="button" class="btn btn-link btn-sm p-0"
+                                                onclick="openVoucherModal()">
+                                                chọn từ danh sách ưu đãi
                                             </button>
                                         </div>
                                         <div id="voucher-message" class="mt-2"></div>
@@ -607,6 +624,53 @@
                     </a>
                 </div>
             @endif
+        </div>
+    </div>
+
+    <!-- Modal chọn voucher giống Shopee -->
+    <div class="modal fade" id="voucherModal" tabindex="-1" aria-labelledby="voucherModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="voucherModalLabel">
+                        <i class="fas fa-ticket-alt me-2"></i>Ưu đãi cho đơn hàng của bạn
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="voucher-modal-loading" class="text-center py-3 d-none">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="voucher-modal-empty" class="text-center text-muted py-3 d-none">
+                        Hiện chưa có ưu đãi nào áp dụng cho đơn hàng này.
+                    </div>
+                    <div id="voucher-modal-error" class="alert alert-danger d-none"></div>
+                    <div id="voucher-modal-list" class="voucher-list">
+                        @if (!empty($suggestedVouchers))
+                            @foreach ($suggestedVouchers as $v)
+                                <div class="voucher-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded"
+                                    data-code="{{ $v['code'] }}">
+                                    <div>
+                                        <div class="fw-bold">{{ $v['code'] }}</div>
+                                        <div class="small text-muted">{{ $v['name'] ?? 'Ưu đãi' }}</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="text-success fw-semibold">
+                                            -{{ number_format($v['discount_amount'], 0, ',', '.') }}₫
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-1"
+                                            onclick="applyVoucherFromList('{{ $v['code'] }}')">
+                                            Dùng mã này
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -1038,5 +1102,122 @@
                 });
             }
         });
+
+        // ====== VOUCHER MODAL (giống Shopee) ======
+        let voucherModalInstance = null;
+
+        function getVoucherModal() {
+            const modalEl = document.getElementById('voucherModal');
+            if (!modalEl) return null;
+            if (!voucherModalInstance && window.bootstrap) {
+                voucherModalInstance = new bootstrap.Modal(modalEl);
+            }
+            return voucherModalInstance;
+        }
+
+        function openVoucherModal() {
+            const modal = getVoucherModal();
+            if (!modal) return;
+
+            // Nếu đã có danh sách render sẵn từ server thì chỉ cần show
+            const hasItems = document.querySelector('#voucher-modal-list .voucher-item') !== null;
+            if (!hasItems) {
+                // fallback: load từ API nếu danh sách trống
+                loadVouchersFromApi();
+            }
+
+            modal.show();
+        }
+
+        function loadVouchersFromApi() {
+            const listEl = document.getElementById('voucher-modal-list');
+            const loadingEl = document.getElementById('voucher-modal-loading');
+            const emptyEl = document.getElementById('voucher-modal-empty');
+            const errorEl = document.getElementById('voucher-modal-error');
+
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+            loadingEl.classList.remove('d-none');
+            emptyEl.classList.add('d-none');
+            errorEl.classList.add('d-none');
+
+            fetch('{{ route('cart.suggest-vouchers') }}', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingEl.classList.add('d-none');
+
+                    if (!data.success || !data.vouchers || data.vouchers.length === 0) {
+                        emptyEl.classList.remove('d-none');
+                        return;
+                    }
+
+                    data.vouchers.forEach(v => {
+                        const item = document.createElement('div');
+                        item.className =
+                            'voucher-item d-flex justify-content-between align-items-center mb-2 p-2 border rounded';
+                        item.setAttribute('data-code', v.code);
+                        item.innerHTML = `
+                            <div>
+                                <div class="fw-bold">${v.code}</div>
+                                <div class="small text-muted">${v.name || 'Ưu đãi'}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-success fw-semibold">
+                                    -${new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 }).format(v.discount_amount)}₫
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-1"
+                                    onclick="applyVoucherFromList('${v.code}')">
+                                    Dùng mã này
+                                </button>
+                            </div>
+                        `;
+                        listEl.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingEl.classList.add('d-none');
+                    errorEl.textContent = 'Không tải được danh sách ưu đãi. Vui lòng thử lại sau.';
+                    errorEl.classList.remove('d-none');
+                });
+        }
+
+        function applyVoucherFromList(code) {
+            const modal = getVoucherModal();
+            if (!code) return;
+
+            // Gọi luôn API applyVoucher, giống nhập tay nhưng không cần người dùng gõ
+            fetch('{{ route('cart.apply-voucher') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        voucher_code: code
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (modal) modal.hide();
+                        // Reload để cập nhật tóm tắt đơn hàng
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Không thể áp dụng mã giảm giá này');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi áp dụng mã giảm giá');
+                });
+        }
     </script>
 @endpush

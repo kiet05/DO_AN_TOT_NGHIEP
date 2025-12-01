@@ -11,6 +11,7 @@ use App\Models\Voucher;
 use App\Services\VoucherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +20,7 @@ class CartController extends Controller
     /**
      * Hiển thị trang giỏ hàng
      */
-    public function index()
+    public function index(VoucherService $voucherService)
     {
         $user = Auth::user();
 
@@ -43,19 +44,27 @@ class CartController extends Controller
         // Tính lại tổng tiền
         $cart->calculateTotal();
 
-        // 🔹 Tự động áp dụng voucher tốt nhất nếu chưa có voucher hoặc muốn tìm voucher tốt hơn
-        if ($cart->items->count() > 0) {
-            $this->autoApplyBestVoucher();
-            
+        // 🔹 Tự động áp dụng voucher tốt nhất nếu:
+        //    - Có sản phẩm trong giỏ
+        //    - Và người dùng KHÔNG chọn tắt tự động voucher (disable_auto_voucher = false)
+        if ($cart->items->count() > 0 && !session('disable_auto_voucher', false)) {
+            $this->autoApplyBestVoucher($voucherService);
+
             // Reload cart để lấy voucher mới
             $cart->refresh();
             $cart->load('voucher');
         }
 
+        // 🔹 Lấy danh sách voucher có thể áp dụng (để hiển thị popup giống Shopee)
+        $suggestedVouchers = [];
+        if ($cart->items->count() > 0) {
+            $suggestedVouchers = $voucherService->getApplicableVouchers($cart, $user->id);
+        }
+
         // Lấy sản phẩm tương tự (dựa trên category của các sản phẩm trong giỏ)
         $similarProducts = $this->getSimilarProducts($cart);
 
-        return view('frontend.cart.index', compact('cart', 'similarProducts'));
+        return view('frontend.cart.index', compact('cart', 'similarProducts', 'suggestedVouchers'));
     }
 
     /**
@@ -476,6 +485,8 @@ class CartController extends Controller
      */
     public function applyVoucher(Request $request, VoucherService $voucherService)
     {
+        // Khi người dùng chủ động nhập mã, bật lại cơ chế tự động voucher (nếu trước đó từng tắt)
+        Session::forget('disable_auto_voucher');
         $request->validate([
             'voucher_code' => 'required|string|max:50',
         ]);
@@ -566,10 +577,46 @@ class CartController extends Controller
             return response()->json($result, 500);
         }
 
+        // Người dùng đã chủ động xóa voucher -> tạm thời tắt auto-apply cho tới khi họ nhập mã mới
+        Session::put('disable_auto_voucher', true);
+
         return response()->json([
             'success' => true,
             'message' => $result['message'],
             'total' => number_format($result['total'], 0, ',', '.') . '₫',
+        ]);
+    }
+
+    /**
+     * API: Lấy danh sách voucher gợi ý (giống popup khuyến mãi Shopee)
+     */
+    public function suggestVouchers(VoucherService $voucherService)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập',
+            ], 401);
+        }
+
+        $cart = Cart::where('user_id', $user->id)
+            ->where('status', 1)
+            ->with(['items.productVariant.product'])
+            ->first();
+
+        if (!$cart || $cart->items->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Giỏ hàng trống',
+            ], 400);
+        }
+
+        $vouchers = $voucherService->getApplicableVouchers($cart, $user->id);
+
+        return response()->json([
+            'success' => true,
+            'vouchers' => $vouchers,
         ]);
     }
 
