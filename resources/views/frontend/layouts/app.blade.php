@@ -840,6 +840,189 @@
     </script>
     
     @stack('scripts')
+    <!-- Nút chat tròn -->
+<div id="chat-toggle"
+     style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 55px;
+        height: 55px;
+        background: #1877f2;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 26px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 999999;
+     ">
+    💬
+</div>
+
+<!-- CHATBOX MESSENGER -->
+<div id="chat-box"
+     style="
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 330px;
+        max-height: 420px;
+        background: #fff;
+        border-radius: 12px;
+        display: none;
+        flex-direction: column;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        z-index: 999998;
+     ">
+
+    <!-- Header -->
+    <div style="
+        background: #1877f2;
+        padding: 12px;
+        color: white;
+        font-weight: bold;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    ">
+        <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
+             style="width: 32px; height: 32px; border-radius: 50%;">
+        Trợ lý AI – Hỗ trợ khách hàng
+    </div>
+
+    <!-- Nội dung chat -->
+    <div id="chat-messages"
+         style="
+            padding: 10px;
+            overflow-y: auto;
+            height: 300px;
+            background: #f0f2f5;
+         ">
+    </div>
+
+    <!-- Thanh nhập tin -->
+    <div style="padding: 10px; display: flex; gap: 5px; background: #fff;">
+        <input id="chat-input"
+               type="text"
+               placeholder="Nhập tin nhắn..."
+               style="
+                    flex: 1;
+                    padding: 8px;
+                    border-radius: 20px;
+                    border: 1px solid #ccc;
+               ">
+        <button onclick="sendChat()"
+                style="
+                    padding: 8px 14px;
+                    border-radius: 20px;
+                    border: none;
+                    background: #1877f2;
+                    color: white;
+               ">
+            Gửi
+        </button>
+    </div>
+</div>
+
+<script>
+// ⭐ Hover vào nút → mở chat
+document.getElementById("chat-toggle").addEventListener("mouseenter", function () {
+    document.getElementById("chat-box").style.display = "flex";
+});
+
+// ⭐ Rời khỏi khung chat → đóng
+document.getElementById("chat-box").addEventListener("mouseleave", function () {
+    this.style.display = "none";
+});
+
+// ⭐ Enter để gửi
+document.getElementById("chat-input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") sendChat();
+});
+
+// ⭐ Hàm gửi tin
+async function sendChat() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const box = document.getElementById("chat-messages");
+
+    // Tin người dùng (bên phải)
+    box.innerHTML += `
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+            <div style="
+                background: #1877f2;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 16px;
+                max-width: 70%;
+                font-size: 14px;
+            ">
+                ${text}
+            </div>
+            <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
+                 style="width: 28px; height: 28px; border-radius: 50%; margin-left: 6px;">
+        </div>
+    `;
+    input.value = "";
+
+    // Loading
+    box.innerHTML += `
+        <div id="typing" style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
+                 style="width: 28px; height: 28px; border-radius: 50%;">
+            <div style="
+                background: #e4e6eb;
+                padding: 6px 12px;
+                border-radius: 18px;
+                font-size: 13px;
+                color: #555;
+            ">
+                AI đang nhập...
+            </div>
+        </div>
+    `;
+
+    box.scrollTop = box.scrollHeight;
+
+    // ⭐⭐⭐ GỌI API ĐÃ FIX 403
+    let res = await fetch('/api/ai/chat', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text })
+    });
+
+    const data = await res.json();
+
+    document.getElementById("typing")?.remove();
+
+    // Tin AI (bên trái)
+    box.innerHTML += `
+        <div style="display: flex; justify-content: flex-start; margin-bottom: 8px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712027.png"
+                 style="width: 28px; height: 28px; border-radius: 50%; margin-right: 6px;">
+            <div style="
+                background: #e4e6eb;
+                padding: 8px 12px;
+                border-radius: 16px;
+                max-width: 70%;
+                font-size: 14px;
+            ">
+                ${data.answer}
+            </div>
+        </div>
+    `;
+
+    box.scrollTop = box.scrollHeight;
+}
+</script>
+
+
 </body>
 </html>
 

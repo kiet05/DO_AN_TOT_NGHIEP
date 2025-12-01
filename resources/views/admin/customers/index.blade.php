@@ -1,3 +1,4 @@
+
 @extends('layouts.admin.master')
 
 @section('content')
@@ -77,18 +78,24 @@
                       <div class="d-flex gap-1 justify-content-center">
 
                         {{-- LỊCH SỬ HOẠT ĐỘNG --}}
-                        <a href="{{ route('admin.customers.show', $u->id) }}"
-                           class="sherah-table__action"
-                           style="background:#3b82f6;color:#fff;padding:4px 10px;border-radius:4px;">
-                          Lịch sử
-                        </a>
+                        <form action="{{ route('admin.customers.show', $u->id) }}" method="GET" class="mb-0">
+                            <button type="submit"
+                                    class="sherah-table__action"
+                                    style="white-space: nowrap;background:#3b82f6;color:#fff;padding:4px 10px;border-radius:4px;">
+                                Lịch sử
+                            </button>
+                        </form>
+
 
                         {{-- SỬA --}}
-                        <a href="{{ route('admin.customers.edit', $u->id) }}"
-                           class="sherah-table__action"
-                           style="background:#10b981;color:#fff;padding:4px 10px;border-radius:4px;">
-                          Sửa
-                        </a>
+                        <form action="{{ route('admin.customers.edit', $u->id) }}" method="GET" class="mb-0">
+                            <button type="submit"
+                                    class="sherah-table__action"
+                                    style="background:#10b981;color:#fff;padding:4px 10px;border-radius:4px;">
+                                Sửa
+                            </button>
+                        </form>
+
 
                         {{-- KHÓA/MỞ --}}
                         <form method="POST"
