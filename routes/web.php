@@ -254,6 +254,15 @@ Route::prefix('admin')
             Route::get('/top-products', [ReportController::class, 'topProducts'])->name('topProducts');
         });
 
+        // 🔎 Reviews (Admin quản lý đánh giá)
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [ReviewController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [ReviewController::class, 'reject'])->name('reject');
+            Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
+        });
+
         // 👥 Users
         Route::get('users', [AdminUserController::class, 'index'])->name('admin.users.index');
         Route::get('users/{id}', [AdminUserController::class, 'show'])->name('admin.users.show');
@@ -304,6 +313,8 @@ Route::prefix('admin')
             ->name('contacts.index');
         Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
             ->name('contacts.show');
+
+        
     });
 
 // Payment routes (outside admin)
