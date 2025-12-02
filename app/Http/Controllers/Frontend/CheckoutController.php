@@ -392,11 +392,22 @@ class CheckoutController extends Controller
 
             DB::commit();
 
-            session(['checkout_order_id' => $order->id]);
+session(['checkout_order_id' => $order->id]);
 
-            return redirect()
-                ->route('checkout.success')
-                ->with('success', 'Đặt hàng thành công!');
+// =======================
+// 🔥 Nếu thanh toán VNPay → chuyển sang VNPay
+// =======================
+if ($method->slug === 'vnpay') {
+    return $this->createVNPayUrl($order);
+}
+
+// =======================
+// 🔥 Nếu COD → vào success như cũ
+// =======================
+return redirect()
+    ->route('checkout.success')
+    ->with('success', 'Đặt hàng thành công!');
+
         } catch (\Throwable $e) {
             DB::rollBack();
             // dd($e->getMessage()); // bật khi cần debug
@@ -532,6 +543,83 @@ class CheckoutController extends Controller
             ],
         ];
     }
+
+    private function createVNPayUrl($order)
+{
+    $vnp_TmnCode    = config('vnpay.vnp_tmn_code');
+    $vnp_HashSecret = config('vnpay.vnp_hash_secret');
+    $vnp_Url        = config('vnpay.vnp_url');
+    $vnp_ReturnUrl  = route('vnpay.return');
+
+    $vnp_TxnRef = $order->id;
+    $vnp_Amount = $order->final_amount * 100;
+
+    $vnp_Params = [
+        'vnp_Version'   => '2.1.0',
+        'vnp_Command'   => 'pay',
+        'vnp_TmnCode'   => $vnp_TmnCode,
+        'vnp_Amount'    => $vnp_Amount,
+        'vnp_CurrCode'  => 'VND',
+        'vnp_TxnRef'    => $vnp_TxnRef,
+        'vnp_OrderInfo' => 'Thanh toan don hang #' . $order->id,
+        'vnp_OrderType' => 'billpayment',
+        'vnp_Locale'    => 'vn',
+        'vnp_ReturnUrl' => $vnp_ReturnUrl,
+        'vnp_IpAddr'    => request()->ip(),
+        'vnp_CreateDate'=> date('YmdHis'),
+    ];
+
+    ksort($vnp_Params);
+
+    $query = '';
+    $hashdata = '';
+    foreach ($vnp_Params as $key => $value) {
+        $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        $hashdata .= urlencode($key) . "=" . urlencode($value) . '&';
+    }
+
+    $query = rtrim($query, '&');
+    $hashdata = rtrim($hashdata, '&');
+
+    $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+
+    $paymentUrl = $vnp_Url . "?" . $query . '&vnp_SecureHash=' . $vnpSecureHash;
+
+    return redirect($paymentUrl);
+}
+
+
+public function vnpayReturn(Request $request)
+{
+    $vnp_HashSecret = config('vnpay.vnp_hash_secret');
+    $inputData = $request->all();
+
+    $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
+
+    unset($inputData['vnp_SecureHash']);
+    ksort($inputData);
+
+    $hashData = urldecode(http_build_query($inputData));
+    $checkHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+
+    $orderId = $inputData['vnp_TxnRef'] ?? null;
+
+    if ($checkHash !== $vnp_SecureHash) {
+        return redirect()->route('checkout.success')
+            ->with('error', 'Chữ ký không hợp lệ!');
+    }
+
+    $order = Order::find($orderId);
+
+    if ($request->vnp_ResponseCode == "00") {
+        $order->update(['payment_status' => 'paid']);
+        return redirect()->route('checkout.success', ['order_id' => $order->id])
+            ->with('success', 'Thanh toán VNPay thành công!');
+    } else {
+        return redirect()->route('checkout.success', ['order_id' => $order->id])
+            ->with('error', 'Thanh toán VNPay thất bại!');
+    }
+}
 
     public function success(Request $request)
     {

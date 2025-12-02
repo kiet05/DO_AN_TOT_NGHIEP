@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Frontend\VNPayController;
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\ReviewController;
@@ -85,12 +86,21 @@ Route::prefix('cart')->name('cart.')->group(function () {
     });
 });
 
-// Thanh toán
+// ============================
+// Checkout (COD + VNPAY)
+// ============================
 Route::middleware('auth')->group(function () {
+
+    // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/store', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    // VNPay Return
+    Route::get('/vnpay/return', [CheckoutController::class, 'vnpayReturn'])->name('vnpay.return');
 });
+
+
 
 // ============================
 
@@ -305,9 +315,3 @@ Route::prefix('admin')
             ->name('contacts.show');
     });
 
-// Payment routes (outside admin)
-Route::prefix('payment')->name('payment.')->group(function () {
-    Route::post('/process', [PaymentController::class, 'processPayment'])->name('process')->middleware('auth');
-    Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
-    Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
-});

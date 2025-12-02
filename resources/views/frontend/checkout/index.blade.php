@@ -548,45 +548,47 @@
                                 </ul>
 
                                 <h4 class="order__title">Phương thức thanh toán</h4>
+                                {{-- <h4 class="order__title">Phương thức thanh toán</h4> --}}
 
-                                @if (isset($paymentMethods) && $paymentMethods->count())
-                                    @foreach ($paymentMethods as $pm)
-                                        <div class="checkout__input__checkbox">
-                                            <label for="pm-{{ $pm->slug }}">
-                                                @if ($pm->icon)
-                                                    <img src="{{ asset('storage/' . $pm->icon) }}"
-                                                        alt="{{ $pm->display_name ?? $pm->name }}"
-                                                        style="height:20px;margin-right:6px;vertical-align:middle;">
+                                    @if (isset($paymentMethods) && $paymentMethods->count())
+                                        @foreach ($paymentMethods as $pm)
+                                            <div class="checkout__input__checkbox">
+                                                <label for="pm-{{ $pm->slug }}">
+                                                    @if ($pm->icon)
+                                                        <img src="{{ asset('storage/' . $pm->icon) }}"
+                                                            alt="{{ $pm->display_name ?? $pm->name }}"
+                                                            style="height:20px;margin-right:6px;vertical-align:middle;">
+                                                    @endif
+
+                                                    {{ $pm->display_name ?? $pm->name }}
+
+                                                    <input type="radio"
+                                                        id="pm-{{ $pm->slug }}"
+                                                        name="payment_method"
+                                                        value="{{ $pm->slug }}"
+                                                        {{ old('payment_method', optional($paymentMethods->first())->slug) === $pm->slug ? 'checked' : '' }}>
+                                                    <span class="checkmark"></span>
+                                                </label>
+
+                                                @if ($pm->description)
+                                                    <small class="text-muted d-block">{{ $pm->description }}</small>
                                                 @endif
-
-                                                {{ $pm->display_name ?? $pm->name }}
-
-                                                <input type="radio" id="pm-{{ $pm->slug }}" name="payment_method"
-                                                    value="{{ $pm->slug }}"
-                                                    {{ old('payment_method', optional($paymentMethods->first())->slug) === $pm->slug ? 'checked' : '' }}>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <div class="checkout__input__checkbox">
+                                            <label for="payment_cod">
+                                                Thanh toán khi nhận hàng (COD)
+                                                <input type="radio" id="payment_cod" name="payment_method" value="cod"
+                                                    {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
                                                 <span class="checkmark"></span>
                                             </label>
-
-                                            @if ($pm->description)
-                                                <small class="text-muted d-block">{{ $pm->description }}</small>
-                                            @endif
                                         </div>
-                                    @endforeach
-                                @else
-                                    {{-- fallback nếu chưa cấu hình payment_methods --}}
-                                    <div class="checkout__input__checkbox">
-                                        <label for="payment_cod">
-                                            Thanh toán khi nhận hàng (COD)
-                                            <input type="radio" id="payment_cod" name="payment_method" value="cod"
-                                                {{ old('payment_method', 'COD') === 'COD' ? 'checked' : '' }}>
-                                            <span class="checkmark"></span>
-                                        </label>
-                                    </div>
-                                @endif
+                                    @endif
 
-                                @error('payment_method')
-                                    <span class="text-danger small d-block mb-2">{{ $message }}</span>
-                                @enderror
+                                    @error('payment_method')
+                                        <span class="text-danger small d-block mb-2">{{ $message }}</span>
+                                    @enderror
 
                                 <button type="submit" class="site-btn">ĐẶT HÀNG</button>
                             </div>
