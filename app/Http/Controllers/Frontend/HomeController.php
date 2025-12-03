@@ -44,6 +44,7 @@ class HomeController extends Controller
             ->with(['category', 'images'])
             ->inRandomOrder()
             ->limit(12)
+            ->take(8) // 4 sản phẩm mỗi hàng x 2 hàng = 8
             ->get();
 
         $searchTerm = trim($request->get('search', ''));

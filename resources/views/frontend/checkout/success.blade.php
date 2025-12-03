@@ -190,10 +190,11 @@
             <h2>Cảm ơn bạn đã đặt hàng!</h2>
             <p>Đơn hàng của bạn đã được ghi nhận và chuyển đến quản trị viên.</p>
             <p>Nhân viên sẽ sớm liên hệ qua số <strong>{{ $order->receiver_phone }}</strong>
-                @if($order->user?->email)
+                @if ($order->user?->email)
                     hoặc email <strong>{{ $order->user->email }}</strong>
                 @endif
-                để xác nhận giao hàng.</p>
+                để xác nhận giao hàng.
+            </p>
 
             <div class="thankyou-meta">
                 <div class="thankyou-meta__item">
@@ -212,8 +213,9 @@
 
             <div class="thankyou-actions">
                 <a href="{{ route('products.index') }}" class="thankyou-btn thankyou-btn--primary">Tiếp tục mua sắm</a>
-                <a href="{{ route('checkout.success', ['order' => $order->id]) }}#order-detail"
-                    class="thankyou-btn thankyou-btn--outline">Xem lại đơn hàng đã đặt</a>
+                <a href="{{ route('order.index') }}" class="thankyou-btn thankyou-btn--outline">
+                    Xem lại đơn hàng đã đặt
+                </a>
             </div>
         </div>
     </section>
@@ -265,7 +267,7 @@
                 <h4>Danh sách sản phẩm</h4>
                 @foreach ($order->orderItems as $item)
                     @php
-                        $productName = $item->productVariant?->product?->name ?? $item->product?->name ?? 'Sản phẩm';
+                        $productName = $item->productVariant?->product?->name ?? ($item->product?->name ?? 'Sản phẩm');
                     @endphp
                     <div class="order-items__item">
                         <div class="order-items__info">
@@ -282,4 +284,3 @@
         </div>
     </section>
 @endsection
-

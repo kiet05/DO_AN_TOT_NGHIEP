@@ -25,6 +25,8 @@ use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Frontend\OrderController as FrontendOrderController;
+use App\Http\Controllers\Frontend\PaymentController as FrontendPaymentController;
 
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -90,7 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-});
+    Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');});
 
 // ============================
 
@@ -128,7 +130,7 @@ Route::view('dashboard', 'dashboard')
 // ====================
 // Route AI tư vấn sản phẩm
 // ====================
-Route::post('/ai/chat', [\App\Http\Controllers\AiChatController::class, 'chat']);
+Route::post('/ai/chat', [\App\Http\Controllers\AiChatController::class, 'chat'])->name('ai.chat');
 
 
 
@@ -152,18 +154,54 @@ Route::middleware(['auth'])->group(function () {
             )
         )
         ->name('two-factor.show');
-    // 👤 Profile User Khách hàng (Sử dụng ProfileController cho các chức năng cốt lõi)
-    // Trang tổng quan profile user
-    Route::get('/profile', [UserController::class, 'index'])->name('profile.index');
-
+    // 👤 TRANG CÁ NHÂN USER (FRONTEND)
+    // Trang hồ sơ (dùng method index trong UserController,
+    Route::get('/profile', [UserController::class, 'index'])->name('profile.edit');
     // Cập nhật thông tin cơ bản
-    Route::put('/profile/update-info', [UserController::class, 'update'])->name('profile.update');
-
-    // Cập nhật Ảnh đại diện
-    Route::put('profile/update-avatar', [UserController::class, 'updateAvatar'])->name('profile.avatar.update');
-
+    Route::put('/profile', [UserController::class, 'update'])->name('profile.update');
+    // Cập nhật avatar – DÙNG POST
+    Route::post('/profile/update-avatar', [UserController::class, 'updateAvatar'])
+        ->name('profile.avatar.update');
     // Đổi mật khẩu
-    Route::put('/profile/change-password', [UserController::class, 'updatePassword'])->name('profile.password.update');
+    Route::put('/profile/password', [UserController::class, 'updatePassword'])
+        ->name('profile.password.update');
+    // Địa chỉ
+    Route::post('/profile/addresses', [UserController::class, 'storeAddress'])->name('profile.addresses.store');
+    Route::put('/profile/addresses/{address}/default', [UserController::class, 'setDefaultAddress'])->name('profile.addresses.set-default');
+    Route::delete('/profile/addresses/{address}', [UserController::class, 'destroyAddress'])->name('profile.addresses.destroy');
+    // Sửa địa chỉ
+    Route::get('/profile/addresses/{address}/edit', [UserController::class, 'editAddress'])
+        ->name('profile.addresses.edit');
+
+    // Cập nhật địa chỉ
+    Route::put('/profile/addresses/{address}', [UserController::class, 'updateAddress'])
+        ->name('profile.addresses.update');
+
+    // 🔹 LỊCH SỬ ĐƠN HÀNG 
+    Route::get('/order', [FrontendOrderController::class, 'index'])->name('order.index');
+    Route::get('/order/{order}', [FrontendOrderController::class, 'show'])->name('order.show');
+    // Hủy đơn – form + xử lý
+    Route::get('/my-orders/{order}/cancel', [FrontendOrderController::class, 'showCancelForm'])
+        ->name('order.cancel.form');
+    Route::post('/my-orders/{order}/cancel', [FrontendOrderController::class, 'cancel'])
+        ->name('order.cancel');
+    // Xác nhận đã nhận hàng
+    Route::post('/my-orders/{order}/received', [FrontendOrderController::class, 'received'])
+        ->name('order.received');
+    // Trả hàng / hoàn tiền – form + xử lý
+    Route::get('/my-orders/{order}/return', [FrontendOrderController::class, 'showReturnForm'])
+        ->name('order.return.form');
+    Route::post('/my-orders/{order}/return', [FrontendOrderController::class, 'submitReturn'])
+        ->name('order.return');
+    // Mua lại
+    Route::post('/my-orders/{order}/reorder', [FrontendOrderController::class, 'reorder'])
+        ->name('order.reorder');
+
+Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.create');
+// Trong middleware auth
+Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])
+    ->name('vnpay.return');
+
 });
 
 
@@ -306,8 +344,8 @@ Route::prefix('admin')
     });
 
 // Payment routes (outside admin)
-Route::prefix('payment')->name('payment.')->group(function () {
-    Route::post('/process', [PaymentController::class, 'processPayment'])->name('process')->middleware('auth');
-    Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
-    Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
-});
+//Route::prefix('payment')->name('payment.')->group(function () {
+  //  Route::post('/process', [PaymentController::class, 'processPayment'])->name('process')->middleware('auth');
+   // Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
+    //Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
+//});

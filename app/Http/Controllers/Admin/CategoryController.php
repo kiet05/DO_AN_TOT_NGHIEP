@@ -40,8 +40,25 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        Category::create($request->only(['name', 'status', 'parent_id']));
-        return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thành công');
+        // validate + chuẩn bị data
+        $data = $request->validate([
+            'name'      => 'required|string|max:255',
+            'status'    => 'required',
+            'parent_id' => 'nullable|exists:categories,id',
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        // nếu có upload ảnh thì lưu vào storage/public/categories
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('categories', 'public');
+            $data['image'] = $path;
+        }
+
+        Category::create($data);
+
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Thêm danh mục thành công');
     }
 
     /**
@@ -57,7 +74,7 @@ class CategoryController extends Controller
      */
     public function edit(string $id)
     {
-        $category = Category::findOrFail($id);
+        $category   = Category::findOrFail($id);
         $categories = Category::where('id', '!=', $id)->get();
         return view('admin.categories.edit', compact('category', 'categories'));
     }
@@ -68,8 +85,23 @@ class CategoryController extends Controller
     public function update(Request $request, string $id)
     {
         $category = Category::findOrFail($id);
-        $category->update($request->only(['name', 'status', 'parent_id']));
-        return redirect()->route('admin.categories.index')
+
+        $data = $request->validate([
+            'name'      => 'required|string|max:255',
+            'status'    => 'required',
+            'parent_id' => 'nullable|exists:categories,id',
+            'image'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('categories', 'public');
+            $data['image'] = $path;
+        }
+
+        $category->update($data);
+
+        return redirect()
+            ->route('admin.categories.index')
             ->with('success', 'Cập nhật danh mục thành công');
     }
 
