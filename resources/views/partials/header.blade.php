@@ -48,6 +48,15 @@
 
                                             // danh sách thông báo chưa đọc
                                             $unreadNotifications = $authUser?->unreadNotifications ?? collect();
+                                            // số đánh giá chờ duyệt — chỉ hiển thị cho admin
+                                            $pendingReviews = 0;
+                                            if ($authUser && optional($authUser->role)->slug === 'admin') {
+                                                try {
+                                                    $pendingReviews = \App\Models\Review::where('status', 0)->count();
+                                                } catch (\Throwable $e) {
+                                                    $pendingReviews = 0;
+                                                }
+                                            }
                                         @endphp
 
                                         <!-- Dark Light Button -->
@@ -332,6 +341,20 @@
                                             <!-- End sherah Balance Hover -->
                                         </div>
                                         <!-- End Header Alarm -->
+
+                                        <!-- Reviews Pending (Admin) -->
+                                        @if(optional($authUser->role)->slug === 'admin')
+                                            <div class="sherah-header__dropmenu" title="Đánh giá chờ duyệt">
+                                                <a href="{{ route('admin.reviews.index') }}" class="d-inline-block" style="color:inherit;text-decoration:none">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
+                                                        <path d="M21 6v11a2 2 0 0 1-2 2H7l-4 3V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#fff" stroke-width="0.6" fill="currentColor" />
+                                                    </svg>
+                                                    @if($pendingReviews > 0)
+                                                        <span class="sherah-header__count sherah-color3__bg">{{ $pendingReviews }}</span>
+                                                    @endif
+                                                </a>
+                                            </div>
+                                        @endif
 
                                         <!-- Header Author -->
                                         <div class="sherah-header__author sherah-flex__center--top">

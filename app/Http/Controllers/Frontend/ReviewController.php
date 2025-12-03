@@ -47,9 +47,10 @@ class ReviewController extends Controller
             'rating'        => $validated['rating'],
             'comment'       => $validated['comment'],
             'image'         => $imagePath,
-            'status'        => 1,
+            // Lưu trạng thái = 0 (chờ duyệt) — admin sẽ duyệt sau
+            'status'        => 0,
         ]);
 
-        return redirect()->back()->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm.');
+        return redirect()->back()->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm, đánh giá đang chờ được duyệt!');
     }
 }

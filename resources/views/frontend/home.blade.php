@@ -94,7 +94,7 @@
                 <div class="col-6 col-md-3">
                     <a href="{{ route('products.index', ['category' => $category->id]) }}" class="category-card">
                         <div class="mb-3">
-                            <i class="fas fa-tshirt fa-3x text-secondary"></i>
+                            <i class="fa-brands fa-shopify fa-3x text-secondary"></i>
                         </div>
                         <h5>{{ $category->name }}</h5>
                     </a>
