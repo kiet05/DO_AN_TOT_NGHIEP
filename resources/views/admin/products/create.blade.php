@@ -143,107 +143,132 @@
                                             <div class="product-form-box sherah-border mg-top-30">
                                                 <h4 class="form-title m-0">Biến thể sản phẩm</h4>
 
-                                                <div id="variants-wrapper">
-                                                    <!-- Biến thể mẫu -->
-                                                    <div class="variant row mb-3 g-3">
-                                                        <input type="hidden" name="variants[0][id]" value="">
-
-                                                        <div class="col-lg-6 col-md-6 col-12">
+                                                <div class="mt-3">
+                                                    <div class="row g-3">
+                                                        {{-- KÍCH CỠ --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
                                                             <div class="form-group">
-                                                                <label class="sherah-wc__form-label">SKU</label>
-                                                                <input type="text" name="variants[0][sku]"
-                                                                    class="sherah-wc__form-input" placeholder="Mã sản phẩm"
-                                                                    required>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-lg-6 col-md-6 col-12">
-                                                            <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Số lượng</label>
-                                                                <input type="number" name="variants[0][quantity]"
-                                                                    class="sherah-wc__form-input" placeholder="Số lượng"
-                                                                    required>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-lg-12 col-md-12 col-12">
-                                                            <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Giá tiền</label>
-                                                                <input type="number" name="variants[0][price]"
-                                                                    class="sherah-wc__form-input" placeholder="Giá tiền"
-                                                                    required>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-12 col-md-12 col-12">
-                                                            <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Ảnh biến thể </label>
-                                                                <input type="file" name="variants[0][image]"
-                                                                    class="form-control" accept="image/*">
-                                                            </div>
-                                                        </div>
-
-
-                                                        <div class="col-lg-3 col-md-3 col-12">
-                                                            <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Trạng thái</label>
-                                                                <select name="variants[0][status]" class="form-control"
-                                                                    required>
-                                                                    <option value="1">Hiện</option>
-                                                                    <option value="0">Ẩn</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- Size -->
-                                                        <div class="col-lg-3 col-md-3 col-12">
-                                                            <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Kích cỡ</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control" required>
+                                                                <label class="sherah-wc__form-label">Kích cỡ áp dụng</label>
+                                                                <select id="matrix-sizes" name="matrix_sizes[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($sizes as $size)
                                                                         <option value="{{ $size->id }}">
                                                                             {{ $size->value }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                                <small class="text-muted">Giữ Ctrl để chọn nhiều
+                                                                    size.</small>
                                                             </div>
                                                         </div>
 
-                                                        <!-- Color -->
-                                                        <div class="col-lg-3 col-md-3 col-12">
+                                                        {{-- MÀU SẮC --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
                                                             <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Màu sắc</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control" required>
+                                                                <label class="sherah-wc__form-label">Màu sắc áp dụng</label>
+                                                                <select id="matrix-colors" name="matrix_colors[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($colors as $color)
                                                                         <option value="{{ $color->id }}">
                                                                             {{ $color->value }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                                <small class="text-muted">Giữ Ctrl để chọn nhiều
+                                                                    màu.</small>
                                                             </div>
                                                         </div>
 
-                                                        <!-- Material -->
-                                                        <div class="col-lg-3 col-md-3 col-12">
+                                                        {{-- CHẤT LIỆU --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
                                                             <div class="form-group">
-                                                                <label class="sherah-wc__form-label">Chất liệu</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control" required>
+                                                                <label class="sherah-wc__form-label">Chất liệu áp
+                                                                    dụng</label>
+                                                                <select id="matrix-materials" name="matrix_materials[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($materials as $material)
                                                                         <option value="{{ $material->id }}">
                                                                             {{ $material->value }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                                <small class="text-muted">Giữ Ctrl để chọn nhiều
+                                                                    chất liệu.</small>
                                                             </div>
                                                         </div>
                                                     </div>
+
+                                                    <div class="mt-2">
+                                                        <button type="button" class="sherah-btn sherah-btn__secondary"
+                                                            id="btn-generate-variants">
+                                                            Tạo biến thể từ thuộc tính
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="table-responsive mt-3">
+                                                        <table class="table table-bordered align-middle variants-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Size</th>
+                                                                    <th>Màu sắc</th>
+                                                                    <th>Chất liệu</th>
+                                                                    <th>SKU</th>
+                                                                    <th>Số lượng</th>
+                                                                    <th>Giá</th>
+                                                                    <th>Trạng thái</th>
+                                                                    <th>Ảnh biến thể</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="variants-body">
+                                                                {{-- JS sẽ render các dòng ở đây --}}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
 
-                                                <button type="button" class="sherah-btn sherah-btn__secondary"
-                                                    id="add-variant">
-                                                    Thêm biến thể
-                                                </button>
+                                                {{-- Template 1 dòng biến thể --}}
+                                                <template id="variant-row-template">
+                                                    <tr>
+                                                        <td class="variant-size-name"></td>
+                                                        <td class="variant-color-name"></td>
+                                                        <td class="variant-material-name"></td>
+
+                                                        <td>
+                                                            <input type="text" class="form-control variant-sku"
+                                                                placeholder="Để trống để tự sinh SKU">
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="number" class="form-control variant-qty"
+                                                                min="0" value="0">
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="number" class="form-control variant-price"
+                                                                min="0" step="0.01">
+                                                        </td>
+
+                                                        <td>
+                                                            <select class="form-control variant-status">
+                                                                <option value="1" selected>Hiện</option>
+                                                                <option value="0">Ẩn</option>
+                                                            </select>
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="file" class="form-control variant-image"
+                                                                accept="image/*">
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-danger btn-remove-variant">
+                                                                &times;
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </template>
                                             </div>
                                             <!-- End Specification -->
+
                                         </div>
                                     </div>
                                     <!-- Ảnh chính -->
@@ -314,45 +339,148 @@
 
 @push('scripts')
     <script>
-        let variantIndex = 1;
-        document.getElementById('add-variant').addEventListener('click', function() {
-            const wrapper = document.getElementById('variants-wrapper');
-            const newVariant = wrapper.querySelector('.variant').cloneNode(true);
+        document.addEventListener('DOMContentLoaded', function() {
+            let variantIndex = 0;
 
-            // Reset input values
-            newVariant.querySelectorAll('input').forEach(input => input.value = '');
-            newVariant.querySelectorAll('select').forEach(select => {
-                select.selectedIndex = -1;
-                // Update name index
-                const name = select.getAttribute('name');
-                select.setAttribute('name', name.replace(/\d+/, variantIndex));
+            function getSelectedOptions(selectId) {
+                const select = document.getElementById(selectId);
+                if (!select) return [];
+                return Array.from(select.selectedOptions).map(function(opt) {
+                    return {
+                        id: opt.value,
+                        name: opt.textContent.trim()
+                    };
+                });
+            }
+
+            function addVariantRow(size, color, material) {
+                const tbody = document.getElementById('variants-body');
+                const template = document.getElementById('variant-row-template');
+                if (!tbody || !template) return;
+
+                const clone = template.content.cloneNode(true);
+                const tr = clone.querySelector('tr');
+
+                tr.querySelector('.variant-size-name').textContent = size.name;
+                tr.querySelector('.variant-color-name').textContent = color.name;
+                tr.querySelector('.variant-material-name').textContent = material.name;
+
+                const skuInput = tr.querySelector('.variant-sku');
+                const qtyInput = tr.querySelector('.variant-qty');
+                const priceInput = tr.querySelector('.variant-price');
+                const statusInput = tr.querySelector('.variant-status');
+                const imageInput = tr.querySelector('.variant-image');
+
+                skuInput.name = `variants[${variantIndex}][sku]`;
+                qtyInput.name = `variants[${variantIndex}][quantity]`;
+                priceInput.name = `variants[${variantIndex}][price]`;
+                statusInput.name = `variants[${variantIndex}][status]`;
+                imageInput.name = `variants[${variantIndex}][image]`;
+
+                [size, color, material].forEach(function(attr) {
+                    if (attr && attr.id) {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = `variants[${variantIndex}][attribute_value_ids][]`;
+                        hidden.value = attr.id;
+                        tr.appendChild(hidden);
+                    }
+                });
+
+                tbody.appendChild(clone);
+                variantIndex++;
+            }
+
+            const generateBtn = document.getElementById('btn-generate-variants');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    const sizes = getSelectedOptions('matrix-sizes');
+                    const colors = getSelectedOptions('matrix-colors');
+                    const materials = getSelectedOptions('matrix-materials');
+
+                    if (!sizes.length || !colors.length || !materials.length) {
+                        alert('Vui lòng chọn ít nhất một kích cỡ, một màu sắc và một chất liệu.');
+                        return;
+                    }
+
+                    const tbody = document.getElementById('variants-body');
+                    tbody.innerHTML = '';
+                    variantIndex = 0;
+
+                    sizes.forEach(function(size) {
+                        colors.forEach(function(color) {
+                            materials.forEach(function(material) {
+                                addVariantRow(size, color, material);
+                            });
+                        });
+                    });
+                });
+            }
+
+            // Xóa 1 dòng biến thể
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-remove-variant');
+                if (btn) {
+                    const row = btn.closest('tr');
+                    if (row) row.remove();
+                }
             });
-            newVariant.querySelectorAll('input').forEach(input => {
-                const name = input.getAttribute('name');
-                input.setAttribute('name', name.replace(/\d+/, variantIndex));
-            });
 
-            wrapper.appendChild(newVariant);
-            variantIndex++;
-        });
-
-        // Thêm ảnh phụ
-        document.getElementById('add-image').addEventListener('click', () => {
-            const div = document.createElement('div');
-            div.classList.add('d-flex', 'align-items-center', 'mb-2');
-            div.innerHTML = `
+            // PHẦN ẢNH PHỤ: giữ nguyên logic bạn đang dùng
+            const addImageBtn = document.getElementById('add-image');
+            if (addImageBtn) {
+                addImageBtn.addEventListener('click', function() {
+                    const div = document.createElement('div');
+                    div.classList.add('d-flex', 'align-items-center', 'mb-2');
+                    div.innerHTML = `
                 <input type="text" name="images[]" class="form-control shadow-sm" placeholder="URL ảnh phụ">
                 <button type="button" class="btn btn-outline-danger btn-sm ms-2 remove-image">
                     <i class="bi bi-trash"></i>
                 </button>`;
-            document.getElementById('image-list').appendChild(div);
-        });
-
-        // Xóa ảnh phụ
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-image')) {
-                e.target.closest('.d-flex').remove();
+                    const list = document.getElementById('image-list');
+                    if (list) list.appendChild(div);
+                });
             }
+
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-image')) {
+                    const wrap = e.target.closest('.d-flex');
+                    if (wrap) wrap.remove();
+                }
+            });
         });
     </script>
+@endpush
+
+@push('styles')
+    <style>
+        /* Giữ hình dạng select multiple như 1 hàng */
+        #matrix-sizes,
+        #matrix-colors,
+        #matrix-materials {
+            height: 38px;
+            padding-right: 30px;
+        }
+
+        /* Table biến thể: cho rộng để có thể cuộn ngang */
+        .variants-table {
+            min-width: 1000px;
+            /* tùy bạn, 1000–1200px đều được */
+        }
+
+        .variants-table th,
+        .variants-table td {
+            white-space: nowrap;
+            /* không xuống dòng, tránh bị vỡ layout */
+        }
+
+        .variants-table input.form-control,
+        .variants-table select.form-control {
+            min-width: 110px;
+            /* để ô nhập không bị quá bé */
+            height: 32px;
+            padding: 2px 6px;
+            font-size: 0.85rem;
+        }
+    </style>
 @endpush

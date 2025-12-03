@@ -202,9 +202,21 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::with(['category', 'variants', 'images'])->findOrFail($id);
+        $product = Product::with([
+            'images',
+            'category',
+            'variants.attributes',
+            'reviews.user',          // để load đánh giá
+            'orderItems.order.user', // để load đơn hàng & khách
+        ])->findOrFail($id);
 
-        return view('admin.products.show', compact('product'));
+        // Nếu bạn có quan hệ orderItems trong Product:
+        $orderItems = $product->orderItems()
+            ->with(['order.user'])
+            ->orderByDesc('id')
+            ->get();
+
+        return view('admin.products.show', compact('product', 'orderItems'));
     }
 
     /**
