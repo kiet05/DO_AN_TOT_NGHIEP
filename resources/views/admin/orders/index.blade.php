@@ -16,15 +16,16 @@
             text-align: center;
         }
 
-        /* 8 trạng thái chuẩn */
-        .pending {        background: #6c757d; }  /* Chờ xử lý */
-        .confirmed {      background: #0d6efd; }  /* Xác nhận   */
-        .processing {     background: #ffc107; }  /* Chuẩn bị   */
-        .shipping {       background: #17a2b8; }  /* Đang giao  */
-        .shipped {        background: #20c997; }  /* Đã giao    */
-        .completed {      background: #28a745; }  /* Hoàn thành */
-        .cancelled {      background: #dc3545; }  /* Hủy        */
-        .returned {       background: #fd7e14; }  /* Hoàn hàng  */
+        /* Trạng thái chuẩn */
+        .pending {          background: #6c757d; }  /* Chờ xử lý   */
+        .confirmed {        background: #0d6efd; }  /* Xác nhận    */
+        .processing {       background: #ffc107; }  /* Chuẩn bị    */
+        .shipping {         background: #17a2b8; }  /* Đang giao   */
+        .shipped {          background: #20c997; }  /* Đã giao     */
+        .completed {        background: #28a745; }  /* Hoàn thành  */
+        .cancelled {        background: #dc3545; }  /* Hủy         */
+        .returned {         background: #fd7e14; }  /* Hoàn hàng   */
+        .return_pending {   background: #ffb007; }  /* Chờ hoàn hàng */
 
         .payment-paid {
             color: #28a745;
@@ -69,14 +70,15 @@
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
                                     <select name="status" onchange="this.form.submit()" class="form-select w-auto">
                                         <option value="">-- Tất cả trạng thái --</option>
-                                        <option value="pending"    @selected(request('status')=='pending')>Chờ xử lý</option>
-                                        <option value="confirmed"  @selected(request('status')=='confirmed')>Xác nhận</option>
-                                        <option value="processing" @selected(request('status')=='processing')>Chuẩn bị</option>
-                                        <option value="shipping"   @selected(request('status')=='shipping')>Đang giao</option>
-                                        <option value="shipped"    @selected(request('status')=='shipped')>Đã giao</option>
-                                        <option value="completed"  @selected(request('status')=='completed')>Hoàn thành</option>
-                                        <option value="cancelled"  @selected(request('status')=='cancelled')>Hủy</option>
-                                        <option value="returned"   @selected(request('status')=='returned')>Hoàn hàng</option>
+                                        <option value="pending"         @selected(request('status')=='pending')>Chờ xử lý</option>
+                                        <option value="confirmed"       @selected(request('status')=='confirmed')>Xác nhận</option>
+                                        <option value="processing"      @selected(request('status')=='processing')>Chuẩn bị</option>
+                                        <option value="shipping"        @selected(request('status')=='shipping')>Đang giao</option>
+                                        <option value="shipped"         @selected(request('status')=='shipped')>Đã giao</option>
+                                        <option value="completed"       @selected(request('status')=='completed')>Hoàn thành</option>
+                                        <option value="cancelled"       @selected(request('status')=='cancelled')>Hủy</option>
+                                        <option value="returned"        @selected(request('status')=='returned')>Hoàn hàng</option>
+                                        <option value="return_pending"  @selected(request('status')=='return_pending')>Chờ hoàn hàng</option>
                                     </select>
 
                                     {{-- Tìm theo ID (chấp nhận 87 hoặc #00087) --}}

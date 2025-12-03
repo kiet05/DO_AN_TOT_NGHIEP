@@ -23,10 +23,13 @@ return new class extends Migration
             // Liên kết sản phẩm
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
 
+            // Tên sản phẩm (gộp từ migration trước)
+            $table->string('product_name')->nullable();
+
             // Liên kết biến thể sản phẩm (nếu có)
             $table->foreignId('product_variant_id')->nullable()->constrained('product_variants')->onDelete('set null');
 
-            // Thông tin người nhận (nếu cần tách riêng từng sản phẩm)
+            // Thông tin người nhận
             $table->string('receiver_name', 100)->nullable();
             $table->string('receiver_phone', 20)->nullable();
             $table->text('receiver_address')->nullable();
@@ -39,10 +42,10 @@ return new class extends Migration
             // Tổng giá của từng dòng sản phẩm
             $table->decimal('subtotal', 15, 2)->default(0);
 
-            // Phí vận chuyển riêng từng sản phẩm (nếu có)
+            // Phí vận chuyển riêng từng sản phẩm
             $table->decimal('shipping_fee', 15, 2)->default(0);
 
-            // Tổng giá sản phẩm (price * quantity - discount)
+            // Tổng giá sản phẩm
             $table->decimal('total_price', 15, 2)->default(0);
 
             // Số tiền cuối cùng sau áp dụng voucher, giảm giá, phí ship...
@@ -55,10 +58,10 @@ return new class extends Migration
             $table->string('payment_method', 50)->nullable();
             $table->string('payment_status', 50)->nullable();
 
-            // Trạng thái xử lý riêng của sản phẩm (ví dụ: đang giao, đã nhận, hoàn trả)
+            // Trạng thái xử lý riêng của sản phẩm
             $table->string('order_status', 50)->default('pending');
 
-            // Tổng tiền đơn hàng con (nếu có tính tổng riêng)
+            // Tổng tiền đơn hàng con
             $table->decimal('total', 15, 2)->default(0);
 
             // Ghi chú sản phẩm

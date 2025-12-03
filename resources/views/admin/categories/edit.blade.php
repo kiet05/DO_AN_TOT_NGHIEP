@@ -13,10 +13,12 @@
                                 <div class="col-12">
                                     <div class="sherah-breadcrumb mg-top-30">
                                         <h2 class="sherah-breadcrumb__title">
-                                            {{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}</h2>
+                                            {{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}
+                                        </h2>
                                         <ul class="sherah-breadcrumb__list">
                                             <li><a href="{{ route('admin.dashboard') }}">Home</a></li>
-                                            <li class="active"><a
+                                            <li class="active">
+                                                <a
                                                     href="#">{{ isset($category) ? 'Sửa danh mục' : 'Thêm danh mục' }}</a>
                                             </li>
                                         </ul>
@@ -38,6 +40,7 @@
                                             <div class="product-form-box sherah-border mg-top-30">
                                                 <h4 class="form-title m-0">Thông tin danh mục</h4>
 
+                                                {{-- Tên danh mục --}}
                                                 <div class="form-group">
                                                     <label class="sherah-wc__form-label">Tên danh mục</label>
                                                     <div class="form-group__input">
@@ -47,6 +50,23 @@
                                                     </div>
                                                 </div>
 
+                                                {{-- Ảnh danh mục --}}
+                                                <div class="form-group">
+                                                    <label for="image" class="sherah-wc__form-label">Ảnh danh mục</label>
+                                                    <div class="form-group__input">
+                                                        <input type="file" name="image" id="image"
+                                                            class="sherah-wc__form-input">
+                                                    </div>
+
+                                                    @if (isset($category) && $category->image)
+                                                        <div class="mt-2">
+                                                            <img src="{{ asset('storage/' . $category->image) }}"
+                                                                alt="{{ $category->name }}" style="max-height: 80px;">
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Danh mục cha --}}
                                                 <div class="form-group">
                                                     <label class="sherah-wc__form-label">Danh mục cha</label>
                                                     <select class="form-group__input" name="parent_id">
@@ -62,15 +82,18 @@
                                                     </select>
                                                 </div>
 
+                                                {{-- Trạng thái --}}
                                                 <div class="form-group">
                                                     <label class="sherah-wc__form-label">Trạng thái</label>
                                                     <select class="form-group__input" name="status" required>
                                                         <option value="1"
                                                             {{ isset($category) && $category->status == 1 ? 'selected' : '' }}>
-                                                            Hiển thị</option>
+                                                            Hiển thị
+                                                        </option>
                                                         <option value="0"
                                                             {{ isset($category) && $category->status == 0 ? 'selected' : '' }}>
-                                                            Ẩn</option>
+                                                            Ẩn
+                                                        </option>
                                                     </select>
                                                 </div>
                                             </div>

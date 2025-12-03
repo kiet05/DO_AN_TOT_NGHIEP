@@ -35,6 +35,7 @@ class OrderItem extends Model
         'total',
         'note',
         'status',
+        'product_name',
     ];
 
     public function order()
