@@ -53,4 +53,9 @@ class Product extends Model
             ->where('status', 1)
             ->latest();
     }
+
+    public function orderItems()
+{
+    return $this->hasMany(OrderItem::class, 'product_id', 'id');
+}
 }

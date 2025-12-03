@@ -188,6 +188,75 @@ class VoucherService
     }
 
     /**
+     * Lấy danh sách tất cả voucher áp dụng được cho giỏ hàng,
+     * đã kèm sẵn số tiền giảm và sắp xếp từ cao xuống thấp
+     */
+    public function getApplicableVouchers(Cart $cart, ?int $userId = null): array
+    {
+        if ($cart->items->isEmpty()) {
+            return [];
+        }
+
+        // Tính tổng tiền hiện tại của giỏ
+        $cart->calculateTotal();
+        $subtotal = $cart->total_price;
+
+        if ($subtotal <= 0) {
+            return [];
+        }
+
+        $now = now();
+
+        // Lấy tất cả voucher đang active và trong thời gian hiệu lực
+        $availableVouchers = Voucher::where('is_active', true)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('start_at')
+                    ->orWhere('start_at', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('end_at')
+                    ->orWhere('end_at', '>=', $now);
+            })
+            ->with(['products', 'categories'])
+            ->get();
+
+        $result = [];
+
+        foreach ($availableVouchers as $voucher) {
+            // Validate theo điều kiện chung
+            $validation = $this->validateVoucher($voucher, $userId, $subtotal);
+            if (!$validation['valid']) {
+                continue;
+            }
+
+            // Kiểm tra có áp dụng được cho giỏ hiện tại không
+            if (!$this->canApplyToCart($voucher, $cart)) {
+                continue;
+            }
+
+            // Tính số tiền giảm
+            $discountAmount = $this->calculateDiscount($voucher, $subtotal);
+            if ($discountAmount <= 0) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $voucher->id,
+                'code' => $voucher->code,
+                'name' => $voucher->name,
+                'discount_amount' => $discountAmount,
+            ];
+        }
+
+        // Sắp xếp giảm dần theo discount
+        usort($result, function ($a, $b) {
+            return $b['discount_amount'] <=> $a['discount_amount'];
+        });
+
+        return $result;
+    }
+
+    /**
      * Áp dụng voucher vào cart
      */
     public function applyToCart(Voucher $voucher, Cart $cart, ?int $userId = null): array

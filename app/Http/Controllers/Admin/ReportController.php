@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -13,69 +12,103 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        // Khoảng thời gian: mặc định 30 ngày gần nhất
-        $from = $request->date('from') ?: now()->subDays(30)->toDateString();
-        $to   = $request->date('to')   ?: now()->toDateString();
+        // ===== 1. Khoảng thời gian =====
+        $from = $request->filled('from')
+            ? $request->date('from')->startOfDay()
+            : now()->subDays(30)->startOfDay();
 
-        // 1) Doanh thu theo ngày (chỉ tính completed)
-        $revenuePerDay = Order::query()
+        $to = $request->filled('to')
+            ? $request->date('to')->endOfDay()
+            : now()->endOfDay();
+
+        // base query dùng lại nhiều lần
+        $baseOrders = Order::query()
+            ->whereBetween('created_at', [$from, $to]);
+
+        // ===== 2. Doanh thu theo ngày (chart) =====
+        $revenuePerDay = (clone $baseOrders)
             ->selectRaw('DATE(created_at) as day, SUM(final_amount) as total')
-            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->where('order_status', 'completed')
             ->groupBy('day')
             ->orderBy('day')
             ->get();
 
-        // Tổng doanh thu & tổng đơn
-        $totals = Order::query()
+        // ===== 3. Tổng quan đơn hàng & doanh thu =====
+        $totals = (clone $baseOrders)
             ->selectRaw("
                 SUM(CASE WHEN order_status = 'completed' THEN final_amount ELSE 0 END) AS revenue,
-                COUNT(*) AS orders_count
+                COUNT(*) AS orders_count,
+                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) AS completed_orders,
+                SUM(CASE WHEN order_status = 'pending'   THEN 1 ELSE 0 END) AS pending_orders,
+                SUM(CASE WHEN order_status = 'shipping'  THEN 1 ELSE 0 END) AS shipping_orders,
+                SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders
             ")
-            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
             ->first();
 
-        // 2) Đơn hàng theo trạng thái
-        $ordersByStatus = Order::query()
-            ->select('order_status', DB::raw('COUNT(*) as cnt'))
-            ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
-            ->groupBy('order_status')
-            ->pluck('cnt', 'order_status'); // ['pending'=>10, 'shipping'=>... ]
+        // ===== 4. AOV (Average Order Value) =====
+        $avgOrderValue = $totals->completed_orders > 0
+            ? round($totals->revenue / $totals->completed_orders, 0)
+            : 0;
 
-        // 3) Sản phẩm bán chạy (cần bảng order_items)
+        // ===== 5. So sánh với kỳ trước =====
+        $days = $from->diffInDays($to) + 1;
+        $prevFrom = (clone $from)->subDays($days);
+        $prevTo   = (clone $from)->subDay();
+
+        $prevRevenue = Order::query()
+            ->whereBetween('created_at', [$prevFrom, $prevTo])
+            ->where('order_status', 'completed')
+            ->sum('final_amount');
+
+        $revenueChangePercent = $prevRevenue > 0
+            ? round(($totals->revenue - $prevRevenue) / $prevRevenue * 100, 2)
+            : null;
+
+        // ===== 6. Đơn hàng theo trạng thái (cho donut chart + card Đang giao / Chờ xử lý) =====
+        $ordersByStatus = (clone $baseOrders)
+            ->select('order_status', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('order_status')
+            ->pluck('cnt', 'order_status');
+
+        // ===== 7. Top sản phẩm bán chạy =====
         $topProducts = collect();
         if (Schema::hasTable('order_items')) {
             $topProducts = DB::table('order_items as oi')
                 ->join('products as p', 'p.id', '=', 'oi.product_id')
                 ->join('orders as o', 'o.id', '=', 'oi.order_id')
-                ->whereBetween('o.created_at', [$from.' 00:00:00', $to.' 23:59:59'])
+                ->whereBetween('o.created_at', [$from, $to])
                 ->where('o.order_status', 'completed')
-                ->select('p.id','p.name', DB::raw('SUM(oi.quantity) as qty'), DB::raw('SUM(oi.price * oi.quantity) as amount'))
-                ->groupBy('p.id','p.name')
+                ->select(
+                    'p.id',
+                    'p.name',
+                    DB::raw('SUM(oi.quantity) as qty'),
+                    DB::raw('SUM(oi.price * oi.quantity) as amount')
+                )
+                ->groupBy('p.id', 'p.name')
                 ->orderByDesc('qty')
                 ->limit(10)
                 ->get();
         }
 
-        // 4) Tồn kho thấp (dựa vào product_variants.quantity)
+        // ===== 8. Sản phẩm tồn kho thấp =====
         $lowStock = collect();
         if (Schema::hasTable('product_variants')) {
             $lowStock = DB::table('product_variants as pv')
                 ->join('products as p', 'p.id', '=', 'pv.product_id')
-                ->select('p.id','p.name','pv.sku','pv.quantity')
-                ->where('pv.quantity', '<=', 5) // ngưỡng cảnh báo
+                ->select('p.id', 'p.name', 'pv.sku', 'pv.quantity')
+                ->where('pv.quantity', '<=', 5)
                 ->orderBy('pv.quantity')
                 ->limit(20)
                 ->get();
         }
 
-        // 5) Mã giảm giá dùng nhiều nhất (nếu có)
+        // ===== 9. Mã giảm giá dùng nhiều =====
         $topCoupons = collect();
         if (Schema::hasTable('coupon_usages') && Schema::hasTable('coupons')) {
             $topCoupons = DB::table('coupon_usages as cu')
                 ->join('coupons as c', 'c.id', '=', 'cu.coupon_id')
                 ->join('orders as o', 'o.id', '=', 'cu.order_id')
-                ->whereBetween('o.created_at', [$from.' 00:00:00', $to.' 23:59:59'])
+                ->whereBetween('o.created_at', [$from, $to])
                 ->select('c.code', DB::raw('COUNT(*) as used'))
                 ->groupBy('c.code')
                 ->orderByDesc('used')
@@ -83,54 +116,82 @@ class ReportController extends Controller
                 ->get();
         }
 
-        // Dữ liệu cho chart
+        // ===== 10. Doanh thu theo phương thức thanh toán =====
+        $revenueByPayment = collect();
+        if (Schema::hasColumn('orders', 'payment_method')) {
+            $revenueByPayment = (clone $baseOrders)
+                ->where('order_status', 'completed')
+                ->select(
+                    'payment_method',
+                    DB::raw('SUM(final_amount) as revenue'),
+                    DB::raw('COUNT(*) as orders_count')
+                )
+                ->groupBy('payment_method')
+                ->get();
+        }
+
+        // ===== 11. Dữ liệu cho chart doanh thu theo ngày =====
         $chartLabels = $revenuePerDay->pluck('day');
         $chartData   = $revenuePerDay->pluck('total');
 
+        // ===== 12. Trả dữ liệu sang view =====
         return view('admin.reports.index', compact(
-            'from','to',
+            'from',
+            'to',
             'totals',
+            'avgOrderValue',
+            'revenueChangePercent',
             'ordersByStatus',
             'topProducts',
             'lowStock',
             'topCoupons',
+            'revenueByPayment',
             'chartLabels',
             'chartData'
         ));
     }
-        public function revenue(\Illuminate\Http\Request $request)
-        {
-            $period = $request->get('period', 'day'); // day|week|month
-            $from   = $request->date('from') ?: now()->subDays(30)->toDateString();
-            $to     = $request->date('to')   ?: now()->toDateString();
 
-            $base = \App\Models\Order::query()
-                ->whereBetween('created_at', [$from.' 00:00:00', $to.' 23:59:59'])
-                ->where('order_status', 'completed');
+    // ========================
+    //  BIỂU ĐỒ DOANH THU RIÊNG
+    // ========================
+    public function revenue(Request $request)
+    {
+        $period = $request->get('period', 'day'); // day|week|month
 
-            if ($period === 'week') {
-                // group theo tuần ISO: YYYY-WW
-                $rows = $base->selectRaw("DATE_FORMAT(created_at, '%x-W%v') as date, SUM(final_amount) as revenue")
-                    ->groupBy('date')->orderBy('date')->get();
-            } elseif ($period === 'month') {
-                // group theo tháng: YYYY-MM
-                $rows = $base->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as date, SUM(final_amount) as revenue")
-                    ->groupBy('date')->orderBy('date')->get();
-            } else {
-                // mặc định theo ngày: YYYY-MM-DD
-                $rows = $base->selectRaw("DATE(created_at) as date, SUM(final_amount) as revenue")
-                    ->groupBy('date')->orderBy('date')->get();
-            }
+        $from = $request->filled('from')
+            ? $request->date('from')->startOfDay()
+            : now()->subDays(30)->startOfDay();
 
-            // dữ liệu cho chart
-            $labels = $rows->pluck('date')->values();
-            $data   = $rows->pluck('revenue')->values();
+        $to = $request->filled('to')
+            ? $request->date('to')->endOfDay()
+            : now()->endOfDay();
 
-            // bảng dưới chart
-            $query = $rows; // để khớp view hiện tại
+        $base = Order::query()
+            ->whereBetween('created_at', [$from, $to])
+            ->where('order_status', 'completed');
 
-            return view('admin.reports.revenue', compact('period', 'from', 'to', 'labels', 'data', 'query'));
+        if ($period === 'week') {
+            $rows = $base->selectRaw("DATE_FORMAT(created_at, '%x-W%v') as date, SUM(final_amount) as revenue")
+                ->groupBy('date')->orderBy('date')->get();
+        } elseif ($period === 'month') {
+            $rows = $base->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as date, SUM(final_amount) as revenue")
+                ->groupBy('date')->orderBy('date')->get();
+        } else {
+            $rows = $base->selectRaw("DATE(created_at) as date, SUM(final_amount) as revenue")
+                ->groupBy('date')->orderBy('date')->get();
         }
 
+        $labels = $rows->pluck('date')->values();
+        $data   = $rows->pluck('revenue')->values();
+        $query  = $rows;
 
+        return view('admin.reports.revenue', compact(
+            'period',
+            'from',
+            'to',
+            'labels',
+            'data',
+            'query'
+        ));
+    }
 }

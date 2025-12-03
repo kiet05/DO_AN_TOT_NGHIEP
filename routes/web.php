@@ -84,6 +84,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
         Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
         Route::post('/apply-voucher', [CartController::class, 'applyVoucher'])->name('apply-voucher');
         Route::post('/remove-voucher', [CartController::class, 'removeVoucher'])->name('remove-voucher');
+        Route::get('/suggest-vouchers', [CartController::class, 'suggestVouchers'])->name('suggest-vouchers');
     });
 });
 
@@ -244,6 +245,7 @@ Route::prefix('admin')
             Route::get('/', [ProductController::class, 'index'])->name('index');
             Route::get('/create', [ProductController::class, 'create'])->name('create');
             Route::post('/store', [ProductController::class, 'store'])->name('store');
+            Route::get('/{id}/show', [ProductController::class, 'show'])->name('show');
             Route::get('/{id}/edit', [ProductController::class, 'edit'])->name('edit');
             Route::put('/{id}/update', [ProductController::class, 'update'])->name('update');
             Route::delete('/{id}/delete', [ProductController::class, 'destroy'])->name('destroy');
@@ -289,6 +291,15 @@ Route::prefix('admin')
             Route::get('/revenue', [ReportController::class, 'revenue'])->name('revenue');
             Route::get('/top-customers', [ReportController::class, 'topCustomers'])->name('topCustomers');
             Route::get('/top-products', [ReportController::class, 'topProducts'])->name('topProducts');
+        });
+
+        // 🔎 Reviews (Admin quản lý đánh giá)
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [ReviewController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [ReviewController::class, 'reject'])->name('reject');
+            Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
         });
 
         // 👥 Users
@@ -341,6 +352,8 @@ Route::prefix('admin')
             ->name('contacts.index');
         Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
             ->name('contacts.show');
+
+        
     });
 
 // Payment routes (outside admin)

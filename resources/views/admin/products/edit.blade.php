@@ -129,183 +129,44 @@
                                             <div class="product-form-box sherah-border mg-top-30">
                                                 <h4 class="form-title m-0">Biến thể sản phẩm</h4>
 
-                                                <div id="variants-wrapper">
-                                                    @php
-                                                        $hasVariants = $product->variants->count() > 0;
-                                                    @endphp
-
-                                                    @if ($hasVariants)
-                                                        @foreach ($product->variants as $index => $variant)
-                                                            <div class="variant row mb-3 g-3">
-                                                                <input type="hidden"
-                                                                    name="variants[{{ $index }}][id]"
-                                                                    value="{{ $variant->id }}">
-
-                                                                <div class="col-lg-6 col-md-6 col-12">
-                                                                    <label>SKU</label>
-                                                                    <input type="text"
-                                                                        name="variants[{{ $index }}][sku]"
-                                                                        class="form-control" value="{{ $variant->sku }}"
-                                                                        required>
-                                                                </div>
-
-                                                                <div class="col-lg-6 col-md-6 col-12">
-                                                                    <label>Số lượng</label>
-                                                                    <input type="number"
-                                                                        name="variants[{{ $index }}][quantity]"
-                                                                        class="form-control"
-                                                                        value="{{ $variant->quantity }}" required>
-                                                                </div>
-
-                                                                <div class="col-lg-12 col-md-12 col-12">
-                                                                    <label>Giá</label>
-                                                                    <input type="number"
-                                                                        name="variants[{{ $index }}][price]"
-                                                                        class="form-control" value="{{ $variant->price }}"
-                                                                        required>
-                                                                </div>
-                                                                <div class="col-lg-12 col-md-12 col-12">
-                                                                    <div class="form-group">
-                                                                        <label class="sherah-wc__form-label">Ảnh biến thể
-                                                                        </label>
-
-                                                                        @if (!empty($variant->image_url))
-                                                                            <div class="variant-image-preview mb-2">
-                                                                                <img src="{{ asset('storage/' . $variant->image_url) }}"
-                                                                                    alt="Ảnh biến thể"
-                                                                                    style="max-width: 120px; height:auto; border-radius:4px; border:1px solid #eee;">
-                                                                            </div>
-                                                                        @endif
-
-                                                                        <input type="file"
-                                                                            name="variants[{{ $index }}][image]"
-                                                                            class="form-control" accept="image/*">
-                                                                        <small class="text-muted">Nếu không chọn ảnh mới, hệ
-                                                                            thống giữ ảnh cũ.</small>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="col-lg-3 col-md-3 col-12">
-                                                                    <label>Trạng thái</label>
-                                                                    <select name="variants[{{ $index }}][status]"
-                                                                        class="form-control">
-                                                                        <option value="1"
-                                                                            {{ $variant->status == 1 ? 'selected' : '' }}>
-                                                                            Hiện
-                                                                        </option>
-                                                                        <option value="0"
-                                                                            {{ $variant->status == 0 ? 'selected' : '' }}>
-                                                                            Ẩn
-                                                                        </option>
-                                                                    </select>
-                                                                </div>
-
-                                                                <div class="col-lg-3 col-md-3 col-12">
-                                                                    <label>Kích thước</label>
-                                                                    <select
-                                                                        name="variants[{{ $index }}][attribute_value_ids][]"
-                                                                        class="form-control">
-                                                                        @foreach ($sizes as $size)
-                                                                            <option value="{{ $size->id }}"
-                                                                                {{ $variant->sizes->contains('id', $size->id) ? 'selected' : '' }}>
-                                                                                {{ $size->value }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-
-                                                                <div class="col-lg-3 col-md-3 col-12">
-                                                                    <label>Màu sắc</label>
-                                                                    <select
-                                                                        name="variants[{{ $index }}][attribute_value_ids][]"
-                                                                        class="form-control">
-                                                                        @foreach ($colors as $color)
-                                                                            <option value="{{ $color->id }}"
-                                                                                {{ $variant->colors->contains('id', $color->id) ? 'selected' : '' }}>
-                                                                                {{ $color->value }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-
-                                                                <div class="col-lg-3 col-md-3 col-12">
-                                                                    <label>Chất liệu</label>
-                                                                    <select
-                                                                        name="variants[{{ $index }}][attribute_value_ids][]"
-                                                                        class="form-control">
-                                                                        @foreach ($materials as $material)
-                                                                            <option value="{{ $material->id }}"
-                                                                                {{ $variant->materials->contains('id', $material->id) ? 'selected' : '' }}>
-                                                                                {{ $material->value }}
-                                                                            </option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        {{-- Nếu chưa có biến thể nào, render 1 biến thể rỗng --}}
-                                                        @php $index = 0; @endphp
-                                                        <div class="variant row mb-3 g-3">
-                                                            <input type="hidden" name="variants[0][id]" value="">
-
-                                                            <div class="col-lg-6 col-md-6 col-12">
-                                                                <label>SKU</label>
-                                                                <input type="text" name="variants[0][sku]"
-                                                                    class="form-control" value="" required>
-                                                            </div>
-
-                                                            <div class="col-lg-6 col-md-6 col-12">
-                                                                <label>Số lượng</label>
-                                                                <input type="number" name="variants[0][quantity]"
-                                                                    class="form-control" value="" required>
-                                                            </div>
-
-                                                            <div class="col-lg-12 col-md-12 col-12">
-                                                                <label>Giá</label>
-                                                                <input type="number" name="variants[0][price]"
-                                                                    class="form-control" value="" required>
-                                                            </div>
-                                                            <div class="col-lg-12 col-md-12 col-12">
-                                                                <label>Ảnh biến thể</label>
-                                                                <input type="file" name="variants[0][image]"
-                                                                    class="form-control" accept="image/*">
-                                                            </div>
-
-                                                            <div class="col-lg-3 col-md-3 col-12">
-                                                                <label>Trạng thái</label>
-                                                                <select name="variants[0][status]" class="form-control">
-                                                                    <option value="1">Hiện</option>
-                                                                    <option value="0">Ẩn</option>
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="col-lg-3 col-md-3 col-12">
-                                                                <label>Kích thước</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control">
+                                                {{-- Chọn thuộc tính để tạo biến thể MỚI --}}
+                                                <div class="mt-3">
+                                                    <div class="row g-3">
+                                                        {{-- KÍCH CỠ --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
+                                                            <div class="form-group">
+                                                                <label class="sherah-wc__form-label">Kích cỡ áp dụng</label>
+                                                                <select id="matrix-sizes" name="matrix_sizes[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($sizes as $size)
                                                                         <option value="{{ $size->id }}">
                                                                             {{ $size->value }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
+                                                        </div>
 
-                                                            <div class="col-lg-3 col-md-3 col-12">
-                                                                <label>Màu sắc</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control">
+                                                        {{-- MÀU SẮC --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
+                                                            <div class="form-group">
+                                                                <label class="sherah-wc__form-label">Màu sắc áp dụng</label>
+                                                                <select id="matrix-colors" name="matrix_colors[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($colors as $color)
                                                                         <option value="{{ $color->id }}">
                                                                             {{ $color->value }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
+                                                        </div>
 
-                                                            <div class="col-lg-3 col-md-3 col-12">
-                                                                <label>Chất liệu</label>
-                                                                <select name="variants[0][attribute_value_ids][]"
-                                                                    class="form-control">
+                                                        {{-- CHẤT LIỆU --}}
+                                                        <div class="col-lg-4 col-md-4 col-12">
+                                                            <div class="form-group">
+                                                                <label class="sherah-wc__form-label">Chất liệu áp
+                                                                    dụng</label>
+                                                                <select id="matrix-materials" name="matrix_materials[]"
+                                                                    class="form-control" multiple size="1">
                                                                     @foreach ($materials as $material)
                                                                         <option value="{{ $material->id }}">
                                                                             {{ $material->value }}</option>
@@ -313,15 +174,188 @@
                                                                 </select>
                                                             </div>
                                                         </div>
-                                                    @endif
+                                                    </div>
 
-                                                    <button type="button" class="sherah-btn sherah-btn__secondary"
-                                                        id="add-variant">
-                                                        Thêm biến thể
-                                                    </button>
+                                                    <div class="mt-2">
+                                                        <button type="button" class="sherah-btn sherah-btn__secondary"
+                                                            id="btn-generate-variants">
+                                                            Tạo thêm biến thể từ thuộc tính
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- Bảng tất cả biến thể (cũ + mới) --}}
+                                                    <div class="table-responsive mt-3">
+                                                        <table class="table table-bordered align-middle variants-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Size</th>
+                                                                    <th>Màu sắc</th>
+                                                                    <th>Chất liệu</th>
+                                                                    <th>SKU</th>
+                                                                    <th>Số lượng</th>
+                                                                    <th>Giá</th>
+                                                                    <th>Trạng thái</th>
+                                                                    <th>Ảnh hiện tại</th>
+                                                                    <th>Ảnh mới</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="variants-body">
+                                                                {{-- Biến thể đang có --}}
+                                                                @foreach ($product->variants as $index => $variant)
+                                                                    @php
+                                                                        // Lấy tên theo quan hệ đã load trong controller
+                                                                        $sizeNames =
+                                                                            $variant->sizes
+                                                                                ?->pluck('value')
+                                                                                ->join(', ') ?? '';
+                                                                        $colorNames =
+                                                                            $variant->colors
+                                                                                ?->pluck('value')
+                                                                                ->join(', ') ?? '';
+                                                                        $materialNames =
+                                                                            $variant->materials
+                                                                                ?->pluck('value')
+                                                                                ->join(', ') ?? '';
+
+                                                                        // Lấy list id attribute_value hiện có để gửi lại cho controller khi update
+                                                                        $attrIds =
+                                                                            $variant->attributes
+                                                                                ?->pluck('id')
+                                                                                ->toArray() ?? [];
+                                                                    @endphp
+
+                                                                    <tr>
+                                                                        <td class="variant-size-name">{{ $sizeNames }}
+                                                                        </td>
+                                                                        <td class="variant-color-name">{{ $colorNames }}
+                                                                        </td>
+                                                                        <td class="variant-material-name">
+                                                                            {{ $materialNames }}</td>
+
+                                                                        {{-- các ô SKU / Qty / Price / Status / Image giữ nguyên như bạn đang có --}}
+                                                                        <td>
+                                                                            <input type="text"
+                                                                                name="variants[{{ $index }}][sku]"
+                                                                                class="form-control"
+                                                                                value="{{ $variant->sku }}">
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <input type="number"
+                                                                                name="variants[{{ $index }}][quantity]"
+                                                                                class="form-control" min="0"
+                                                                                value="{{ $variant->quantity }}">
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <input type="number"
+                                                                                name="variants[{{ $index }}][price]"
+                                                                                class="form-control" min="0"
+                                                                                step="0.01"
+                                                                                value="{{ $variant->price }}">
+                                                                        </td>
+
+                                                                        <td>
+                                                                            <select
+                                                                                name="variants[{{ $index }}][status]"
+                                                                                class="form-control">
+                                                                                <option value="1"
+                                                                                    {{ $variant->status ? 'selected' : '' }}>
+                                                                                    Hiện</option>
+                                                                                <option value="0"
+                                                                                    {{ !$variant->status ? 'selected' : '' }}>
+                                                                                    Ẩn</option>
+                                                                            </select>
+                                                                        </td>
+
+                                                                        {{-- Ảnh hiện tại + ảnh mới… (đoạn này giữ nguyên code cũ của bạn) --}}
+                                                                        <td>
+                                                                            @if ($variant->image_url)
+                                                                                <img src="{{ asset('storage/' . $variant->image_url) }}"
+                                                                                    alt="Variant Image"
+                                                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                                                            @else
+                                                                                <span class="text-muted small">Chưa có
+                                                                                    ảnh</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td>
+                                                                            <input type="file"
+                                                                                name="variants[{{ $index }}][image]"
+                                                                                class="form-control" accept="image/*">
+                                                                            {{-- giữ đường dẫn ảnh cũ để dùng nếu không upload ảnh mới --}}
+                                                                            <input type="hidden"
+                                                                                name="variants[{{ $index }}][old_image]"
+                                                                                value="{{ $variant->image }}">
+                                                                        </td>
+
+                                                                        {{-- Hidden ID để controller biết đây là biến thể cũ --}}
+                                                                        <input type="hidden"
+                                                                            name="variants[{{ $index }}][id]"
+                                                                            value="{{ $variant->id }}">
+
+                                                                        {{-- Hidden attribute_value_ids để không mất liên kết size/màu/chất liệu --}}
+                                                                        @foreach ($attrIds as $attrId)
+                                                                            <input type="hidden"
+                                                                                name="variants[{{ $index }}][attribute_value_ids][]"
+                                                                                value="{{ $attrId }}">
+                                                                        @endforeach
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                                                <!-- End Specification -->
+
+                                                {{-- Template cho biến thể MỚI (giống create) --}}
+                                                <template id="variant-row-template">
+                                                    <tr>
+                                                        <td class="variant-size-name"></td>
+                                                        <td class="variant-color-name"></td>
+                                                        <td class="variant-material-name"></td>
+
+                                                        <td>
+                                                            <input type="text" class="form-control variant-sku"
+                                                                placeholder="SKU">
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="number" class="form-control variant-qty"
+                                                                min="0" value="0">
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="number" class="form-control variant-price"
+                                                                min="0" step="0.01">
+                                                        </td>
+
+                                                        <td>
+                                                            <select class="form-control variant-status">
+                                                                <option value="1" selected>Hiện</option>
+                                                                <option value="0">Ẩn</option>
+                                                            </select>
+                                                        </td>
+
+                                                        <td>
+                                                            <span class="text-muted small">Mới</span>
+                                                        </td>
+
+                                                        <td>
+                                                            <input type="file" class="form-control variant-image"
+                                                                accept="image/*">
+                                                        </td>
+
+                                                        <td class="text-center">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-danger btn-remove-variant">
+                                                                &times;
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                </template>
                                             </div>
+                                            <!-- End Specification -->
+
                                         </div>
 
                                     </div>
@@ -406,73 +440,116 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            let variantIndex = {{ $product->variants->count() }};
+            // Bắt đầu đếm index từ số biến thể hiện có
+            let variantIndex = document.querySelectorAll('#variants-body tr').length;
 
-            const variantsWrapper = document.getElementById('variants-wrapper');
-            const addVariantBtn = document.getElementById('add-variant');
-
-            if (variantsWrapper && addVariantBtn) {
-                addVariantBtn.addEventListener('click', function() {
-                    const template = variantsWrapper.querySelector('.variant');
-                    if (!template) return;
-
-                    const newVariant = template.cloneNode(true);
-
-                    // bỏ id cũ (nếu có) để không update nhầm
-                    const hiddenId = newVariant.querySelector('input[type="hidden"][name^="variants"]');
-                    if (hiddenId) hiddenId.remove();
-
-                    // cập nhật lại name + reset value cho tất cả input (kể cả file input)
-                    newVariant.querySelectorAll('input').forEach(input => {
-                        const oldName = input.getAttribute('name');
-                        if (!oldName) return;
-
-                        input.value = '';
-                        const newName = oldName.replace(/\[(\d+)\]/, '[' + variantIndex + ']');
-                        input.setAttribute('name', newName);
-                    });
-
-                    // cập nhật lại name + reset cho select
-                    newVariant.querySelectorAll('select').forEach(select => {
-                        const oldName = select.getAttribute('name');
-                        if (!oldName) return;
-
-                        select.selectedIndex = 0;
-                        const newName = oldName.replace(/\[(\d+)\]/, '[' + variantIndex + ']');
-                        select.setAttribute('name', newName);
-                    });
-
-                    // ✅ xóa preview ảnh biến thể cũ trong bản clone (nếu có)
-                    newVariant.querySelectorAll('.variant-image-preview').forEach(el => el.remove());
-
-                    variantsWrapper.appendChild(newVariant);
-                    variantIndex++;
+            function getSelectedOptions(selectId) {
+                const select = document.getElementById(selectId);
+                if (!select) return [];
+                return Array.from(select.selectedOptions).map(function(opt) {
+                    return {
+                        id: opt.value,
+                        name: opt.textContent.trim()
+                    };
                 });
             }
 
-            const addImageBtn = document.getElementById('add-image');
-            if (addImageBtn) {
-                addImageBtn.addEventListener('click', () => {
-                    const div = document.createElement('div');
-                    div.classList.add('d-flex', 'align-items-center', 'mb-2');
-                    div.innerHTML = `
-                    <input type="text" name="images[]" class="form-control shadow-sm" placeholder="URL ảnh phụ">
-                    <button type="button" class="btn btn-outline-danger btn-sm ms-2 remove-image">
-                        <i class="bi bi-trash"></i>
-                    </button>`;
-                    const imageList = document.getElementById('image-list');
-                    if (imageList) {
-                        imageList.appendChild(div);
+            function addVariantRow(size, color, material) {
+                const tbody = document.getElementById('variants-body');
+                const template = document.getElementById('variant-row-template');
+                if (!tbody || !template) return;
+
+                const clone = template.content.cloneNode(true);
+                const tr = clone.querySelector('tr');
+
+                tr.querySelector('.variant-size-name').textContent = size.name;
+                tr.querySelector('.variant-color-name').textContent = color.name;
+                tr.querySelector('.variant-material-name').textContent = material.name;
+
+                const skuInput = tr.querySelector('.variant-sku');
+                const qtyInput = tr.querySelector('.variant-qty');
+                const priceInput = tr.querySelector('.variant-price');
+                const statusInput = tr.querySelector('.variant-status');
+                const imageInput = tr.querySelector('.variant-image');
+
+                skuInput.name = `variants[${variantIndex}][sku]`;
+                qtyInput.name = `variants[${variantIndex}][quantity]`;
+                priceInput.name = `variants[${variantIndex}][price]`;
+                statusInput.name = `variants[${variantIndex}][status]`;
+                imageInput.name = `variants[${variantIndex}][image]`;
+
+                // Gắn attribute_value_ids (size, color, material) cho biến thể mới
+                [size, color, material].forEach(function(attr) {
+                    if (attr && attr.id) {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = `variants[${variantIndex}][attribute_value_ids][]`;
+                        hidden.value = attr.id;
+                        tr.appendChild(hidden);
                     }
                 });
+
+                tbody.appendChild(clone);
+                variantIndex++;
             }
 
-            document.addEventListener('click', (e) => {
-                if (e.target.closest('.remove-image')) {
-                    const row = e.target.closest('.d-flex');
+            const generateBtn = document.getElementById('btn-generate-variants');
+            if (generateBtn) {
+                generateBtn.addEventListener('click', function() {
+                    const sizes = getSelectedOptions('matrix-sizes');
+                    const colors = getSelectedOptions('matrix-colors');
+                    const materials = getSelectedOptions('matrix-materials');
+
+                    if (!sizes.length || !colors.length || !materials.length) {
+                        alert('Vui lòng chọn ít nhất một kích cỡ, một màu sắc và một chất liệu.');
+                        return;
+                    }
+
+                    sizes.forEach(function(size) {
+                        colors.forEach(function(color) {
+                            materials.forEach(function(material) {
+                                addVariantRow(size, color, material);
+                            });
+                        });
+                    });
+                });
+            }
+
+            // Xóa dòng biến thể (cả cũ + mới)
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-remove-variant');
+                if (btn) {
+                    const row = btn.closest('tr');
                     if (row) row.remove();
                 }
             });
         });
     </script>
+@endpush
+@push('styles')
+    <style>
+        #matrix-sizes,
+        #matrix-colors,
+        #matrix-materials {
+            height: 38px;
+            padding-right: 30px;
+        }
+
+        .variants-table {
+            min-width: 1000px;
+        }
+
+        .variants-table th,
+        .variants-table td {
+            white-space: nowrap;
+        }
+
+        .variants-table input.form-control,
+        .variants-table select.form-control {
+            min-width: 110px;
+            height: 32px;
+            padding: 2px 6px;
+            font-size: 0.85rem;
+        }
+    </style>
 @endpush
