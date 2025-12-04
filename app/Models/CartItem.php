@@ -20,8 +20,8 @@ class CartItem extends Model
 
     protected $casts = [
         'quantity' => 'integer',
-        'price_at_time' => 'decimal:2',
-        'subtotal' => 'decimal:2',
+        'price_at_time' => 'integer',
+        'subtotal' => 'integer',
     ];
 
     public function cart()

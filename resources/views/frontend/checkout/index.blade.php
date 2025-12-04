@@ -548,8 +548,6 @@
                                 </ul>
 
                                 <h4 class="order__title">Phương thức thanh toán</h4>
-                                {{-- <h4 class="order__title">Phương thức thanh toán</h4> --}}
-
                                     @if (isset($paymentMethods) && $paymentMethods->count())
                                         @foreach ($paymentMethods as $pm)
                                             <div class="checkout__input__checkbox">
@@ -674,7 +672,7 @@
             // Lấy giá trị subtotal từ data-value (đã được format từ PHP)
             const baseSubtotalText = subtotalEl.dataset.value || '0';
             // Chuyển đổi từ chuỗi số có dấu phẩy thành số thuần
-            const baseSubtotal = parseFloat(baseSubtotalText.toString().replace(/[^\d]/g, '')) || 0;
+            const baseSubtotal = parseFloat(baseSubtotalText.toString().replace(/[^0-9\-]/g, '')) || 0;
             const originalDistrict = districtSelect.dataset.selected;
 
             const formatCurrency = (value) => {
@@ -725,7 +723,7 @@
                 if (discountEl) {
                     const discountValue = discountEl.dataset.value || '0';
                     // Chuyển đổi từ chuỗi số có dấu phẩy thành số thuần
-                    discountAmount = parseFloat(discountValue.toString().replace(/[^\d]/g, '')) || 0;
+                    discountAmount = parseFloat(discountValue.toString().replace(/[^0-9\-]/g, '')) || 0;
                 }
                 
                 // Tính tổng: subtotal - discount + shipping
@@ -733,6 +731,9 @@
                 const finalTotal = Math.round(baseSubtotal - discountAmount + fee);
                 totalEl.textContent = formatCurrency(finalTotal);
             };
+            // Cho phép gọi từ bên ngoài DOMContentLoaded
+            window.updateTotals = updateTotals;
+
 
             populateDistricts(citySelect.value, originalDistrict);
             updateTotals();

@@ -83,6 +83,7 @@ Route::prefix('cart')->name('cart.')->group(function () {
         Route::delete('/{id}/remove', [CartController::class, 'remove'])->name('remove');
         Route::post('/apply-voucher', [CartController::class, 'applyVoucher'])->name('apply-voucher');
         Route::post('/remove-voucher', [CartController::class, 'removeVoucher'])->name('remove-voucher');
+        Route::get('/suggest-vouchers', [CartController::class, 'suggestVouchers'])->name('suggest-vouchers');
     });
 });
 
@@ -97,7 +98,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
 
     // VNPay Return
-    Route::get('/vnpay/return', [CheckoutController::class, 'vnpayReturn'])->name('vnpay.return');
+    Route::get('/payment/vnpay/return', [CheckoutController::class, 'vnpayReturn'])->name('payment.vnpay.return');
+
 });
 
 

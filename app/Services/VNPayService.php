@@ -10,12 +10,13 @@ class VNPayService
     protected $vnp_ReturnUrl;
 
     public function __construct()
-    {
-        $this->vnp_TmnCode    = config('vnpay.vnp_TmnCode');
-        $this->vnp_HashSecret = config('vnpay.vnp_HashSecret');
-        $this->vnp_Url        = config('vnpay.vnp_Url');
-        $this->vnp_ReturnUrl  = config('vnpay.vnp_ReturnUrl');
-    }
+{
+    $this->vnp_TmnCode    = config('vnpay.vnp_tmn_code');
+    $this->vnp_HashSecret = config('vnpay.vnp_hash_secret');
+    $this->vnp_Url        = config('vnpay.vnp_url');
+    $this->vnp_ReturnUrl  = config('vnpay.vnp_return_url');
+}
+
 
     /**
      * Tạo URL thanh toán VNPay
@@ -42,7 +43,7 @@ class VNPayService
             "vnp_OrderInfo"  => "Thanh toán đơn hàng #$orderId",
             "vnp_OrderType"  => "billpayment",
             "vnp_ReturnUrl"  => $this->vnp_ReturnUrl,
-            "vnp_TxnRef"     => $appTransId
+            "vnp_TxnRef" => $orderId
         ];
 
         // Sort theo key

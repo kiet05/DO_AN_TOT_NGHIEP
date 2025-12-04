@@ -19,8 +19,8 @@ class Cart extends Model
     ];
 
     protected $casts = [
-        'total_price' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
+        'discount_amount' => 'integer',
+        'total_price' => 'integer',
     ];
 
     public function user()
