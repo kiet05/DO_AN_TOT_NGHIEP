@@ -12,7 +12,7 @@ class ReturnItem extends Model
 
     protected $table = 'return_items';
     
-    protected $fillable = ['return_id', 'order_item_id', 'quantity', 'image_proof', 'note'];
+    protected $fillable = ['return_id', 'order_item_id', 'quantity', 'image_proof', 'note', 'status',];
 
     public function return()
     {

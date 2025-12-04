@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\OrderItem;
 
 class Order extends Model
 {
@@ -30,8 +29,7 @@ class Order extends Model
         'note',
         'cancel_reason',
         'return_reason',
-        'return_image_path',   // 👈 thêm dòng này
-
+        'return_image_path',   // ảnh khách up khi yêu cầu hoàn hàng
     ];
 
     protected $casts = [
@@ -48,7 +46,6 @@ class Order extends Model
     public const STATUS_PREPARING = 'preparing';  // Chờ lấy hàng / Chuẩn bị
     public const STATUS_SHIPPING  = 'shipping';   // Đang giao
     public const STATUS_SHIPPED = 'shipped';  // Đã giao
-    public const STATUS_COMPLETED = 'completed';  // Đã giao
     public const STATUS_RETURNED  = 'returned';   // Trả hàng
     public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
     public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
@@ -64,7 +61,6 @@ class Order extends Model
             self::STATUS_PREPARING => 'Chờ chuẩn bị',
             self::STATUS_SHIPPING  => 'Đang giao',
             self::STATUS_SHIPPED => 'Đã giao',
-            self::STATUS_COMPLETED => 'Hoàn Thành',
             self::STATUS_RETURNED  => 'Trả hàng',
             self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
             self::STATUS_CANCELLED => 'Đã hủy',
@@ -86,6 +82,7 @@ class Order extends Model
 
     /**
      * Các trạng thái mà KHÁCH có thể yêu cầu trả hàng
+     * (dùng cho những chỗ khác nếu cần)
      */
     public static function customerReturnableStatuses(): array
     {
@@ -94,27 +91,12 @@ class Order extends Model
         ];
     }
 
-    /**
-     * KH có thể hủy đơn không?
-     */
-
-    /**
-     * KH có thể yêu cầu trả hàng không?
-     */
-    public function canBeReturnedByCustomer(): bool
-    {
-        $status = $this->normalizeStatus($this->order_status);
-
-        return in_array($status, self::customerReturnableStatuses(), true);
-    }
-
     /*
     |--------------------------------------------------------------------------
     | QUAN HỆ
     |--------------------------------------------------------------------------
     */
 
-    // Mỗi đơn hàng thuộc về 1 user
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -150,6 +132,12 @@ class Order extends Model
         return $this->hasMany(OrderStatusHistory::class);
     }
 
+    // 👇 quan hệ với bảng returns
+    public function returns()
+    {
+        return $this->hasMany(\App\Models\ReturnModel::class, 'order_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACCESSOR HIỂN THỊ THANH TOÁN / TRẠNG THÁI
@@ -180,22 +168,24 @@ class Order extends Model
     }
 
     /**
-     * Chuẩn hoá status về tên chuẩn
-     * (map dữ liệu cũ sang bộ status mới)
+     * Chuẩn hoá status về tên chuẩn (map dữ liệu cũ sang bộ status mới)
      */
     private function normalizeStatus(?string $status): string
     {
         $status = strtolower((string) $status);
 
         $aliases = [
-            'canceled'   => self::STATUS_CANCELLED,   // kiểu Mỹ -> kiểu Anh
-            'processing' => self::STATUS_PREPARING,   // cũ: processing
-            'shipped'    => self::STATUS_SHIPPED,   // cũ: shipped
+            'canceled'   => self::STATUS_CANCELLED, // kiểu Mỹ -> kiểu Anh
+            'processing' => self::STATUS_PREPARING, // dữ liệu cũ
+            'success'    => 'completed',            // nếu DB cũ có "success"
         ];
 
         return $aliases[$status] ?? $status;
     }
-    // Chuẩn hoá trạng thái hiện tại của đơn
+
+    /**
+     * Trạng thái chuẩn để check logic (hoàn hàng, hủy đơn, v.v.)
+     */
     public function canonicalStatus(): string
     {
         $status = $this->order_status ?? '';
@@ -208,14 +198,20 @@ class Order extends Model
         return $aliases[$status] ?? $status;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | QUYỀN THAO TÁC CỦA KHÁCH
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * KH được phép hủy khi đơn còn ở: pending / confirmed / processing
+     * KH được phép hủy khi đơn còn ở: pending / confirmed / preparing
      */
     public function canBeCancelledByCustomer(): bool
     {
         $canon = $this->canonicalStatus();
 
-        return in_array($canon, ['pending', 'confirmed', 'processing'], true);
+        return in_array($canon, ['pending', 'confirmed', 'processing', 'preparing'], true);
     }
 
     /**
@@ -230,13 +226,28 @@ class Order extends Model
 
     /**
      * KH được phép gửi yêu cầu trả hàng / hoàn tiền
-     * khi đơn đã giao
+     * – đơn đã giao (shipped/completed)
+     * – không quá 7 ngày kể từ khi giao
+     * – không phải đơn đang/đã trả (return_pending / returned)
      */
     public function canRequestReturnByCustomer(): bool
     {
         $canon = $this->canonicalStatus();
 
-        return in_array($canon, ['shipped', 'completed'], true);
+        if (! in_array($canon, ['shipped', 'completed'], true)) {
+            return false;
+        }
+
+        // Nếu có field status_changed_at thì giới hạn 7 ngày
+        if ($this->status_changed_at && $this->status_changed_at->diffInDays(now()) > 7) {
+            return false;
+        }
+
+        if (in_array($this->order_status, ['return_pending', 'returned'], true)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
