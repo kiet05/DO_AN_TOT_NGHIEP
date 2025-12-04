@@ -280,21 +280,21 @@
 
 @section('content')
     @php
-        // Tính tổng tiền chỉ cho các sản phẩm đã chọn
         $subtotal = 0;
         foreach ($cart->items as $item) {
-            $itemSubtotal = $item->quantity * $item->price_at_time;
-            $subtotal += $itemSubtotal;
+            $subtotal += $item->quantity * $item->price_at_time;
         }
-        $discountAmount = $cart->discount_amount ?? 0;
-        $initialShippingFee = $shippingFee ?? 0;
-        $initialTotal = $subtotal - $discountAmount + $initialShippingFee;
 
-        // KHÔNG set city/district mặc định nữa, chỉ lấy từ old()
-        $currentCity = old('receiver_city');
-        $currentDistrict = old('receiver_district');
-        $districtOptions = $currentCity ? $locations[$currentCity]['districts'] ?? [] : [];
+        $discountAmount = $cart->discount_amount ?? 0;
+        $initialShippingFee = $initialShippingFee ?? 0;
+        $total = $subtotal - $discountAmount + $initialShippingFee;
+
+        $currentCity = old('receiver_city', '');
+        $currentDistrict = old('receiver_district', '');
+        $districtOptions =
+            $currentCity && isset($locations[$currentCity]['districts']) ? $locations[$currentCity]['districts'] : [];
     @endphp
+
 
     <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-option">
@@ -431,8 +431,7 @@
                                                 <option value="">-- Chọn quận / huyện --</option>
                                                 @foreach ($districtOptions as $code => $name)
                                                     <option value="{{ $code }}" @selected($currentDistrict === $code)>
-                                                        {{ $name }}
-                                                    </option>
+                                                        {{ $name }}</option>
                                                 @endforeach
                                             </select>
                                             @error('receiver_district')
@@ -528,9 +527,9 @@
 
                                 <ul class="checkout__total__all">
                                     <li>Tạm tính
-                                        <span id="checkout-subtotal" data-value="{{ $subtotal }}">
-                                            {{ number_format($subtotal, 0, ',', '.') }}₫
-                                        </span>
+                                        <span id="checkout-subtotal"
+                                            data-value="{{ $subtotal }}">{{ number_format($subtotal, 0, ',', '.') }}₫</span>
+
                                     </li>
                                     @if ($cart->voucher && $discountAmount > 0)
                                         <li style="color: #28a745;">
@@ -543,17 +542,18 @@
                                     @else
                                         <li style="display: none;">
                                             Giảm giá
-                                            <span id="checkout-discount" data-value="0" style="color: #28a745;">0₫</span>
+                                            <span id="checkout-discount"
+                                                data-value="{{ $discountAmount }}">-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
                                         </li>
                                     @endif
                                     <li>Phí vận chuyển
-                                        <span id="checkout-shipping" data-value="{{ $initialShippingFee }}">
-                                            {{ number_format($initialShippingFee, 0, ',', '.') }}₫
-                                        </span>
+                                        <span id="checkout-shipping"
+                                            data-value="{{ $initialShippingFee }}">{{ number_format($initialShippingFee, 0, ',', '.') }}₫</span>
+
                                     </li>
                                     <li>Tổng cộng
                                         <span id="checkout-total">
-                                            {{ number_format($initialTotal, 0, ',', '.') }}₫
+                                            {{ number_format($total, 0, ',', '.') }}₫
                                         </span>
                                     </li>
                                 </ul>
@@ -790,20 +790,18 @@
             window.populateDistricts = populateDistricts;
 
             const updateTotals = () => {
-                const fee = calculateFeeFromCity(citySelect.value);
-                shippingEl.dataset.value = fee;
-                shippingEl.textContent = formatCurrency(fee);
+                const subtotal = parseInt(subtotalEl.dataset.value) || 0;
+                const discount = parseInt(document.getElementById('checkout-discount').dataset.value) || 0;
+                const shipping = calculateFeeFromCity(citySelect.value);
 
-                const discountEl = document.getElementById('checkout-discount');
-                let discountAmount = 0;
-                if (discountEl) {
-                    const discountValue = discountEl.dataset.value || '0';
-                    discountAmount = parseFloat(discountValue.toString().replace(/[^\d]/g, '')) || 0;
-                }
+                shippingEl.dataset.value = shipping;
+                shippingEl.textContent = formatCurrency(shipping);
 
-                const finalTotal = Math.round(baseSubtotal - discountAmount + fee);
-                totalEl.textContent = formatCurrency(finalTotal);
+                const total = subtotal - discount + shipping;
+                totalEl.textContent = formatCurrency(total);
             };
+
+
 
             window.updateTotals = updateTotals;
 
