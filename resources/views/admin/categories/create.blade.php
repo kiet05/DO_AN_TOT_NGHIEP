@@ -27,7 +27,8 @@
                             <div class="sherah-page-inner sherah-border sherah-basic-page sherah-default-bg mg-top-25 p-0">
                                 <form class="sherah-wc__form-main"
                                     action="{{ isset($category) ? route('admin.categories.update', $category->id) : route('admin.categories.store') }}"
-                                    method="POST">
+                                    method="POST" enctype="multipart/form-data">
+
                                     @csrf
                                     @if (isset($category))
                                         @method('PUT')
@@ -51,6 +52,26 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    {{-- Ảnh danh mục --}}
+                                                    <div class="col-12">
+                                                        <div class="form-group">
+                                                            <label for="image" class="sherah-wc__form-label">Ảnh danh
+                                                                mục</label>
+                                                            <div class="form-group__input">
+                                                                <input type="file" name="image" id="image"
+                                                                    class="sherah-wc__form-input">
+                                                            </div>
+
+                                                            @if (isset($category) && $category->image)
+                                                                <div class="mt-2">
+                                                                    <img src="{{ asset('storage/' . $category->image) }}"
+                                                                        alt="{{ $category->name }}"
+                                                                        style="max-height: 80px;">
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
 
                                                     <!-- Parent danh mục -->
                                                     <div class="col-12">

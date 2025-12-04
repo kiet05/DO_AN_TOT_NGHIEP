@@ -26,9 +26,77 @@ class Order extends Model
         'payment_status',
         'order_status',
         'status',
+        'note',
+        'cancel_reason',
+        'return_reason',
+        'return_image_path',   // ảnh khách up khi yêu cầu hoàn hàng
     ];
 
-    // Mỗi đơn hàng thuộc về 1 user
+    protected $casts = [
+        'status_changed_at' => 'datetime',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | HẰNG SỐ TRẠNG THÁI ĐƠN HÀNG
+    |--------------------------------------------------------------------------
+    */
+    public const STATUS_PENDING   = 'pending';    // Chờ xử lý
+    public const STATUS_CONFIRMED = 'confirmed';  // Chờ xác nhận
+    public const STATUS_PREPARING = 'preparing';  // Chờ lấy hàng / Chuẩn bị
+    public const STATUS_SHIPPING  = 'shipping';   // Đang giao
+    public const STATUS_SHIPPED = 'shipped';  // Đã giao
+    public const STATUS_RETURNED  = 'returned';   // Trả hàng
+    public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
+    public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
+
+    /**
+     * Danh sách trạng thái + label tiếng Việt
+     */
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_PENDING   => 'Chờ xử lý',
+            self::STATUS_CONFIRMED => 'Chờ xác nhận',
+            self::STATUS_PREPARING => 'Chờ chuẩn bị',
+            self::STATUS_SHIPPING  => 'Đang giao',
+            self::STATUS_SHIPPED => 'Đã giao',
+            self::STATUS_RETURNED  => 'Trả hàng',
+            self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
+            self::STATUS_CANCELLED => 'Đã hủy',
+        ];
+    }
+
+    /**
+     * Các trạng thái mà KHÁCH được phép tự hủy đơn
+     * (đơn chưa giao cho shipper)
+     */
+    public static function customerCancelableStatuses(): array
+    {
+        return [
+            self::STATUS_PENDING,
+            self::STATUS_CONFIRMED,
+            self::STATUS_PREPARING,
+        ];
+    }
+
+    /**
+     * Các trạng thái mà KHÁCH có thể yêu cầu trả hàng
+     * (dùng cho những chỗ khác nếu cần)
+     */
+    public static function customerReturnableStatuses(): array
+    {
+        return [
+            self::STATUS_SHIPPED,
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUAN HỆ
+    |--------------------------------------------------------------------------
+    */
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -48,52 +116,151 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id');
+    }
+
     public function payment()
     {
         return $this->belongsTo(Payment::class);
     }
-    public function getPaymentStatusLabelAttribute()
-{
-    return match ($this->payment_status) {
-        'unpaid'  => 'Chưa thanh toán',
-        'pending' => 'Đang chờ thanh toán',
-        'paid'    => 'Đã thanh toán',
-        'failed'   => 'Thanh toán thất bại',
-        'canceled' => 'Đã hủy thanh toán',
-        default   => $this->payment_status,
-    };
-}
 
-   public function getStatusLabelAttribute(): string
+    public function statusHistories()
     {
-        // Chuẩn hoá lại status (đổi success -> completed, canceled -> cancelled...)
-        $key = $this->normalizeStatus($this->order_status);
+        return $this->hasMany(OrderStatusHistory::class);
+    }
 
-        $map = [
-            'pending'    => 'Chờ xử lý',
-            'confirmed'  => 'Xác nhận',
-            'processing' => 'Chuẩn bị',
-            'shipping'   => 'Đang giao',
-            'shipped'    => 'Đã giao',
-            'completed'  => 'Hoàn thành',
-            'cancelled'  => 'Hủy',
-            'returned'   => 'Hoàn hàng',
-        ];
+    // 👇 quan hệ với bảng returns
+    public function returns()
+    {
+        return $this->hasMany(\App\Models\ReturnModel::class, 'order_id');
+    }
 
-        return $map[$key] ?? ucfirst($key);
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSOR HIỂN THỊ THANH TOÁN / TRẠNG THÁI
+    |--------------------------------------------------------------------------
+    */
+
+    public function getPaymentStatusLabelAttribute()
+    {
+        return match ($this->payment_status) {
+            'unpaid'   => 'Chưa thanh toán',
+            'pending'  => 'Đang chờ thanh toán',
+            'paid'     => 'Đã thanh toán',
+            'failed'   => 'Thanh toán thất bại',
+            'canceled' => 'Đã hủy thanh toán',
+            default    => $this->payment_status,
+        };
     }
 
     /**
-     * Chuẩn hoá status về tên chuẩn
+     * Label tiếng Việt cho order_status
      */
-    private function normalizeStatus(string $status): string
+    public function getStatusLabelAttribute(): string
     {
+        $key = $this->normalizeStatus($this->order_status);
+        $map = self::statusOptions();
+
+        return $map[$key] ?? ucfirst((string) $key);
+    }
+
+    /**
+     * Chuẩn hoá status về tên chuẩn (map dữ liệu cũ sang bộ status mới)
+     */
+    private function normalizeStatus(?string $status): string
+    {
+        $status = strtolower((string) $status);
+
         $aliases = [
-            'success'  => 'completed',  // dữ liệu cũ
-            'canceled' => 'cancelled',  // kiểu Mỹ -> kiểu Anh
+            'canceled'   => self::STATUS_CANCELLED, // kiểu Mỹ -> kiểu Anh
+            'processing' => self::STATUS_PREPARING, // dữ liệu cũ
+            'success'    => 'completed',            // nếu DB cũ có "success"
         ];
 
         return $aliases[$status] ?? $status;
     }
 
+    /**
+     * Trạng thái chuẩn để check logic (hoàn hàng, hủy đơn, v.v.)
+     */
+    public function canonicalStatus(): string
+    {
+        $status = $this->order_status ?? '';
+
+        $aliases = [
+            'success'  => 'completed',
+            'canceled' => 'cancelled',
+        ];
+
+        return $aliases[$status] ?? $status;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUYỀN THAO TÁC CỦA KHÁCH
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * KH được phép hủy khi đơn còn ở: pending / confirmed / preparing
+     */
+    public function canBeCancelledByCustomer(): bool
+    {
+        $canon = $this->canonicalStatus();
+
+        return in_array($canon, ['pending', 'confirmed', 'processing', 'preparing'], true);
+    }
+
+    /**
+     * KH được phép bấm "Đã nhận hàng" khi đơn đang giao
+     */
+    public function canBeConfirmedReceivedByCustomer(): bool
+    {
+        $canon = $this->canonicalStatus();
+
+        return in_array($canon, ['shipping'], true);
+    }
+
+    /**
+     * KH được phép gửi yêu cầu trả hàng / hoàn tiền
+     * – đơn đã giao (shipped/completed)
+     * – không quá 7 ngày kể từ khi giao
+     * – không phải đơn đang/đã trả (return_pending / returned)
+     */
+    public function canRequestReturnByCustomer(): bool
+    {
+        $canon = $this->canonicalStatus();
+
+        if (! in_array($canon, ['shipped', 'completed'], true)) {
+            return false;
+        }
+
+        // Nếu có field status_changed_at thì giới hạn 7 ngày
+        if ($this->status_changed_at && $this->status_changed_at->diffInDays(now()) > 7) {
+            return false;
+        }
+
+        if (in_array($this->order_status, ['return_pending', 'returned'], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * KH được phép "Mua lại" khi đơn đã hủy
+     */
+    public function canBeReorderedByCustomer(): bool
+    {
+        $canon = $this->canonicalStatus();
+
+        return $canon === 'cancelled';
+    }
+    public function voucherUsage()
+    {
+        return $this->hasOne(VoucherUsage::class, 'order_id');
+    }
 }

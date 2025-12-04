@@ -263,6 +263,15 @@
                                     </a>
                                 </li>
 
+                                {{-- Đánh giá --}}
+                                <li>
+                                    <a href="{{ route('admin.reviews.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Đánh giá</span>
+                                        </span>
+                                    </a>
+                                </li>
+
                                 {{-- Cài đặt shop --}}
                                 <li>
                                     <a href="{{ route('admin.shop-settings.edit') }}">

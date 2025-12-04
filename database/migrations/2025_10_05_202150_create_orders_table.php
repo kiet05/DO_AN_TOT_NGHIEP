@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('receiver_phone', 20);
             $table->text('receiver_address');
 
+            // Ghi chú đơn hàng
+            $table->text('note')->nullable();
+
             // Thông tin thanh toán
             $table->decimal('shipping_fee', 15, 2)->default(0);
             $table->decimal('total_price', 15, 2)->default(0);
@@ -31,7 +34,15 @@ return new class extends Migration
             $table->string('payment_status', 50);
             $table->string('order_status', 50);
 
-            // Trạng thái đơn hàng
+            // Lý do hủy, trả hàng
+            $table->text('cancel_reason')->nullable();
+            $table->text('return_reason')->nullable();
+            $table->string('return_image_path')->nullable();
+
+            // Thời điểm thay đổi trạng thái
+            $table->timestamp('status_changed_at')->nullable();
+
+            // Trạng thái chung
             $table->string('status', 50)->default('pending');
 
             $table->timestamps();

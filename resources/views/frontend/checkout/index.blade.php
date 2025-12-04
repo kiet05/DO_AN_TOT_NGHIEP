@@ -280,20 +280,22 @@
 
 @section('content')
     @php
-        // Tính tổng tiền chỉ cho các sản phẩm đã chọn
-        // Đảm bảo tính lại subtotal từ quantity * price_at_time để chính xác
         $subtotal = 0;
         foreach ($cart->items as $item) {
-            $itemSubtotal = $item->quantity * $item->price_at_time;
-            $subtotal += $itemSubtotal;
+            $subtotal += $item->quantity * $item->price_at_time;
         }
+
         $discountAmount = $cart->discount_amount ?? 0;
-        $initialShippingFee = $shippingFee ?? 0;
-        $initialTotal = $subtotal - $discountAmount + $initialShippingFee;
-        $currentCity = $selectedCity ?? array_key_first($locations ?? []);
-        $currentDistrict = $selectedDistrict ?? null;
-        $districtOptions = $locations[$currentCity]['districts'] ?? [];
+        $initialShippingFee = $initialShippingFee ?? 0;
+        $total = $subtotal - $discountAmount + $initialShippingFee;
+
+        $currentCity = old('receiver_city', '');
+        $currentDistrict = old('receiver_district', '');
+        $districtOptions =
+            $currentCity && isset($locations[$currentCity]['districts']) ? $locations[$currentCity]['districts'] : [];
     @endphp
+
+
     <!-- Breadcrumb Section Begin -->
     <section class="breadcrumb-option">
         <div class="container">
@@ -326,14 +328,19 @@
                         {{-- ================== CỘT TRÁI: THÔNG TIN GIAO HÀNG ================== --}}
                         <div class="col-lg-8 col-md-6">
                             @if ($cart->voucher)
-                                <div class="alert alert-success mb-3" style="padding: 12px 15px; border-radius: 6px; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;">
+                                <div class="alert alert-success mb-3"
+                                    style="padding: 12px 15px; border-radius: 6px; background: #d4edda; border: 1px solid #c3e6cb; color: #155724;">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
                                             <i class="fas fa-tag me-2"></i>
                                             <strong>Mã giảm giá đã áp dụng: {{ $cart->voucher->code }}</strong>
-                                            <small class="d-block text-muted mt-1">{{ $cart->voucher->name }} - Giảm {{ number_format($discountAmount, 0, ',', '.') }}₫</small>
+                                            <small class="d-block text-muted mt-1">
+                                                {{ $cart->voucher->name }} - Giảm
+                                                {{ number_format($discountAmount, 0, ',', '.') }}₫
+                                            </small>
                                         </div>
-                                        <a href="{{ route('cart.index') }}" class="btn btn-sm btn-link text-danger p-0" style="text-decoration: none;">
+                                        <a href="{{ route('cart.index') }}" class="btn btn-sm btn-link text-danger p-0"
+                                            style="text-decoration: none;">
                                             <i class="fas fa-edit me-1"></i>Thay đổi
                                         </a>
                                     </div>
@@ -347,143 +354,146 @@
                                     <p class="mb-2" style="font-size: 14px; font-weight: 600;">Địa chỉ đã lưu:</p>
                                     <div class="saved-addresses" style="max-height: 200px; overflow-y: auto;">
                                         @foreach ($savedAddresses as $address)
-                                            <div class="saved-address-item mb-2 p-3 border rounded" 
-                                                style="cursor: pointer; transition: all 0.2s; {{ $address->is_default ? 'border-color: #28a745; background: #f8fff9;' : '' }}"
-                                                onclick="selectAddress({{ $address->id }})">
-                                                <div class="d-flex justify-content-between align-items-start">
+                                            <div class="saved-address-item mb-2 p-3 border rounded"
+                                                style="cursor: pointer; transition: all 0.2s;">
+                                                <div class="d-flex justify-content-between align-items-start"
+                                                    onclick="selectAddress({{ $address->id }})">
                                                     <div class="flex-grow-1">
                                                         <div class="d-flex align-items-center mb-1">
-                                                            <strong style="font-size: 14px;">{{ $address->receiver_name }}</strong>
+                                                            <strong style="font-size: 14px;">
+                                                                {{ $address->receiver_name ?? $address->name }}
+                                                            </strong>
                                                             @if ($address->is_default)
-                                                                <span class="badge bg-success ms-2" style="font-size: 11px;">Mặc định</span>
+                                                                <span class="badge bg-success ms-2"
+                                                                    style="font-size: 11px;">Mặc định</span>
                                                             @endif
                                                         </div>
                                                         <p class="mb-1" style="font-size: 13px; color: #666;">
-                                                            {{ $address->receiver_phone }}
+                                                            {{ $address->receiver_phone ?? $address->phone }}
                                                         </p>
                                                         <p class="mb-0" style="font-size: 13px; color: #666;">
-                                                            {{ $address->receiver_address_detail }}, 
-                                                            {{ $locations[$address->receiver_city]['districts'][$address->receiver_district] ?? $address->receiver_district }}, 
-                                                            {{ $locations[$address->receiver_city]['name'] ?? $address->receiver_city }}
+                                                            {{ $address->receiver_address_detail ?? $address->address_line }},
+                                                            {{ $address->receiver_district ?? $address->district }},
+                                                            {{ $address->receiver_city ?? $address->province }}
                                                         </p>
                                                     </div>
-                                                    <input type="radio" name="selected_address_id" value="{{ $address->id }}" 
-                                                        id="address_{{ $address->id }}" 
-                                                        class="address-radio" 
-                                                        {{ $address->is_default ? 'checked' : '' }}
-                                                        style="margin-top: 4px;">
+                                                    <input type="radio" name="selected_address_id"
+                                                        value="{{ $address->id }}" id="address_{{ $address->id }}"
+                                                        class="address-radio" style="margin-top: 4px;">
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="showNewAddressForm()">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mt-2"
+                                        onclick="showNewAddressForm()">
                                         <i class="fas fa-plus me-1"></i>Thêm địa chỉ mới
                                     </button>
                                 </div>
                             @endif
 
-                            <div id="address-form" style="{{ $savedAddresses && $savedAddresses->count() > 0 ? 'display: none;' : '' }}">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="checkout__input">
-                                        <p>Họ và tên<span>*</span></p>
-                                        <input type="text" name="receiver_name" id="receiver_name"
-                                            value="{{ old('receiver_name', $defaultAddress ? $defaultAddress->receiver_name : ($user->full_name ?? $user->name)) }}">
-                                        @error('receiver_name')
-                                            <span class="text-danger small">{{ $message }}</span>
-                                        @enderror
+                            {{-- FORM ĐỊA CHỈ (ban đầu trống) --}}
+                            <div id="address-form">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <div class="checkout__input">
+                                            <p>Họ và tên<span>*</span></p>
+                                            <input type="text" name="receiver_name" id="receiver_name"
+                                                value="{{ old('receiver_name') }}">
+                                            @error('receiver_name')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="checkout__input">
-                                        <p>Thành phố<span>*</span></p>
-                                        <select name="receiver_city" id="receiver_city" class="form-select">
-                                            @foreach ($locations as $code => $city)
-                                                <option value="{{ $code }}"
-                                                    @selected(old('receiver_city', $currentCity) === $code)>
-                                                    {{ $city['name'] }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('receiver_city')
-                                            <span class="text-danger small">{{ $message }}</span>
-                                        @enderror
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="checkout__input">
+                                            <p>Thành phố<span>*</span></p>
+                                            <select name="receiver_city" id="receiver_city" class="form-select">
+                                                <option value="">-- Chọn thành phố --</option>
+                                                @foreach ($locations as $code => $city)
+                                                    <option value="{{ $code }}" @selected($currentCity === $code)>
+                                                        {{ $city['name'] }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('receiver_city')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="checkout__input">
+                                            <p>Quận / Huyện<span>*</span></p>
+                                            <select name="receiver_district" id="receiver_district" class="form-select"
+                                                data-selected="{{ $currentDistrict }}">
+                                                <option value="">-- Chọn quận / huyện --</option>
+                                                @foreach ($districtOptions as $code => $name)
+                                                    <option value="{{ $code }}" @selected($currentDistrict === $code)>
+                                                        {{ $name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('receiver_district')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="checkout__input">
-                                        <p>Quận / Huyện<span>*</span></p>
-                                        <select name="receiver_district" id="receiver_district" class="form-select"
-                                            data-selected="{{ old('receiver_district', $currentDistrict) }}">
-                                            @foreach ($districtOptions as $code => $name)
-                                                <option value="{{ $code }}"
-                                                    @selected(old('receiver_district', $currentDistrict) === $code)>
-                                                    {{ $name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('receiver_district')
-                                            <span class="text-danger small">{{ $message }}</span>
-                                        @enderror
+
+                                <div class="checkout__input">
+                                    <p>Địa chỉ cụ thể<span>*</span></p>
+                                    <input type="text" name="receiver_address_detail" id="receiver_address_detail"
+                                        class="checkout__input__add" placeholder="Số nhà, đường, phường/xã..."
+                                        value="{{ old('receiver_address_detail') }}">
+                                    @error('receiver_address_detail')
+                                        <span class="text-danger small">{{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="checkout__input">
+                                            <p>Số điện thoại<span>*</span></p>
+                                            <input type="text" name="receiver_phone" id="receiver_phone"
+                                                value="{{ old('receiver_phone') }}">
+                                            @error('receiver_phone')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="checkout__input">
+                                            <p>Email</p>
+                                            <input type="text" value="{{ $user->email }}" disabled>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="checkout__input">
-                                <p>Địa chỉ cụ thể<span>*</span></p>
-                                <input type="text" name="receiver_address_detail" id="receiver_address_detail" class="checkout__input__add"
-                                    placeholder="Số nhà, đường, phường/xã..."
-                                    value="{{ old('receiver_address_detail', $defaultAddress ? $defaultAddress->receiver_address_detail : '') }}">
-                                @error('receiver_address_detail')
-                                    <span class="text-danger small">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="checkout__input">
-                                        <p>Số điện thoại<span>*</span></p>
-                                        <input type="text" name="receiver_phone" id="receiver_phone"
-                                            value="{{ old('receiver_phone', $defaultAddress ? $defaultAddress->receiver_phone : ($user->phone ?? '')) }}">
-                                        @error('receiver_phone')
-                                            <span class="text-danger small">{{ $message }}</span>
-                                        @enderror
-                                    </div>
+                                <div class="checkout__input">
+                                    <p>Ghi chú đơn hàng</p>
+                                    <input type="text" name="note"
+                                        placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."
+                                        value="{{ old('note') }}">
                                 </div>
-                                <div class="col-lg-6">
-                                    <div class="checkout__input">
-                                        <p>Email</p>
-                                        <input type="text" value="{{ $user->email }}" disabled>
-                                    </div>
+
+                                {{-- Checkbox lưu địa chỉ 
+                                <div class="checkout__input__checkbox mb-3">
+                                    <label for="save_address">
+                                        <input type="checkbox" id="save_address" name="save_address" value="1">
+                                        <span class="checkmark"></span>
+                                        Lưu địa chỉ này để sử dụng sau
+                                    </label>
                                 </div>
-                            </div>
 
-                            <div class="checkout__input">
-                                <p>Ghi chú đơn hàng</p>
-                                <input type="text" name="note"
-                                    placeholder="Ví dụ: Giao giờ hành chính, gọi trước khi giao..."
-                                    value="{{ old('note') }}">
-                            </div>
-
-                            {{-- Checkbox lưu địa chỉ --}}
-                            <div class="checkout__input__checkbox mb-3">
-                                <label for="save_address">
-                                    <input type="checkbox" id="save_address" name="save_address" value="1">
-                                    <span class="checkmark"></span>
-                                    Lưu địa chỉ này để sử dụng sau
-                                </label>
-                            </div>
-
-                            <div class="checkout__input__checkbox mb-3" id="set_default_wrapper" style="display: none;">
-                                <label for="set_as_default">
-                                    <input type="checkbox" id="set_as_default" name="set_as_default" value="1">
-                                    <span class="checkmark"></span>
-                                    Đặt làm địa chỉ mặc định
-                                </label>
-                            </div>
+                                <div class="checkout__input__checkbox mb-3" id="set_default_wrapper"
+                                    style="display: none;">
+                                    <label for="set_as_default">
+                                        <input type="checkbox" id="set_as_default" name="set_as_default" value="1">
+                                        <span class="checkmark"></span>
+                                        Đặt làm địa chỉ mặc định
+                                    </label>
+                                </div> --}}
                             </div>
                         </div>
 
@@ -501,7 +511,6 @@
                                             $product = $item->productVariant->product;
                                             $variant = $item->productVariant;
                                             $variantAttributes = $variant->attributeValues->pluck('value')->join(', ');
-                                            // Tính lại subtotal để đảm bảo chính xác
                                             $itemSubtotal = $item->quantity * $item->price_at_time;
                                         @endphp
                                         <li>
@@ -518,31 +527,33 @@
 
                                 <ul class="checkout__total__all">
                                     <li>Tạm tính
-                                        <span id="checkout-subtotal" data-value="{{ $subtotal }}">
-                                            {{ number_format($subtotal, 0, ',', '.') }}₫
-                                        </span>
+                                        <span id="checkout-subtotal"
+                                            data-value="{{ $subtotal }}">{{ number_format($subtotal, 0, ',', '.') }}₫</span>
+
                                     </li>
                                     @if ($cart->voucher && $discountAmount > 0)
                                         <li style="color: #28a745;">
                                             Giảm giá ({{ $cart->voucher->code }})
-                                            <span id="checkout-discount" data-value="{{ $discountAmount }}" style="color: #28a745;">
+                                            <span id="checkout-discount" data-value="{{ $discountAmount }}"
+                                                style="color: #28a745;">
                                                 -{{ number_format($discountAmount, 0, ',', '.') }}₫
                                             </span>
                                         </li>
                                     @else
                                         <li style="display: none;">
                                             Giảm giá
-                                            <span id="checkout-discount" data-value="0" style="color: #28a745;">0₫</span>
+                                            <span id="checkout-discount"
+                                                data-value="{{ $discountAmount }}">-{{ number_format($discountAmount, 0, ',', '.') }}₫</span>
                                         </li>
                                     @endif
                                     <li>Phí vận chuyển
-                                        <span id="checkout-shipping" data-value="{{ $initialShippingFee }}">
-                                            {{ number_format($initialShippingFee, 0, ',', '.') }}₫
-                                        </span>
+                                        <span id="checkout-shipping"
+                                            data-value="{{ $initialShippingFee }}">{{ number_format($initialShippingFee, 0, ',', '.') }}₫</span>
+
                                     </li>
                                     <li>Tổng cộng
                                         <span id="checkout-total">
-                                            {{ number_format($initialTotal, 0, ',', '.') }}₫
+                                            {{ number_format($total, 0, ',', '.') }}₫
                                         </span>
                                     </li>
                                 </ul>
@@ -572,17 +583,18 @@
                                                     <small class="text-muted d-block">{{ $pm->description }}</small>
                                                 @endif
                                             </div>
-                                        @endforeach
-                                    @else
-                                        <div class="checkout__input__checkbox">
-                                            <label for="payment_cod">
-                                                Thanh toán khi nhận hàng (COD)
-                                                <input type="radio" id="payment_cod" name="payment_method" value="cod"
-                                                    {{ old('payment_method', 'cod') === 'cod' ? 'checked' : '' }}>
-                                                <span class="checkmark"></span>
-                                            </label>
-                                        </div>
-                                    @endif
+
+                                    @endforeach
+                                @else
+                                    <div class="checkout__input__checkbox">
+                                        <label for="payment_cod">
+                                            Thanh toán khi nhận hàng (COD)
+                                            <input type="radio" id="payment_cod" name="payment_method" value="cod"
+                                                {{ old('payment_method', 'COD') === 'COD' ? 'checked' : '' }}>
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    </div>
+                                @endif
 
                                     @error('payment_method')
                                         <span class="text-danger small d-block mb-2">{{ $message }}</span>
@@ -602,114 +614,185 @@
         const savedAddresses = @json($savedAddresses);
         const locations = @json($locations);
 
-        // Xử lý chọn địa chỉ đã lưu
+        // ==== CHỌN ĐỊA CHỈ ĐÃ LƯU -> ĐỔ DỮ LIỆU XUỐNG FORM (CÓ CITY + DISTRICT) ====
         function selectAddress(addressId) {
-            const address = savedAddresses.find(a => a.id === addressId);
+            const list = Array.isArray(savedAddresses) ? savedAddresses : [];
+            const address = list.find(a => a.id === addressId);
             if (!address) return;
 
-            // Cập nhật form với thông tin địa chỉ đã chọn
-            document.getElementById('receiver_name').value = address.receiver_name;
-            document.getElementById('receiver_phone').value = address.receiver_phone;
-            document.getElementById('receiver_address_detail').value = address.receiver_address_detail;
-            
-            // Cập nhật thành phố và quận
-            const citySelect = document.querySelector('select[name="receiver_city"]');
-            const districtSelect = document.querySelector('select[name="receiver_district"]');
-            
-            citySelect.value = address.receiver_city;
-            populateDistricts(address.receiver_city, address.receiver_district);
-            
-            // Đánh dấu radio button đã chọn
-            document.getElementById('address_' + addressId).checked = true;
-            
-            // Hiển thị form
-            document.getElementById('address-form').style.display = 'block';
-            
-            // Cập nhật phí ship
-            updateTotals();
+            const nameInput = document.getElementById('receiver_name');
+            const phoneInput = document.getElementById('receiver_phone');
+            const addrDetailInput = document.getElementById('receiver_address_detail');
+            const citySelect = document.getElementById('receiver_city');
+            const districtSelect = document.getElementById('receiver_district');
+
+            // 1. Họ tên + SĐT
+            if (nameInput) nameInput.value = address.receiver_name || address.name || '';
+            if (phoneInput) phoneInput.value = address.receiver_phone || address.phone || '';
+
+            // 2. Địa chỉ chi tiết (cứ để phần line / detail, city & district đã có dropdown riêng)
+            if (addrDetailInput) {
+                addrDetailInput.value = address.receiver_address_detail ||
+                    address.address_line ||
+                    '';
+            }
+
+            // 3. Map TÊN tỉnh / thành phố sang MÃ city trong locations
+            const cityMap = locations || {};
+            const rawCity = address.receiver_city || address.province || ''; // VD: "Ninh Bình"
+            let cityCode = '';
+
+            // 3.1. Nếu rawCity trùng luôn key thì dùng luôn
+            if (rawCity && cityMap[rawCity]) {
+                cityCode = rawCity;
+            } else {
+                // 3.2. Ngược lại, tìm code theo name
+                for (const [code, cityObj] of Object.entries(cityMap)) {
+                    if (cityObj && cityObj.name === rawCity) {
+                        cityCode = code;
+                        break;
+                    }
+                }
+            }
+
+            // Nếu vẫn không map được thì fallback "other" nếu có
+            if (!cityCode) {
+                if (cityMap.other) {
+                    cityCode = 'other';
+                }
+            }
+
+            if (citySelect) {
+                citySelect.value = cityCode || '';
+            }
+
+            // 4. Map TÊN quận/huyện sang MÃ district trong locations[cityCode].districts
+            const rawDistrict = address.receiver_district || address.district || ''; // VD: "Gia Viễn"
+            let districtCode = '';
+
+            if (cityCode && cityMap[cityCode] && cityMap[cityCode].districts) {
+                const districts = cityMap[cityCode].districts;
+
+                // 4.1. Nếu rawDistrict trùng key
+                if (rawDistrict && districts[rawDistrict]) {
+                    districtCode = rawDistrict;
+                } else {
+                    // 4.2. Tìm theo name
+                    for (const [code, name] of Object.entries(districts)) {
+                        if (name === rawDistrict) {
+                            districtCode = code;
+                            break;
+                        }
+                    }
+                }
+
+                // 4.3. Fallback "other" nếu không tìm được
+                if (!districtCode && districts.other) {
+                    districtCode = 'other';
+                }
+            }
+
+            // 5. Gọi populateDistricts để fill dropdown + chọn sẵn districtCode
+            if (typeof window.populateDistricts === 'function') {
+                window.populateDistricts(cityCode, districtCode);
+            } else if (districtSelect) {
+                // nếu vì lý do nào đó populateDistricts chưa có thì set value trực tiếp
+                districtSelect.value = districtCode || '';
+            }
+
+            // 6. Đánh dấu radio đã chọn
+            const radio = document.getElementById('address_' + addressId);
+            if (radio) radio.checked = true;
+
+            // 7. Cập nhật lại phí ship / tổng tiền
+            if (typeof window.updateTotals === 'function') {
+                window.updateTotals();
+            }
         }
 
-        // Hiển thị form nhập địa chỉ mới
+        // Thêm địa chỉ mới: form trống, bỏ chọn radio
         function showNewAddressForm() {
-            document.getElementById('address-form').style.display = 'block';
-            // Bỏ chọn tất cả radio button
-            document.querySelectorAll('.address-radio').forEach(radio => {
-                radio.checked = false;
-            });
-            // Reset form
-            document.getElementById('receiver_name').value = '';
-            document.getElementById('receiver_phone').value = '';
-            document.getElementById('receiver_address_detail').value = '';
+            document.querySelectorAll('.address-radio').forEach(radio => (radio.checked = false));
+
+            const nameInput = document.getElementById('receiver_name');
+            const phoneInput = document.getElementById('receiver_phone');
+            const addrDetailInput = document.getElementById('receiver_address_detail');
+            const citySelect = document.getElementById('receiver_city');
+            const districtSelect = document.getElementById('receiver_district');
+
+            if (nameInput) nameInput.value = '';
+            if (phoneInput) phoneInput.value = '';
+            if (addrDetailInput) addrDetailInput.value = '';
+
+            if (citySelect) citySelect.value = '';
+            if (districtSelect) {
+                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+            }
+
+            if (typeof window.updateTotals === 'function') {
+                window.updateTotals();
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const citySelect = document.querySelector('select[name="receiver_city"]');
-            const districtSelect = document.querySelector('select[name="receiver_district"]');
+            const citySelect = document.getElementById('receiver_city');
+            const districtSelect = document.getElementById('receiver_district');
             const subtotalEl = document.getElementById('checkout-subtotal');
             const shippingEl = document.getElementById('checkout-shipping');
             const totalEl = document.getElementById('checkout-total');
-            const locationMap = locations;
-            
-            // Xử lý checkbox "Lưu địa chỉ"
+            const locationMap = locations || {};
+
+            // Checkbox "Lưu địa chỉ"
             const saveAddressCheckbox = document.getElementById('save_address');
             const setDefaultWrapper = document.getElementById('set_default_wrapper');
-            
-            if (saveAddressCheckbox) {
+            if (saveAddressCheckbox && setDefaultWrapper) {
                 saveAddressCheckbox.addEventListener('change', function() {
                     if (this.checked) {
                         setDefaultWrapper.style.display = 'block';
                     } else {
                         setDefaultWrapper.style.display = 'none';
-                        document.getElementById('set_as_default').checked = false;
+                        const setAsDefault = document.getElementById('set_as_default');
+                        if (setAsDefault) setAsDefault.checked = false;
                     }
                 });
             }
 
-            if (!citySelect || !districtSelect || !subtotalEl || !shippingEl || !totalEl) {
-                return;
-            }
+            if (!citySelect || !districtSelect || !subtotalEl || !shippingEl || !totalEl) return;
 
-            // Lấy giá trị subtotal từ data-value (đã được format từ PHP)
             const baseSubtotalText = subtotalEl.dataset.value || '0';
             // Chuyển đổi từ chuỗi số có dấu phẩy thành số thuần
             const baseSubtotal = parseFloat(baseSubtotalText.toString().replace(/[^0-9\-]/g, '')) || 0;
             const originalDistrict = districtSelect.dataset.selected;
+            const baseSubtotal = parseFloat(baseSubtotalText.toString().replace(/[^\d]/g, '')) || 0;
+            const originalDistrict = districtSelect.dataset.selected || '';
 
-            const formatCurrency = (value) => {
-                return new Intl.NumberFormat('vi-VN').format(value) + '₫';
-            };
+
+            const formatCurrency = (value) =>
+                new Intl.NumberFormat('vi-VN').format(value) + '₫';
 
             const calculateFeeFromCity = (cityCode) => {
-                if (!cityCode) {
-                    return 0;
-                }
+                if (!cityCode) return 0;
                 return cityCode === 'hanoi' ? 30000 : 40000;
             };
 
             const populateDistricts = (cityCode, preset) => {
-                const districts = locationMap[cityCode]?.districts || {};
-                districtSelect.innerHTML = '';
-                let firstOptionValue = null;
+                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+                if (!cityCode || !locationMap[cityCode]) return;
 
-                Object.entries(districts).forEach(([code, name], index) => {
+                const districts = locationMap[cityCode].districts || {};
+                Object.entries(districts).forEach(([code, name]) => {
                     const option = document.createElement('option');
                     option.value = code;
                     option.textContent = name;
-                    if (index === 0) {
-                        firstOptionValue = code;
-                    }
-                    if (preset && preset === code) {
-                        option.selected = true;
-                    }
+                    if (preset && preset === code) option.selected = true;
                     districtSelect.appendChild(option);
                 });
 
-                if (!districtSelect.value && firstOptionValue) {
-                    districtSelect.value = firstOptionValue;
+                if (!districtSelect.value && preset) {
+                    districtSelect.value = preset;
                 }
             };
-            
-            // Export function để dùng trong selectAddress
+
             window.populateDistricts = populateDistricts;
 
             const updateTotals = () => {
@@ -730,23 +813,70 @@
                 // Đảm bảo tính toán chính xác với số nguyên
                 const finalTotal = Math.round(baseSubtotal - discountAmount + fee);
                 totalEl.textContent = formatCurrency(finalTotal);
+                const subtotal = parseInt(subtotalEl.dataset.value) || 0;
+                const discount = parseInt(document.getElementById('checkout-discount').dataset.value) || 0;
+                const shipping = calculateFeeFromCity(citySelect.value);
+
+                shippingEl.dataset.value = shipping;
+                shippingEl.textContent = formatCurrency(shipping);
+
+                const total = subtotal - discount + shipping;
+                totalEl.textContent = formatCurrency(total);
             };
             // Cho phép gọi từ bên ngoài DOMContentLoaded
             window.updateTotals = updateTotals;
 
 
-            populateDistricts(citySelect.value, originalDistrict);
+
+
+            window.updateTotals = updateTotals;
+
+            if (citySelect.value) {
+                populateDistricts(citySelect.value, originalDistrict);
+            } else {
+                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+            }
             updateTotals();
 
             citySelect.addEventListener('change', () => {
-                populateDistricts(citySelect.value);
+                populateDistricts(citySelect.value, null);
                 updateTotals();
             });
-            
-            // Nếu có địa chỉ mặc định, tự động chọn
-            @if ($defaultAddress)
-                selectAddress({{ $defaultAddress->id }});
-            @endif
+
+            // Validate trước khi submit
+            const checkoutForm = document.querySelector('.checkout__form form');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    const fields = ['receiver_name', 'receiver_phone', 'receiver_address_detail'];
+                    const cityEl = document.getElementById('receiver_city');
+                    const districtEl = document.getElementById('receiver_district');
+                    let hasError = false;
+
+                    [...fields, 'receiver_city', 'receiver_district'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.borderColor = '#e5e5e5';
+                    });
+
+                    const markError = (el) => {
+                        if (!el) return;
+                        el.style.borderColor = '#e53637';
+                        hasError = true;
+                    };
+
+                    fields.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el && !el.value.trim()) markError(el);
+                    });
+
+                    if (cityEl && !cityEl.value) markError(cityEl);
+                    if (districtEl && !districtEl.value) markError(districtEl);
+
+                    if (hasError) {
+                        e.preventDefault();
+                        alert('Vui lòng điền đầy đủ thông tin nhận hàng trước khi đặt hàng.');
+                    }
+                });
+            }
         });
     </script>
 @endsection

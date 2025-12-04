@@ -17,7 +17,8 @@
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb small mb-0">
                                     <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                                    <li class="breadcrumb-item"><a href="{{ route('admin.orders.index') }}">Đơn hàng</a></li>
+                                    <li class="breadcrumb-item"><a href="{{ route('admin.orders.index') }}">Đơn hàng</a>
+                                    </li>
                                     <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
                                 </ol>
                             </nav>
@@ -42,69 +43,106 @@
                     @php
                         // Chuẩn hoá trạng thái từ dữ liệu cũ
                         $aliases = [
-                            'success'  => 'completed',
+                            'success' => 'completed',
                             'canceled' => 'cancelled',
                         ];
                         $canon = $aliases[$order->order_status] ?? $order->order_status;
 
                         // Badge trạng thái
                         $statusBadge = [
-                            'pending'    => ['txt' => 'Chờ xử lý',  'cls' => 'bg-secondary'],
-                            'confirmed'  => ['txt' => 'Xác nhận',   'cls' => 'bg-primary'],
-                            'processing' => ['txt' => 'Chuẩn bị',   'cls' => 'bg-warning text-dark'],
-                            'shipping'   => ['txt' => 'Đang giao',  'cls' => 'bg-info'],
-                            'shipped'    => ['txt' => 'Đã giao',    'cls' => 'bg-success'],
-                            'completed'  => ['txt' => 'Hoàn thành', 'cls' => 'bg-success'],
-                            'cancelled'  => ['txt' => 'Đã hủy',     'cls' => 'bg-danger'],
-                            'returned'   => ['txt' => 'Hoàn hàng',  'cls' => 'bg-warning text-dark'],
+                            'pending' => ['txt' => 'Chờ xử lý', 'cls' => 'bg-secondary'],
+                            'confirmed' => ['txt' => 'Xác nhận', 'cls' => 'bg-primary'],
+                            'processing' => ['txt' => 'Chuẩn bị', 'cls' => 'bg-warning text-dark'],
+                            'shipping' => ['txt' => 'Đang giao', 'cls' => 'bg-info'],
+                            'shipped' => ['txt' => 'Đã giao', 'cls' => 'bg-success'],
+                            'completed' => ['txt' => 'Hoàn thành', 'cls' => 'bg-success'],
+                            'cancelled' => ['txt' => 'Đã hủy', 'cls' => 'bg-danger'],
+                            'return_pending' => ['txt' => 'Yêu cầu hoàn hàng', 'cls' => 'bg-warning text-dark'], // 👈 thêm
+
+                            'returned' => ['txt' => 'Hoàn hàng', 'cls' => 'bg-warning text-dark'],
                         ];
 
                         // Thanh toán
                         $payTxt = $order->payment_status === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
                         $payCls = $order->payment_status === 'paid' ? 'bg-success' : 'bg-danger';
-
+                        // Loại thanh toán
+                        $payTypeTxt = match ($order->payment_method ?? '') {
+                            'cod' => 'Thanh toán khi nhận hàng (COD)',
+                            'online' => 'Thanh toán online',
+                            default => 'Chưa xác định',
+                        };
+                        $payTypeCls =
+                            $order->payment_type === 'cod'
+                                ? 'bg-info'
+                                : ($order->payment_type === 'online'
+                                    ? 'bg-primary'
+                                    : 'bg-secondary');
                         // Chuỗi bước (8 cột, gồm cả Hoàn hàng & Đã hủy)
                         $steps = [
-                            ['key' => 'pending',    'label' => 'Chờ xử lý'],
-                            ['key' => 'confirmed',  'label' => 'Xác nhận'],
+                            ['key' => 'pending', 'label' => 'Chờ xử lý'],
+                            ['key' => 'confirmed', 'label' => 'Xác nhận'],
                             ['key' => 'processing', 'label' => 'Chuẩn bị'],
-                            ['key' => 'shipping',   'label' => 'Đang giao'],
-                            ['key' => 'shipped',    'label' => 'Đã giao'],
-                            ['key' => 'completed',  'label' => 'Hoàn thành'],
-                            ['key' => 'returned',   'label' => 'Hoàn hàng'],
-                            ['key' => 'cancelled',  'label' => 'Đã hủy'],
+                            ['key' => 'shipping', 'label' => 'Đang giao'],
+                            ['key' => 'shipped', 'label' => 'Đã giao'],
+                            ['key' => 'completed', 'label' => 'Hoàn thành'],
+                            ['key' => 'returned', 'label' => 'Hoàn hàng'],
+                            ['key' => 'cancelled', 'label' => 'Đã hủy'],
                         ];
 
                         // Luồng chính (không gồm Hoàn hàng / Đã hủy)
-                        $pipelineKeys     = ['pending', 'confirmed', 'processing', 'shipping', 'shipped', 'completed'];
+                        $pipelineKeys = ['pending', 'confirmed', 'processing', 'shipping', 'shipped', 'completed'];
                         $pipelineIndexMap = array_flip($pipelineKeys);
 
                         $canonInPipeline = isset($pipelineIndexMap[$canon]);
-                        $currentIndex    = $canonInPipeline ? $pipelineIndexMap[$canon] : -1;
-                        $shippedIndex    = $pipelineIndexMap['shipped'];
+                        $currentIndex = $canonInPipeline ? $pipelineIndexMap[$canon] : -1;
+                        $shippedIndex = $pipelineIndexMap['shipped'];
 
                         // Nhãn tiếng Việt cho dropdown cập nhật
                         $labelStatus = [
-                            'pending'    => 'Chờ xử lý',
-                            'confirmed'  => 'Xác nhận',
+                            'pending' => 'Chờ xử lý',
+                            'confirmed' => 'Xác nhận',
                             'processing' => 'Chuẩn bị',
-                            'shipping'   => 'Đang giao',
-                            'shipped'    => 'Đã giao',
-                            'completed'  => 'Hoàn thành',
-                            'cancelled'  => 'Hủy',
-                            'returned'   => 'Hoàn hàng',
+                            'shipping' => 'Đang giao',
+                            'shipped' => 'Đã giao',
+                            'completed' => 'Hoàn thành',
+                            'cancelled' => 'Hủy',
+                            'return_pending' => 'Yêu cầu trả hàng',
+
+                            'returned' => 'Hoàn hàng',
                         ];
 
                         // allowedNext được truyền từ controller (theo statusMatrix)
                         $allowedNext = $allowedNext ?? [];
-                        $isLocked    = empty($allowedNext);
+                        $isLocked = empty($allowedNext);
+                        $statusTimes = $statusTimes ?? []; // mảng ['pending' => Carbon|string, ...]
                     @endphp
 
                     <div class="row g-3">
+                        {{-- Tài khoản đặt hàng --}}
+                        @if ($order->user)
+                            <div class="card shadow-sm border-0 h-100 mb-3">
+                                <div class="card-header bg-light fw-semibold">Thông tin tài khoản</div>
+                                <div class="card-body">
+                                    <div class="mb-2">
+                                        <span class="text-muted">Tên tài khoản:</span>
+                                        <strong>{{ $order->user->name }}</strong>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="text-muted">Email:</span>
+                                        <strong>{{ $order->user->email }}</strong>
+                                    </div>
+                                    <div class="mb-0">
+                                        <span class="text-muted">Số điện thoại:</span>
+                                        <strong>{{ $order->user->phone ?? $order->receiver_phone }}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Khách hàng --}}
                         <div class="card shadow-sm border-0 h-100">
                             <div class="">
-                                <div class="card-header bg-light fw-semibold">Thông tin khách hàng</div>
+                                <div class="card-header bg-light fw-semibold">Thông tin người nhận</div>
                                 <div class="card-body">
                                     <div class="mb-2">
                                         <span class="text-muted">Họ tên:</span>
@@ -114,10 +152,16 @@
                                         <span class="text-muted">Điện thoại:</span>
                                         <strong>{{ $order->receiver_phone }}</strong>
                                     </div>
-                                    <div class="mb-0">
+                                    <div class="mb-2">
                                         <span class="text-muted">Địa chỉ nhận hàng:</span>
                                         <strong>{{ $order->receiver_address }}</strong>
                                     </div>
+                                    @if ($order->note)
+                                        <div class="mb-2">
+                                            <span class="text-muted">Ghi chú đơn hàng:</span>
+                                            <strong>{{ $order->note }}</strong>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -136,12 +180,21 @@
                                     <span class="text-muted ms-3">Thanh toán:</span>
                                     <span class="badge {{ $payCls }}">{{ $payTxt }}</span>
 
+                                    <span class="text-muted ms-3">Loại thanh toán:</span>
+                                    <span class="badge bg-primary text-white">{{ $payTypeTxt }}</span>
+
                                     @if (in_array($canon, ['cancelled', 'returned'], true))
                                         <span class="badge bg-light text-danger ms-3">
                                             Trạng thái cuối: {{ $statusBadge[$canon]['txt'] ?? $order->status_label }}
                                         </span>
                                     @endif
                                 </div>
+                                <div class="small text-muted mb-1">
+                                    Thời gian đặt hàng:
+                                    <strong>{{ $order->created_at?->format('H:i d/m/Y') }}</strong>
+                                </div>
+
+
 
                                 <div class="small text-muted mb-3">
                                     Phí ship:
@@ -159,29 +212,35 @@
                                             $pipelineIndex = $pipelineIndexMap[$s['key']] ?? null;
 
                                             $isDone = false;
-                                            $cls    = '';
-                                            $icon   = 'fa-circle-o';
+                                            $cls = '';
+                                            $icon = 'fa-circle-o';
 
                                             if ($canonInPipeline) {
                                                 // Đơn đang trên luồng chính: tô xanh tới bước hiện tại
                                                 if ($pipelineIndex !== null && $pipelineIndex <= $currentIndex) {
                                                     $isDone = true;
-                                                    $cls    = 'list-group-item-success';
+                                                    $cls = 'list-group-item-success';
                                                 }
-                                            } elseif ($canon === 'returned') {
-                                                // Hoàn hàng: pending → shipped xanh, returned vàng
+                                            } elseif (in_array($canon, ['returned', 'return_pending'], true)) {
+                                                // pending → shipped xanh
+                                                if ($pipelineIndex !== null && $pipelineIndex <= $shippedIndex) {
+                                                    $isDone = true;
+                                                    $cls = 'list-group-item-success';
+                                                }
+
                                                 if ($s['key'] === 'returned') {
                                                     $isDone = true;
-                                                    $cls    = 'list-group-item-warning';
-                                                } elseif ($pipelineIndex !== null && $pipelineIndex <= $shippedIndex) {
-                                                    $isDone = true;
-                                                    $cls    = 'list-group-item-success';
+                                                    // nếu mới yêu cầu thì vàng, nếu đã xử lý xong thì xanh
+                                                    $cls =
+                                                        $canon === 'return_pending'
+                                                            ? 'list-group-item-warning'
+                                                            : 'list-group-item-success';
                                                 }
                                             } elseif ($canon === 'cancelled') {
                                                 // Đã hủy: chỉ cột Đã hủy đỏ
                                                 if ($s['key'] === 'cancelled') {
                                                     $isDone = true;
-                                                    $cls    = 'list-group-item-danger';
+                                                    $cls = 'list-group-item-danger';
                                                 }
                                             }
 
@@ -196,9 +255,24 @@
                                             }
                                         @endphp
 
-                                        <li class="list-group-item d-flex align-items-center flex-fill {{ $cls }}">
-                                            <i class="fa {{ $icon }} me-2"></i>
-                                            <span class="small">{{ $s['label'] }}</span>
+                                        <li
+                                            class="list-group-item d-flex flex-column justify-content-center flex-fill {{ $cls }}">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fa {{ $icon }} me-2"></i>
+                                                <span class="small">{{ $s['label'] }}</span>
+                                            </div>
+
+                                            @php
+                                                $time = $statusTimes[$s['key']] ?? null;
+                                            @endphp
+
+                                            @if ($time)
+                                                <span class="small text-muted mt-1">
+                                                    {{ \Carbon\Carbon::parse($time)->format('H:i d/m/Y') }}
+                                                </span>
+                                            @else
+                                                {{-- Chưa tới trạng thái này --}}
+                                            @endif
                                         </li>
                                     @endforeach
                                 </ul>
@@ -206,7 +280,7 @@
                                 {{-- Cập nhật trạng thái: ẩn nếu không còn bước tiếp --}}
                                 @if (!$isLocked)
                                     <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}"
-                                          class="d-flex align-items-center gap-2">
+                                        class="d-flex align-items-center gap-2">
                                         @csrf
                                         <select name="status" class="form-select form-select-sm w-auto">
                                             @foreach ($allowedNext as $st)
@@ -230,6 +304,51 @@
                                             <strong>{{ $labelStatus[$canon] ?? $order->status_label }}</strong>.
                                             Không thể cập nhật thêm.
                                         </span>
+                                    </div>
+                                @endif
+
+                                {{-- Lý do hủy / hoàn hàng --}}
+                                @php
+                                    $cancelReason = $canon === 'cancelled' ? $order->cancel_reason : null;
+                                    $returnReason = in_array($canon, ['return_pending', 'returned'], true)
+                                        ? $order->return_reason
+                                        : null;
+                                @endphp
+
+                                {{-- Đơn bị hủy: giữ card chi tiết --}}
+                                @if ($cancelReason)
+                                    <div class="mt-3">
+                                        <div class="card shadow-sm border-0">
+                                            <div class="card-header bg-light fw-semibold">
+                                                Lý do hủy đơn của khách
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="border rounded bg-light px-3 py-2"
+                                                    style="white-space: pre-line; font-size: 14px;">
+                                                    {{ $cancelReason }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Đơn hoàn / trả hàng: chỉ 1 dòng + link xem chi tiết --}}
+                                @if ($returnReason)
+                                    @php
+                                        // Lấy câu lý do chính (trước dấu " | ", nếu có) và rút gọn độ dài
+                                        $firstPart = preg_split('/\s*\|\s*/', $returnReason)[0] ?? $returnReason;
+                                        $shortReason = \Illuminate\Support\Str::limit($firstPart, 80);
+                                    @endphp
+                                    <div class="alert alert-warning d-flex justify-content-between align-items-center mt-3">
+                                        <div class="small">
+                                            <strong>Lý do hoàn hàng:</strong>
+                                            {{ $shortReason }}
+                                        </div>
+                                        <a href="#" {{-- TODO: thay '#' bằng route trang quản lý hoàn hàng, ví dụ:
+                                                route('admin.return_orders.show', $order->id)
+                                            --}} class="btn btn-sm btn-outline-primary">
+                                            Xem chi tiết
+                                        </a>
                                     </div>
                                 @endif
 
@@ -257,8 +376,8 @@
                                         @forelse($order->orderItems as $it)
                                             @php
                                                 $price = (float) ($it->price ?? 0);
-                                                $qty   = (int) ($it->quantity ?? 0);
-                                                $line  = $price * $qty;
+                                                $qty = (int) ($it->quantity ?? 0);
+                                                $line = $price * $qty;
                                                 $subTotal += $line;
 
                                                 $product = $it->product;
@@ -280,7 +399,7 @@
                                             <tr>
                                                 <td>
                                                     <img src="{{ $img }}" alt="img"
-                                                         class="rounded img-thumbnail" width="48" height="48">
+                                                        class="rounded img-thumbnail" width="48" height="48">
                                                 </td>
                                                 <td>
                                                     <div class="fw-semibold">
@@ -319,6 +438,22 @@
                                     </tbody>
 
                                     @if ($order->orderItems && $order->orderItems->count())
+                                        @php
+                                            // Tính discount từ voucher
+                                            $discountAmount = 0;
+
+                                            if ($order->voucher_id) {
+                                                // Cách 1: Lấy từ VoucherUsage nếu có relationship
+                                                if ($order->relationLoaded('voucherUsage') && $order->voucherUsage) {
+                                                    $discountAmount = $order->voucherUsage->discount_amount ?? 0;
+                                                } else {
+                                                    // Cách 2: Tính ngược từ final_amount
+                                                    $totalBeforeDiscount = $subTotal + $order->shipping_fee;
+                                                    $discountAmount = $totalBeforeDiscount - $order->final_amount;
+                                                    $discountAmount = max(0, $discountAmount); // Đảm bảo không âm
+                                                }
+                                            }
+                                        @endphp
                                         <tfoot class="table-light">
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Tạm tính</th>
@@ -326,6 +461,21 @@
                                                     {{ number_format($subTotal, 0, ',', '.') }}đ
                                                 </th>
                                             </tr>
+                                            {{-- ✅ THÊM DÒNG GIẢM GIÁ --}}
+                                            @if ($discountAmount > 0)
+                                                <tr>
+                                                    <th colspan="5" class="text-end text-muted">
+                                                        Giảm giá
+                                                        @if ($order->voucher)
+                                                            <span
+                                                                class="badge bg-success ms-2">{{ $order->voucher->code }}</span>
+                                                        @endif
+                                                    </th>
+                                                    <th class="text-end text-success">
+                                                        − {{ number_format($discountAmount, 0, ',', '.') }}đ
+                                                    </th>
+                                                </tr>
+                                            @endif
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Phí ship</th>
                                                 <th class="text-end">

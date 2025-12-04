@@ -188,10 +188,10 @@
                                                                             </a>
 
                                                                             {{-- Nếu có route xem chi tiết admin --}}
-                                                                            {{-- <a href="{{ route('admin.products.show', $product->id) }}"
-                                           class="btn btn-sm btn-outline-info flex-fill">
-                                            Xem chi tiết
-                                        </a> --}}
+                                                                            <a href="{{ route('admin.products.show', $product->id) }}"
+                                                                                class="btn btn-sm btn-outline-info flex-fill">
+                                                                                Xem chi tiết
+                                                                            </a>
 
                                                                             <form
                                                                                 action="{{ route('admin.products.destroy', $product->id) }}"
@@ -209,8 +209,7 @@
                                                                 </tr>
                                                             @empty
                                                                 <tr>
-                                                                    <td colspan="8"
-                                                                        class="text-center py-4 text-muted">
+                                                                    <td colspan="8" class="text-center py-4 text-muted">
                                                                         Không có sản phẩm nào trong danh mục này.
                                                                     </td>
                                                                 </tr>

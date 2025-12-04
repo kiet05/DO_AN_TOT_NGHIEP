@@ -31,20 +31,6 @@ class CheckoutController extends Controller
             ->with(['items.productVariant.product', 'items.productVariant.attributeValues', 'voucher'])
             ->first();
 
-        // 🔹 Tự động áp dụng voucher tốt nhất nếu chưa có voucher hoặc muốn tìm voucher tốt hơn
-        if ($cart && $cart->items->count() > 0) {
-            $voucherService = app(VoucherService::class);
-            $bestVoucherData = $voucherService->findBestVoucher($cart, $user->id);
-            
-            if ($bestVoucherData && (!$cart->voucher_id || $bestVoucherData['discount_amount'] > ($cart->discount_amount ?? 0))) {
-                $voucherService->applyToCart($bestVoucherData['voucher'], $cart, $user->id);
-            }
-            
-            // Reload cart để lấy voucher mới
-            $cart->refresh();
-            $cart->load('voucher');
-        }
-
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
         }
@@ -72,11 +58,13 @@ class CheckoutController extends Controller
 
         // Tính lại tổng tiền chỉ cho các sản phẩm đã chọn
         // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        // Tính subtotal cho các sản phẩm đã chọn
         $selectedSubtotal = 0;
         foreach ($cart->items as $item) {
             $selectedSubtotal += $item->quantity * $item->price_at_time;
         }
         $cart->total_price = $selectedSubtotal;
+
 
         // 🔹 Lấy các phương thức thanh toán đang active
         $paymentMethods = PaymentMethod::active()->get();
@@ -92,7 +80,7 @@ class CheckoutController extends Controller
 
         // 🔹 Cấu hình thành phố / quận, dùng để tính phí ship
         $locations = $this->locationConfig();
-        
+
         // Nếu có địa chỉ mặc định, dùng nó; nếu không dùng old input hoặc giá trị đầu tiên
         if ($defaultAddress) {
             $selectedCity = $defaultAddress->receiver_city;
@@ -101,7 +89,7 @@ class CheckoutController extends Controller
             $selectedCity = session()->getOldInput('receiver_city', array_key_first($locations));
             $selectedDistrict = session()->getOldInput('receiver_district', array_key_first($locations[$selectedCity]['districts'] ?? []));
         }
-        
+
         $districtsOfCity = $locations[$selectedCity]['districts'] ?? [];
 
         return view('frontend.checkout.index', [
@@ -131,7 +119,7 @@ class CheckoutController extends Controller
             'receiver_phone'         => 'required|string|max:20',
             'receiver_city'          => ['required', 'string', Rule::in($cityCodes)],
             'receiver_district'      => ['required', 'string'],
-            'receiver_address_detail'=> 'required|string',
+            'receiver_address_detail' => 'required|string',
             'note'                   => 'nullable|string',
             // 🔹 validate theo slug trong bảng payment_methods
             'payment_method'         => 'required|string|exists:payment_methods,slug',
@@ -167,7 +155,7 @@ class CheckoutController extends Controller
         if ($request->has('selected_items') && $request->selected_items) {
             $selectedItemIds = explode(',', $request->selected_items);
             $selectedItemIds = array_filter(array_map('intval', $selectedItemIds));
-            
+
             if (!empty($selectedItemIds)) {
                 $cart->setRelation('items', $cart->items->whereIn('id', $selectedItemIds));
             }
@@ -186,19 +174,19 @@ class CheckoutController extends Controller
             }
         }
 
-        $cart->calculateTotal();
 
         // 🔹 Kiểm tra lại voucher trước khi checkout (đảm bảo voucher vẫn hợp lệ)
         $voucher = null;
         $discountAmount = 0;
         $voucherService = app(VoucherService::class);
-        
+
         if ($cart->voucher_id) {
             $voucher = Voucher::with(['products', 'categories'])->find($cart->voucher_id);
-            
+
             if (!$voucher) {
                 // Reset voucher trong cart nếu không tồn tại
                 $voucherService->removeFromCart($cart);
+
                 return redirect()->route('cart.index')
                     ->with('error', 'Mã giảm giá không còn hợp lệ. Vui lòng thử lại.');
             }
@@ -221,35 +209,50 @@ class CheckoutController extends Controller
         $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
         // Tính tổng tiền chỉ cho các sản phẩm đã chọn
         // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        // ❌ Không dùng $cart->calculateTotal()
+
+        // ✅ Tính subtotal cho các sản phẩm đã chọn
+        // =============================
+        // 🔥 TÍNH TỔNG TIỀN CHUẨN XÁC
+        // =============================
+
+        // 1. Subtotal của các sản phẩm đã chọn
         $totalPrice = 0;
         foreach ($cart->items as $item) {
             $totalPrice += $item->quantity * $item->price_at_time;
         }
-        
-        // 🔹 Tính lại discount_amount dựa trên voucher hiện tại (nếu có)
+
+        // 2. Tính phí ship
+        $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
+
+        // 3. Tính giảm giá
+        $discountAmount = 0;
+
         if ($voucher) {
-            // Validate với subtotal
+
+            // Validate lại voucher với subtotal
             $validation = $voucherService->validateVoucher($voucher, $user->id, $totalPrice);
             if (!$validation['valid']) {
                 $voucherService->removeFromCart($cart);
                 return redirect()->route('cart.index')
                     ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
             }
-            
-            // Kiểm tra có áp dụng được cho cart không
+
+            // Check voucher có áp dụng cho item đã chọn hay không
             if (!$voucherService->canApplyToCart($voucher, $cart)) {
                 $voucherService->removeFromCart($cart);
                 return redirect()->route('cart.index')
                     ->with('error', 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng.');
             }
-            
-            // Tính lại số tiền giảm
-            $discountAmount = $voucherService->calculateDiscount($voucher, $totalPrice);
-        } else {
-            $discountAmount = 0;
+
+            // Tính giảm giá theo subtotal
+            $discountAmount = abs($voucherService->calculateDiscount($voucher, $totalPrice));
         }
-        
-        $finalAmount = $totalPrice - $discountAmount + $shippingFee;
+
+        // 4. Final amount
+        $finalAmount = max(0, $totalPrice - $discountAmount + $shippingFee);
+
+
 
         // Ghép lại địa chỉ đầy đủ để lưu vào đơn
         $cityName      = $locations[$request->receiver_city]['name'] ?? '';
@@ -266,14 +269,14 @@ class CheckoutController extends Controller
             if ($voucher) {
                 // Lock voucher để kiểm tra lại
                 $lockedVoucher = Voucher::where('id', $voucher->id)->lockForUpdate()->first();
-                
+
                 if (!$lockedVoucher) {
                     DB::rollBack();
                     $voucherService->removeFromCart($cart);
                     return redirect()->route('cart.index')
                         ->with('error', 'Mã giảm giá không còn hợp lệ. Vui lòng thử lại.');
                 }
-                
+
                 // Validate lại voucher trong transaction
                 $validation = $voucherService->validateVoucher($lockedVoucher, $user->id, $totalPrice);
                 if (!$validation['valid']) {
@@ -282,7 +285,7 @@ class CheckoutController extends Controller
                     return redirect()->route('cart.index')
                         ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
                 }
-                
+
                 // Kiểm tra lại có áp dụng được cho cart không
                 if (!$voucherService->canApplyToCart($lockedVoucher, $cart)) {
                     DB::rollBack();
@@ -290,14 +293,14 @@ class CheckoutController extends Controller
                     return redirect()->route('cart.index')
                         ->with('error', 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng.');
                 }
-                
+
                 // Tính lại discount với voucher đã lock
                 $discountAmount = $voucherService->calculateDiscount($lockedVoucher, $totalPrice);
                 $finalAmount = $totalPrice - $discountAmount + $shippingFee;
-                
+
                 $voucher = $lockedVoucher; // Sử dụng voucher đã lock
             }
-            
+
             // 🔹 Lấy danh sách variant IDs cần lock
             $variantIds = $cart->items->pluck('product_variant_id')->toArray();
 
@@ -312,7 +315,7 @@ class CheckoutController extends Controller
             $outOfStockItems = [];
             foreach ($cart->items as $item) {
                 $variant = $lockedVariants->get($item->product_variant_id);
-                
+
                 if (!$variant) {
                     $outOfStockItems[] = $item->productVariant->product->name ?? 'Sản phẩm không tồn tại';
                     continue;
@@ -346,12 +349,14 @@ class CheckoutController extends Controller
                 'payment_status'  => 'unpaid',   // hoặc 'pending_cod' với COD
                 'order_status'    => 'pending',
                 'status'          => 'pending',
+                'note'             => $request->input('note'),   // thêm dòng này
+
             ]);
 
             // 🔹 Tạo OrderItems + trừ tồn kho (atomic operation)
             foreach ($cart->items as $item) {
                 $variant = $lockedVariants->get($item->product_variant_id);
-                
+
                 if (!$variant) {
                     DB::rollBack();
                     return redirect()->route('cart.index')
@@ -362,7 +367,7 @@ class CheckoutController extends Controller
                 if (!$variant->relationLoaded('product')) {
                     $variant->load('product');
                 }
-                
+
                 $product = $variant->product;
 
                 // Tính lại subtotal để đảm bảo chính xác
@@ -374,6 +379,8 @@ class CheckoutController extends Controller
                     'customer_id'       => null,
                     'product_id'        => $product->id,
                     'product_variant_id' => $variant->id,
+                    'product_name'        => $product->name,
+
                     'receiver_name'     => $order->receiver_name,
                     'receiver_phone'    => $order->receiver_phone,
                     'receiver_address'  => $order->receiver_address,
@@ -489,8 +496,20 @@ return redirect()
 
         } catch (\Throwable $e) {
             DB::rollBack();
+
             Log::error('Checkout error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             // dd($e->getMessage()); // bật khi cần debug
+
+            Log::error('Checkout error', [
+                'user_id' => $user->id,
+                'voucher_id' => $voucher ? $voucher->id : null,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+
             return redirect()->route('checkout.index')
                 ->with('error', 'Có lỗi xảy ra khi đặt hàng, vui lòng thử lại sau.');
         }
@@ -518,101 +537,120 @@ return redirect()
     {
         return [
             'hanoi' => [
-                'name' => 'Hà Nội (nội thành)',
+                'name' => 'Hà Nội',
                 'districts' => [
-                    'ba_dinh'      => 'Quận Ba Đình',
-                    'hoan_kiem'    => 'Quận Hoàn Kiếm',
-                    'tay_ho'       => 'Quận Tây Hồ',
-                    'long_bien'    => 'Quận Long Biên',
-                    'cau_giay'     => 'Quận Cầu Giấy',
-                    'dong_da'      => 'Quận Đống Đa',
-                    'hai_ba_trung' => 'Quận Hai Bà Trưng',
-                    'hoang_mai'    => 'Quận Hoàng Mai',
-                    'thanh_xuan'   => 'Quận Thanh Xuân',
-                    'ha_dong'      => 'Quận Hà Đông',
-                    'bac_tu_liem'  => 'Quận Bắc Từ Liêm',
-                    'nam_tu_liem'  => 'Quận Nam Từ Liêm',
+                    'ba_dinh'      => 'Ba Đình',
+                    'hoan_kiem'    => 'Hoàn Kiếm',
+                    'tay_ho'       => 'Tây Hồ',
+                    'long_bien'    => 'Long Biên',
+                    'cau_giay'     => 'Cầu Giấy',
+                    'dong_da'      => 'Đống Đa',
+                    'hai_ba_trung' => 'Hai Bà Trưng',
+                    'hoang_mai'    => 'Hoàng Mai',
+                    'thanh_xuan'   => 'Thanh Xuân',
+                    'ha_dong'      => 'Hà Đông',
+                    'bac_tu_liem'  => 'Bắc Từ Liêm',
+                    'nam_tu_liem'  => 'Nam Từ Liêm',
                 ],
             ],
+
             'ho_chi_minh' => [
-                'name' => 'TP. Hồ Chí Minh',
+                'name' => 'TP Hồ Chí Minh',
                 'districts' => [
-                    'quan_1'  => 'Quận 1',
-                    'quan_3'  => 'Quận 3',
-                    'quan_5'  => 'Quận 5',
-                    'quan_7'  => 'Quận 7',
-                    'quan_10' => 'Quận 10',
-                    'go_vap'  => 'Quận Gò Vấp',
-                    'binh_thanh' => 'Quận Bình Thạnh',
-                    'phu_nhuan'  => 'Quận Phú Nhuận',
-                    'tan_binh'   => 'Quận Tân Bình',
-                    'tan_phu'    => 'Quận Tân Phú',
-                    'thu_duc'    => 'TP. Thủ Đức',
-                    'binh_chanh' => 'Huyện Bình Chánh',
+                    'quan_1'      => 'Quận 1',
+                    'quan_3'      => 'Quận 3',
+                    'quan_5'      => 'Quận 5',
+                    'quan_7'      => 'Quận 7',
+                    'quan_10'     => 'Quận 10',
+                    'go_vap'      => 'Gò Vấp',
+                    'binh_thanh'  => 'Bình Thạnh',
+                    'phu_nhuan'   => 'Phú Nhuận',
+                    'tan_binh'    => 'Tân Bình',
+                    'tan_phu'     => 'Tân Phú',
+                    'thu_duc'     => 'Thủ Đức',
+                    'binh_chanh'  => 'Bình Chánh',
                 ],
             ],
+
             'da_nang' => [
                 'name' => 'Đà Nẵng',
                 'districts' => [
-                    'hai_chau'  => 'Quận Hải Châu',
-                    'thanh_khe' => 'Quận Thanh Khê',
-                    'son_tra'   => 'Quận Sơn Trà',
-                    'ngu_hanh_son' => 'Quận Ngũ Hành Sơn',
-                    'lien_chieu'   => 'Quận Liên Chiểu',
-                    'cam_le'       => 'Quận Cẩm Lệ',
-                    'hoa_vang'     => 'Huyện Hòa Vang',
+                    'hai_chau'    => 'Hải Châu',
+                    'thanh_khe'   => 'Thanh Khê',
+                    'son_tra'     => 'Sơn Trà',
+                    'ngu_hanh_son' => 'Ngũ Hành Sơn',
+                    'lien_chieu'  => 'Liên Chiểu',
+                    'cam_le'      => 'Cẩm Lệ',
+                    'hoa_vang'    => 'Hòa Vang',
                 ],
             ],
+
             'hai_phong' => [
                 'name' => 'Hải Phòng',
                 'districts' => [
-                    'hong_bang'  => 'Quận Hồng Bàng',
-                    'ngo_quyen'  => 'Quận Ngô Quyền',
-                    'le_chan'    => 'Quận Lê Chân',
-                    'kien_an'    => 'Quận Kiến An',
-                    'hai_an'     => 'Quận Hải An',
-                    'duong_kinh' => 'Quận Dương Kinh',
-                    'do_son'     => 'Quận Đồ Sơn',
-                    'thuy_nguyen'=> 'Huyện Thủy Nguyên',
+                    'hong_bang'   => 'Hồng Bàng',
+                    'ngo_quyen'   => 'Ngô Quyền',
+                    'le_chan'     => 'Lê Chân',
+                    'kien_an'     => 'Kiến An',
+                    'hai_an'      => 'Hải An',
+                    'duong_kinh'  => 'Dương Kinh',
+                    'do_son'      => 'Đồ Sơn',
+                    'thuy_nguyen' => 'Thủy Nguyên',
                 ],
             ],
+
+            'can_tho' => [
+                'name' => 'Cần Thơ',
+                'districts' => [
+                    'ninh_kieu'   => 'Ninh Kiều',
+                    'binh_thuy'   => 'Bình Thủy',
+                    'cai_rang'    => 'Cái Răng',
+                    'omon'        => 'Ô Môn',
+                    'thot_not'    => 'Thốt Nốt',
+                    'khac'        => 'Khác',
+                ],
+            ],
+
+            // ===== CÁC TỈNH ĐÃ CÓ CHI TIẾT TRONG CODE CŨ =====
             'binh_duong' => [
                 'name' => 'Bình Dương',
                 'districts' => [
-                    'thu_dau_mot' => 'TP. Thủ Dầu Một',
-                    'di_an'       => 'TP. Dĩ An',
-                    'thuan_an'    => 'TP. Thuận An',
-                    'tan_uyen'    => 'TP. Tân Uyên',
-                    'ben_cat'     => 'TP. Bến Cát',
-                    'bau_bang'    => 'Huyện Bàu Bàng',
-                    'bac_tan_uyen'=> 'Huyện Bắc Tân Uyên',
-                    'phu_giao'    => 'Huyện Phú Giáo',
-                    'dau_tieng'   => 'Huyện Dầu Tiếng',
+                    'thu_dau_mot'  => 'Thủ Dầu Một',
+                    'di_an'        => 'Dĩ An',
+                    'thuan_an'     => 'Thuận An',
+                    'tan_uyen'     => 'Tân Uyên',
+                    'ben_cat'      => 'Bến Cát',
+                    'bau_bang'     => 'Bàu Bàng',
+                    'bac_tan_uyen' => 'Bắc Tân Uyên',
+                    'phu_giao'     => 'Phú Giáo',
+                    'dau_tieng'    => 'Dầu Tiếng',
                 ],
             ],
+
             'dong_nai' => [
                 'name' => 'Đồng Nai',
                 'districts' => [
-                    'bien_hoa'      => 'TP. Biên Hòa',
-                    'long_khanh'    => 'TP. Long Khánh',
-                    'nhon_trach'    => 'Huyện Nhơn Trạch',
-                    'long_thanh'    => 'Huyện Long Thành',
-                    'trang_bom'     => 'Huyện Trảng Bom',
-                    'cam_my'        => 'Huyện Cẩm Mỹ',
-                    'xuan_loc'      => 'Huyện Xuân Lộc',
-                    'tan_phu_dong_nai' => 'Huyện Tân Phú',
+                    'bien_hoa'       => 'Biên Hòa',
+                    'long_khanh'     => 'Long Khánh',
+                    'nhon_trach'     => 'Nhơn Trạch',
+                    'long_thanh'     => 'Long Thành',
+                    'trang_bom'      => 'Trảng Bom',
+                    'cam_my'         => 'Cẩm Mỹ',
+                    'xuan_loc'       => 'Xuân Lộc',
+                    'tan_phu_dong_nai' => 'Tân Phú',
                 ],
             ],
+
             'quang_ninh' => [
                 'name' => 'Quảng Ninh',
                 'districts' => [
-                    'ha_long'    => 'TP. Hạ Long',
-                    'mong_cai'   => 'TP. Móng Cái',
-                    'cam_phe'    => 'TP. Cẩm Phả',
-                    'uong_bi'    => 'TP. Uông Bí',
-                    'quang_yen'  => 'TX. Quảng Yên',
-                    'dong_trieu' => 'TX. Đông Triều',
-                    'co_to'      => 'Huyện Cô Tô',
+                    'ha_long'   => 'Hạ Long',
+                    'mong_cai'  => 'Móng Cái',
+                    'cam_phe'   => 'Cẩm Phả',
+                    'uong_bi'   => 'Uông Bí',
+                    'quang_yen' => 'Quảng Yên',
+                    'dong_trieu' => 'Đông Triều',
+                    'co_to'     => 'Cô Tô',
                 ],
             ],
             'other' => [
@@ -626,8 +664,6 @@ return redirect()
 
 private function createVNPayUrl($order)
 {
-    Log::info('⭐ VNPay URL created for order: ' . $order->id);
-
     $vnp_TmnCode    = config('vnpay.vnp_tmn_code');
     $vnp_HashSecret = config('vnpay.vnp_hash_secret');
     $vnp_Url        = config('vnpay.vnp_url');
@@ -648,30 +684,19 @@ private function createVNPayUrl($order)
         "vnp_CreateDate" => date('YmdHis'),
     ];
 
-    // Sắp xếp key
     ksort($vnp_Params);
 
-    // GHÉP CHUỖI HASHDATA ĐÚNG CHUẨN
-    $hashData = '';
-    $query    = '';
-
-    foreach ($vnp_Params as $key => $value) {
-        // chuỗi để ký
-        if ($hashData !== '') {
-            $hashData .= '&';
-        }
-        $hashData .= $key . '=' . $value;
-
-        // chuỗi query gửi đi (urlencode)
-        $query .= urlencode($key) . '=' . urlencode($value) . '&';
-    }
+    // VNPay yêu cầu dùng http_build_query rồi urldecode
+    $hashData = urldecode(http_build_query($vnp_Params));
 
     $vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-    $paymentUrl = $vnp_Url . '?' . $query . 'vnp_SecureHash=' . $vnp_SecureHash;
+    // Gửi đi: query phải dùng http_build_query (tự encode đúng chuẩn)
+    $vnp_Params['vnp_SecureHash'] = $vnp_SecureHash;
 
-    return redirect($paymentUrl);
+    return redirect($vnp_Url . "?" . http_build_query($vnp_Params));
 }
+
 
 
 public function vnpayReturn(Request $request)
@@ -688,20 +713,16 @@ public function vnpayReturn(Request $request)
 
     $vnp_SecureHash = $inputData['vnp_SecureHash'] ?? '';
 
-    unset($inputData['vnp_SecureHash'], $inputData['vnp_SecureHashType']);
+    unset($inputData['vnp_SecureHash']);
+unset($inputData['vnp_SecureHashType']);
 
-    ksort($inputData);
+ksort($inputData);
 
-    // GHÉP CHUỖI HASHDATA Y HỆT create
-    $hashData = '';
-    foreach ($inputData as $key => $value) {
-        if ($hashData !== '') {
-            $hashData .= '&';
-        }
-        $hashData .= $key . '=' . $value;
-    }
+// CHUẨI HASH CHUẨN VNPay
+$hashData = urldecode(http_build_query($inputData));
 
-    $checkHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+$checkHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+
 
     $orderId = $inputData['vnp_TxnRef'] ?? null;
     if (!$orderId) {

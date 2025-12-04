@@ -11,17 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('addresses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('receiver_name', 100);
-            $table->string('receiver_phone', 20);
-            $table->string('receiver_city', 50);
-            $table->string('receiver_district', 50);
-            $table->text('receiver_address_detail');
-            $table->boolean('is_default')->default(false);
-            $table->timestamps();
-        });
+       // migration (tóm tắt)
+Schema::create('addresses', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+    $table->string('receiver_name');
+    $table->string('phone');
+    $table->string('address_line');
+    $table->string('ward');
+    $table->string('district');
+    $table->string('province');
+    $table->boolean('is_default')->default(false);
+    $table->timestamps();
+});
+
     }
 
     /**

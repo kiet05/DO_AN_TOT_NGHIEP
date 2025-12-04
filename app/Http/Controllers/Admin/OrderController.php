@@ -35,46 +35,47 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
- private function statusMatrix(): array
-{
-    return [
-        'pending'    => ['confirmed', 'cancelled'],      // Chờ xử lý -> Xác nhận / Hủy
-        'confirmed'  => ['processing', 'cancelled'],     // Xác nhận   -> Chuẩn bị / Hủy
-        'processing' => ['shipping', 'cancelled'],       // Chuẩn bị   -> Đang giao / Hủy
+    private function statusMatrix(): array
+    {
+        return [
+            'pending'    => ['confirmed', 'cancelled'],      // Chờ xử lý -> Xác nhận / Hủy
+            'confirmed'  => ['processing', 'cancelled'],     // Xác nhận   -> Chuẩn bị / Hủy
+            'processing' => ['shipping', 'cancelled'],       // Chuẩn bị   -> Đang giao / Hủy
 
-        // ĐANG GIAO: chỉ cho phép sang ĐÃ GIAO hoặc HỦY
-        'shipping'   => ['shipped', 'cancelled'],
+            // ĐANG GIAO: chỉ cho phép sang ĐÃ GIAO hoặc HỦY
+            'shipping'   => ['shipped', 'cancelled'],
 
-        // ĐÃ GIAO: có thể sang HOÀN THÀNH hoặc HOÀN HÀNG
-        'shipped'    => ['completed', 'returned'],
+            // ĐÃ GIAO: có thể sang HOÀN THÀNH hoặc HOÀN HÀNG
+            'shipped'    => ['completed', 'returned'],
+            'return_pending' => ['returned', 'cancelled'],
+            // HOÀN THÀNH: trạng thái cuối (nếu muốn cho phép hoàn sau hoàn thành
+            // thì đổi thành ['returned'])
+            'completed'  => [],
 
-        // HOÀN THÀNH: trạng thái cuối (nếu muốn cho phép hoàn sau hoàn thành
-        // thì đổi thành ['returned'])
-        'completed'  => [],
-
-        // 2 trạng thái cuối còn lại
-        'cancelled'  => [],
-        'returned'   => [],
-    ];
-}
+            // 2 trạng thái cuối còn lại
+            'cancelled'  => [],
+            'returned'   => [],
+        ];
+    }
 
 
 
 
     // Trạng thái CHUẨN dùng để hiển thị/validate chính
-private function allowedStatuses(): array
-{
-    return [
-        'pending',    // Chờ xử lý
-        'confirmed',  // Xác nhận
-        'processing', // Chuẩn bị
-        'shipping',   // Đang giao
-        'shipped',    // Đã giao
-        'completed',  // Hoàn thành
-        'cancelled',  // Hủy
-        'returned',   // Hoàn hàng
-    ];
-}
+    private function allowedStatuses(): array
+    {
+        return [
+            'pending',    // Chờ xử lý
+            'confirmed',  // Xác nhận
+            'processing', // Chuẩn bị
+            'shipping',   // Đang giao
+            'shipped',    // Đã giao
+            'completed',  // Hoàn thành
+            'cancelled',  // Hủy
+            'returned',   // Hoàn hàng
+            'return_pending',   // Hoàn hàng
+        ];
+    }
 
 
 
@@ -98,11 +99,37 @@ private function allowedStatuses(): array
         }
 
         DB::transaction(function () use ($order, $to) {
-            // LUÔN lưu tên chuẩn vào DB
+            // Lưu trạng thái cũ để kiểm tra có thay đổi hay không
+            $oldStatus = $order->order_status;
+
+            // Luôn lưu tên chuẩn vào DB
             $order->order_status = $to;
+
+            // Nếu có thay đổi trạng thái thì:
+            if ($oldStatus !== $to) {
+                // 1) cập nhật thời gian đổi trạng thái
+                $order->status_changed_at = now();
+
+                // 2) lưu lịch sử trạng thái (phục vụ hiển thị trên các cột stepper)
+                if (method_exists($order, 'statusHistories')) {
+                    $order->statusHistories()->create([
+                        'status' => $to,
+                        // nếu có thêm cột khác thì bạn thêm vào:
+                        // 'changed_from' => $oldStatus,
+                        // 'changed_by'   => auth()->id(),
+                        // 'note'         => null,
+                    ]);
+                }
+            }
+
+            // Nếu đơn đã giao hoặc hoàn thành thì coi như đã thanh toán
+            if (in_array($to, ['shipped', 'completed'], true)) {
+                $order->payment_status = 'paid';  // đúng key mà view đang check
+            }
+
             $order->save();
 
-            // Đồng bộ thanh toán khi đơn 'completed'
+            // Đồng bộ thanh toán khi đơn 'completed' (giữ nguyên logic cũ)
             if ($to === 'completed' && method_exists($order, 'payment') && $order->payment) {
                 $payment = $order->payment;
                 if (in_array($payment->status, ['pending', 'failed', 'canceled'], true)) {
@@ -118,19 +145,36 @@ private function allowedStatuses(): array
         return back()->with('success', 'Cập nhật trạng thái thành công!');
     }
 
+
+
     public function show(Order $order)
     {
-        // nạp luôn quan hệ để view xài
+        // Nạp luôn các quan hệ để view dùng cho nhẹ
         $order->load([
-            'orderItems.product',                  // $it->product
-            'orderItems.productVariant',           // $it->productVariant
-            'orderItems.productVariant.attributeValues', // nếu muốn show phân loại
+            'user',                                       // tài khoản đặt hàng
+            'orderItems.product',                         // $it->product
+            'orderItems.productVariant',                  // $it->productVariant
+            'orderItems.productVariant.attributeValues',  // phân loại biến thể
+            'statusHistories',                            // lịch sử trạng thái (thêm)
         ]);
 
-        $from        = $this->canonicalStatus($order->order_status);
-        $allowedNext = $this->statusMatrix()[$from] ?? [];
-        return view('admin.orders.show', compact('order', 'allowedNext'));
+        $from         = $this->canonicalStatus($order->order_status);
+        $statusMatrix = $this->statusMatrix();
+        $allowedNext  = $statusMatrix[$from] ?? [];
+
+        // Gom thời gian lần đầu đạt từng trạng thái
+        $statusTimes = $order->statusHistories
+            ->sortBy('created_at')
+            ->groupBy('status')
+            ->map(function ($group) {
+                // lấy lần ĐẦU đạt trạng thái đó
+                return $group->first()->created_at;
+                // nếu muốn lần CUỐI thì dùng: return $group->last()->created_at;
+            });
+
+        return view('admin.orders.show', compact('order', 'allowedNext', 'statusTimes'));
     }
+
 
 
 
@@ -172,17 +216,17 @@ private function allowedStatuses(): array
     }
     // Thêm vào trong class OrderController
 
-   /** Map các tên cũ -> tên chuẩn dùng trong view */
-private function legacyAliases(): array
-{
-    return [
-        'success'  => 'completed',
-        'canceled' => 'cancelled',
+    /** Map các tên cũ -> tên chuẩn dùng trong view */
+    private function legacyAliases(): array
+    {
+        return [
+            'success'  => 'completed',
+            'canceled' => 'cancelled',
 
-        // Nếu trước đây bạn có ghi kiểu khác thì thêm vào đây
-        // 'processing_old' => 'processing',
-    ];
-}
+            // Nếu trước đây bạn có ghi kiểu khác thì thêm vào đây
+            // 'processing_old' => 'processing',
+        ];
+    }
 
 
     /** Trả về tên trạng thái chuẩn */
@@ -203,5 +247,4 @@ private function legacyAliases(): array
         }
         return array_values(array_unique($syn));
     }
-    
 }

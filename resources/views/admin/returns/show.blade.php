@@ -1,163 +1,286 @@
 @extends('layouts.admin.master')
 
+@section('title', 'Yêu cầu hoàn hàng #' . $ret->id)
+
 @section('content')
-    @php
-        $labels = [0 => 'Chờ duyệt', 1 => 'Đã duyệt', 2 => 'Từ chối', 3 => 'Đang hoàn tiền', 4 => 'Hoàn tất'];
-        $badges = [0 => 'secondary', 1 => 'primary', 2 => 'danger', 3 => 'warning', 4 => 'success'];
-    @endphp
     <section class="sherah-adashboard sherah-show">
         <div class="container">
             <div class="row">
                 <div class="col-12">
                     <div class="sherah-body">
                         <div class="sherah-dsinner">
+
                             <div class="row mg-top-30">
                                 <div class="col-12 sherah-flex-between">
-                                    <!-- Sherah Breadcrumb -->
                                     <div class="sherah-breadcrumb">
-                                        <h2 class="sherah-breadcrumb__title">Sản phẩm</h2>
+                                        <h2 class="sherah-breadcrumb__title">
+                                            Yêu cầu #{{ $ret->id }} - Đơn #{{ $ret->order->id ?? 'N/A' }}
+                                        </h2>
                                         <ul class="sherah-breadcrumb__list">
-                                            <li><a href="/">Dashboard</a></li>
-                                            <li class="active"><a href="{{ route('admin.products.index') }}">Sản phẩm</a>
-                                            </li>
+                                            <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                                            <li class="active"><a href="{{ route('admin.returns.index') }}">Yêu cầu hoàn
+                                                    hàng</a></li>
                                         </ul>
                                     </div>
-                                    <!-- End Sherah Breadcrumb -->
                                 </div>
                             </div>
-                            <div class="row g-3">
-                                <div class="col-lg-8">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            Yêu cầu #{{ $ret->id }} · Đơn #{{ $ret->order_id }}
+
+                            <div class="sherah-default-bg sherah-border mg-top-30">
+                                <div class="row">
+                                    {{-- CỘT TRÁI: THÔNG TIN YÊU CẦU + SẢN PHẨM --}}
+                                    <div class="col-lg-8 col-12 p-4">
+
+                                        {{-- Thông tin khách & lý do --}}
+                                        <div class="mb-3">
+                                            <p class="mb-1">
+                                                <strong>Khách:</strong>
+                                                {{ $ret->user->name ?? 'N/A' }}
+                                                - {{ $ret->user->email ?? '' }}
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Đơn hàng:</strong>
+                                                @if ($ret->order)
+                                                    #{{ $ret->order->id }}
+                                                    - {{ $ret->order->receiver_name }} |
+                                                    {{ $ret->order->receiver_phone }} |
+                                                    {{ $ret->order->receiver_address }}
+                                                @else
+                                                    Không tìm thấy đơn hàng
+                                                @endif
+                                            </p>
+
+                                            <p class="mt-2">
+                                                <strong>Lý do:</strong><br>
+                                                {!! nl2br(e($ret->reason ?? ($ret->order->return_reason ?? '(Không có)'))) !!}
+                                            </p>
                                         </div>
-                                        <div class="card-body">
-                                            <div class="mb-2">
-                                                <span
-                                                    class="badge text-bg-{{ $badges[$ret->status] ?? 'secondary' }}">{{ $labels[$ret->status] ?? $ret->status }}</span>
-                                            </div>
-                                            <div class="mb-2"><b>Khách:</b>
-                                                {{ $ret->user->full_name ?? ($ret->user->name ?? 'User ' . $ret->user_id) }}
-                                                ·
-                                                {{ $ret->user->email ?? '' }}</div>
-                                            <div class="mb-2"><b>Lý do:</b> {{ $ret->reason }}</div>
-                                            @if ($ret->proof_image)
-                                                <div class="mb-3">
-                                                    <a href="{{ $ret->proof_image }}" target="_blank"
-                                                        class="btn btn-sm btn-outline-secondary">Ảnh minh chứng</a>
+
+                                        {{-- Ảnh minh chứng --}}
+                                        <div class="mb-4">
+                                            <h5 class="mb-2">Ảnh minh chứng</h5>
+
+                                            @php
+                                                $proof = $ret->proof_image ?: $ret->order->return_image_path ?? null;
+                                            @endphp
+
+                                            @if ($proof)
+                                                <a href="{{ asset('storage/' . $proof) }}" target="_blank"
+                                                    class="btn btn-sm btn-outline-primary mb-2">
+                                                    Xem ảnh gốc
+                                                </a>
+
+                                                <div
+                                                    style="max-width:260px; border:1px solid #eee; padding:6px; border-radius:8px;">
+                                                    <img src="{{ asset('storage/' . $proof) }}" alt="Ảnh minh chứng"
+                                                        style="width:100%; object-fit:contain;">
                                                 </div>
+                                            @else
+                                                <p class="text-muted">Chưa có ảnh minh chứng.</p>
                                             @endif
-                                            @if (is_array($ret->evidence_urls) && count($ret->evidence_urls))
-                                                <div class="d-flex gap-2 flex-wrap mb-3">
-                                                    @foreach ($ret->evidence_urls as $u)
-                                                        <a href="{{ $u }}" target="_blank"
-                                                            class="btn btn-sm btn-outline-secondary">Ảnh</a>
+
+                                            @if (is_array($ret->evidence_urls))
+                                                <div class="mt-2 d-flex flex-wrap gap-2">
+                                                    @foreach ($ret->evidence_urls as $url)
+                                                        <a href="{{ $url }}" target="_blank"
+                                                            class="badge bg-light text-primary border">
+                                                            Link bổ sung
+                                                        </a>
                                                     @endforeach
                                                 </div>
                                             @endif
+                                        </div>
 
-                                            <h6 class="mt-3 mb-2">Sản phẩm</h6>
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Order Item</th>
-                                                        <th>Số lượng</th>
-                                                        <th>Ghi chú</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @forelse($ret->items as $it)
-                                                        <tr>
-                                                            <td>#{{ $it->order_item_id }}</td>
-                                                            <td>{{ $it->quantity }}</td>
-                                                            <td>{{ $it->note }}</td>
-                                                        </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="3" class="text-muted">Không có dòng sản phẩm
-                                                            </td>
-                                                        </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
+                                        {{-- Sản phẩm trong yêu cầu --}}
+                                        <div class="mt-4">
+                                            <h5 class="mb-2">Sản phẩm liên quan</h5>
 
-                                            <div class="row g-2">
-                                                <div class="col-md-6">
-                                                    <div class="form-control bg-light">
-                                                        <div><b>Số tiền hoàn:</b>
-                                                            {{ number_format($ret->refund_amount, 0, ',', '.') }} đ</div>
-                                                        <div><b>Phương thức:</b> {{ $ret->refund_method ?? '-' }}</div>
-                                                        <div><b>Người duyệt:</b>
-                                                            {{ $ret->approver->full_name ?? ($ret->approver->name ?? '-') }}
-                                                        </div>
-                                                        <div><b>Thời điểm:</b>
-                                                            {{ optional($ret->decided_at)->format('d/m/Y H:i') }}</div>
-                                                    </div>
-                                                </div>
+                                            <div class="sherah-table p-0">
+                                                <table class="product-overview-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 70px;">Ảnh</th>
+                                                            <th>Sản phẩm</th>
+                                                            <th style="width: 120px;">Thuộc tính</th>
+                                                            <th style="width: 90px;">SL yêu cầu</th>
+                                                            <th style="width: 110px;">Giá / SP</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse ($ret->items as $item)
+                                                            @php
+                                                                $orderItem = $item->orderItem;
+                                                                $product = $orderItem?->product;
+                                                                $variant = $orderItem?->productVariant;
+                                                            @endphp
+                                                            <tr>
+                                                                <td>
+                                                                    @if ($variant?->image_url)
+                                                                        <img src="{{ asset('storage/' . $variant->image_url) }}"
+                                                                            style="width:50px;height:50px;object-fit:cover;">
+                                                                    @elseif ($product?->image_main)
+                                                                        <img src="{{ asset('storage/' . $product->image_main) }}"
+                                                                            style="width:50px;height:50px;object-fit:cover;">
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    {{ $product?->name ?? 'Sản phẩm #' . $orderItem->product_id }}
+                                                                    @if ($variant)
+                                                                        <div class="text-muted small">
+                                                                            {{ $variant->sku ?? '' }}
+                                                                        </div>
+                                                                    @endif
+                                                                </td>
+                                                                <td>
+                                                                    {{ $item->quantity }}
+                                                                </td>
+                                                                <td>
+                                                                    {{ number_format($orderItem->price ?? 0, 0, ',', '.') }}
+                                                                    đ
+                                                                </td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="4" class="text-muted text-center">
+                                                                    Không có dòng sản phẩm nào trong yêu cầu hoàn hàng.
+                                                                </td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+
+                                                </table>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div class="col-lg-4">
-                                    <div class="card">
-                                        <div class="card-header">Xử lý</div>
-                                        <div class="card-body d-grid gap-2">
-                                            @if ($ret->status === 0)
-                                                <form method="post"
-                                                    action="{{ route('admin.returns.approve', $ret->id) }}"
-                                                    class="d-grid gap-2">
-                                                    @csrf
-                                                    <input type="number" name="refund_amount" min="0" step="1000"
-                                                        class="form-control" placeholder="Số tiền hoàn"
-                                                        value="{{ $ret->refund_amount }}">
+                                    </div>
+
+                                    {{-- CỘT PHẢI: XỬ LÝ & THÔNG TIN HOÀN TIỀN --}}
+                                    <div class="col-lg-4 col-12 sherah-border-left p-4">
+
+                                        {{-- FORM XỬ LÝ (Duyệt / Từ chối) --}}
+                                        <div class="mb-4">
+                                            <h5 class="mb-3">Xử lý</h5>
+
+                                            <form action="{{ route('admin.returns.approve', $ret->id) }}" method="POST">
+                                                @csrf
+                                                <div class="mb-2">
+                                                    <label class="form-label">Số tiền hoàn</label>
+                                                    <input type="number" step="1000" min="0" name="refund_amount"
+                                                        value="{{ old('refund_amount', $ret->refund_amount) }}"
+                                                        class="form-control">
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label">Phương thức</label>
                                                     <select name="refund_method" class="form-select">
-                                                        <option value="wallet" @selected($ret->refund_method === 'wallet')>Hoàn về ví
+                                                        <option value="wallet"
+                                                            {{ old('refund_method', $ret->refund_method) === 'wallet' ? 'selected' : '' }}>
+                                                            Hoàn về ví
                                                         </option>
-                                                        <option value="manual" @selected($ret->refund_method === 'manual')>Hoàn thủ công
+                                                        <option value="manual"
+                                                            {{ old('refund_method', $ret->refund_method) === 'manual' ? 'selected' : '' }}>
+                                                            Hoàn thủ công (chuyển khoản / tiền mặt)
                                                         </option>
                                                     </select>
-                                                    <button class="btn btn-primary">Duyệt</button>
-                                                </form>
-                                                <form method="post"
-                                                    action="{{ route('admin.returns.reject', $ret->id) }}">
-                                                    @csrf
-                                                    <button class="btn btn-outline-danger w-100 mt-2">Từ chối</button>
-                                                </form>
-                                            @endif
+                                                </div>
 
-                                            @if (($ret->status === 1 || $ret->status === 3) && $ret->refund_method === 'wallet')
-                                                <form method="post"
-                                                    action="{{ route('admin.returns.refund.auto', $ret->id) }}">
-                                                    @csrf
-                                                    <button class="btn btn-success w-100">Hoàn tiền vào ví</button>
-                                                </form>
-                                            @endif
+                                                @if ($ret->status === 0)
+                                                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                                                        Duyệt
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-secondary w-100 mb-2" disabled>
+                                                        Đã xử lý
+                                                    </button>
+                                                @endif
+                                            </form>
 
-                                            @if ($ret->status === 1)
-                                                <form method="post"
-                                                    action="{{ route('admin.returns.refunding', $ret->id) }}">
-                                                    @csrf
-                                                    <button class="btn btn-warning w-100 mt-2">Đang hoàn tiền</button>
-                                                </form>
-                                            @endif
-
-                                            @if (($ret->status === 1 || $ret->status === 3) && $ret->refund_method === 'manual')
-                                                <form method="post"
-                                                    action="{{ route('admin.returns.refund.manual', $ret->id) }}">
-                                                    @csrf
-                                                    <button class="btn btn-success w-100">Đánh dấu hoàn tất</button>
-                                                </form>
-                                            @endif
+                                            <form action="{{ route('admin.returns.reject', $ret->id) }}" method="POST">
+                                                @csrf
+                                                @if (in_array($ret->status, [0, 1], true))
+                                                    <button type="submit" class="btn btn-outline-danger w-100">
+                                                        Từ chối
+                                                    </button>
+                                                @endif
+                                            </form>
                                         </div>
+
+                                        {{-- THÔNG TIN HOÀN TIỀN --}}
+                                        <div class="sherah-default-bg sherah-border p-3 mb-3">
+                                            <h6 class="mb-3">Thông tin hoàn tiền</h6>
+
+                                            <p class="mb-1">
+                                                <strong>Số tiền hoàn:</strong>
+                                                {{ number_format($ret->refund_amount, 0, ',', '.') }} đ
+                                            </p>
+
+                                            <p class="mb-1">
+                                                <strong>Phương thức:</strong>
+                                                @php
+                                                    $methodLabel = match ($ret->refund_method) {
+                                                        'wallet' => 'Hoàn về ví',
+                                                        'manual' => 'Hoàn thủ công',
+                                                        default => '-',
+                                                    };
+                                                @endphp
+                                                {{ $methodLabel }}
+                                            </p>
+
+                                            <p class="mb-1">
+                                                <strong>Người duyệt:</strong>
+                                                {{ $ret->approver->name ?? '-' }}
+                                            </p>
+
+                                            <p class="mb-1">
+                                                <strong>Thời điểm:</strong>
+                                                {{ $ret->decided_at ? $ret->decided_at->format('d/m/Y H:i') : '-' }}
+                                            </p>
+
+                                            <p class="mb-0">
+                                                <strong>Trạng thái yêu cầu:</strong>
+                                                @php
+                                                    $statusText =
+                                                        [
+                                                            0 => 'Chờ xử lý',
+                                                            1 => 'Đã duyệt',
+                                                            2 => 'Đã từ chối',
+                                                            3 => 'Đang hoàn tiền',
+                                                            4 => 'Hoàn tất',
+                                                        ][$ret->status] ?? $ret->status;
+                                                @endphp
+                                                {{ $statusText }}
+                                            </p>
+                                        </div>
+
+                                        {{-- THÔNG TIN ĐƠN HÀNG --}}
+                                        @if ($ret->order)
+                                            <div class="sherah-default-bg sherah-border p-3">
+                                                <h6 class="mb-3">Thông tin đơn hàng</h6>
+                                                <p class="mb-1">
+                                                    <strong>Mã đơn:</strong> #{{ $ret->order->id }}
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>Ngày đặt:</strong>
+                                                    {{ $ret->order->created_at?->format('d/m/Y H:i') }}
+                                                </p>
+                                                <p class="mb-1">
+                                                    <strong>Giá trị đơn:</strong>
+                                                    {{ number_format($ret->order->final_amount, 0, ',', '.') }}₫
+                                                </p>
+                                                <p class="mb-0">
+                                                    <strong>Trạng thái đơn:</strong>
+                                                    {{ $ret->order->status_label ?? $ret->order->order_status }}
+                                                </p>
+                                            </div>
+                                        @endif
+
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
+                        </div> {{-- /.sherah-dsinner --}}
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
 @endsection

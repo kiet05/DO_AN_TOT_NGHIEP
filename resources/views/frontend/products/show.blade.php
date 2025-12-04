@@ -180,7 +180,26 @@
             height: 18px;
             border-radius: 50%;
             border: 1px solid #ddd;
+            display: inline-block;
+            background: #fff;
         }
+
+        /* map màu theo tên */
+        .color-dot.color-den {
+            background: #000;
+            /* Đen: chấm đen */
+        }
+
+        .color-dot.color-trang {
+            background: #ffffff;
+            /* Trắng */
+        }
+
+        .color-dot.color-navy {
+            background: #001f3f;
+            /* Navy xanh đậm */
+        }
+
 
         /* ACTIVE */
         .attr-btn.active {
@@ -424,20 +443,17 @@
                                     @endphp
 
                                     @if ($isColor)
+                                        @php
+                                            // chuyển 'Đen', 'Trắng', 'Navy' → 'den', 'trang', 'navy'
+                                            $colorSlug = Str::slug(Str::lower($val->value));
+                                        @endphp
+
                                         <button class="attr-btn color-preview" data-attr="{{ $val->id }}"
                                             data-group="{{ $name }}" data-type="color"
                                             data-image="{{ $colorImage }}">
                                             <span>{{ $val->value }}</span>
                                             <span class="color-dot"
-                                                style="
-                                      background: {{ strtolower($val->value) }};
-                                      display:inline-block;
-                                      width:18px;
-                                      height:18px;
-                                      border-radius:50%;
-                                      border:1px solid #ddd;
-                                  ">
-                                            </span>
+                                                style="background: {{ $val->code ?? $val->value }}"></span>
                                         </button>
                                     @else
                                         <button class="attr-btn" data-attr="{{ $val->id }}"
