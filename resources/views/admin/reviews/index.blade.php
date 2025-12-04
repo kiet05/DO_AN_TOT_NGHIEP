@@ -37,7 +37,7 @@
                                     <button type="submit" class="btn btn-primary">Tìm</button>
 
                                     @if (request('status') || request('product_id'))
-                                        <a href="{{ route('admin.reviews.index') }}" class="btn btn-outline-secondary">Xóa lọc</a>
+                                        <a href="{{ route('admin.reviews.index') }}" class="btn btn-outline-secondary">Xóa</a>
                                     @endif
                                 </div>
                             </form>

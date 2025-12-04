@@ -24,7 +24,7 @@
                         </div>
 
                         <div class="sherah-page-inner sherah-border sherah-default-bg mg-top-20 p-4">
-                            <h4>ID sản phẩm {{ $rev->id }}</h4>
+                            <h4>ID sản phẩm: {{ $rev->id }}</h4>
                             <p><strong>Sản phẩm:</strong> {{ optional($rev->product)->name ?? '(đã xóa)' }}</p>
                             <p><strong>Người đánh giá:</strong> {{ optional($rev->user)->name ?? 'Khách' }}</p>
                             <p><strong>Đánh giá:</strong> {{ $rev->rating }}/5</p>
@@ -55,10 +55,13 @@
                             </p>
 
                             <div class="mt-3">
+                                <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ms-2">
+                                    <i class="fa fa-arrow-left me-1"></i> Trở về
+                                </a>
                                 <form action="{{ route('admin.reviews.approve', $rev->id) }}" method="POST"
                                     style="display:inline">
                                     @csrf
-                                    <button class="btn btn-success">Duyệt</button>
+                                    <button class="btn btn-success ms-2">Duyệt</button>
                                 </form>
 
                                 <form action="{{ route('admin.reviews.reject', $rev->id) }}" method="POST"
@@ -75,9 +78,7 @@
                                         onclick="return confirm('Bạn chắc muốn xoá đánh giá này?')">Xoá</button>
                                 </form>
 
-                                <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ms-2">
-                                    <i class="fa fa-arrow-left me-1"></i> Trở về
-                                </a>
+                                
                             </div>
                         </div>
 
