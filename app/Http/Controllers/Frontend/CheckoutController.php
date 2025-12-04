@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -29,20 +30,6 @@ class CheckoutController extends Controller
             ->where('status', 1)
             ->with(['items.productVariant.product', 'items.productVariant.attributeValues', 'voucher'])
             ->first();
-
-        // 🔹 Tự động áp dụng voucher tốt nhất nếu chưa có voucher hoặc muốn tìm voucher tốt hơn
-        if ($cart && $cart->items->count() > 0) {
-            $voucherService = app(VoucherService::class);
-            $bestVoucherData = $voucherService->findBestVoucher($cart, $user->id);
-
-            if ($bestVoucherData && (!$cart->voucher_id || $bestVoucherData['discount_amount'] > ($cart->discount_amount ?? 0))) {
-                $voucherService->applyToCart($bestVoucherData['voucher'], $cart, $user->id);
-            }
-
-            // Reload cart để lấy voucher mới
-            $cart->refresh();
-            $cart->load('voucher');
-        }
 
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->route('cart.index')->with('error', 'Giỏ hàng đang trống');
@@ -71,11 +58,13 @@ class CheckoutController extends Controller
 
         // Tính lại tổng tiền chỉ cho các sản phẩm đã chọn
         // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        // Tính subtotal cho các sản phẩm đã chọn
         $selectedSubtotal = 0;
         foreach ($cart->items as $item) {
             $selectedSubtotal += $item->quantity * $item->price_at_time;
         }
         $cart->total_price = $selectedSubtotal;
+
 
         // 🔹 Lấy các phương thức thanh toán đang active
         $paymentMethods = PaymentMethod::active()->get();
@@ -184,7 +173,6 @@ class CheckoutController extends Controller
             }
         }
 
-        $cart->calculateTotal();
 
         // 🔹 Kiểm tra lại voucher trước khi checkout (đảm bảo voucher vẫn hợp lệ)
         $voucher = null;
@@ -220,14 +208,28 @@ class CheckoutController extends Controller
         $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
         // Tính tổng tiền chỉ cho các sản phẩm đã chọn
         // Tính lại từ quantity * price_at_time để đảm bảo chính xác
+        // ❌ Không dùng $cart->calculateTotal()
+
+        // ✅ Tính subtotal cho các sản phẩm đã chọn
+        // =============================
+        // 🔥 TÍNH TỔNG TIỀN CHUẨN XÁC
+        // =============================
+
+        // 1. Subtotal của các sản phẩm đã chọn
         $totalPrice = 0;
         foreach ($cart->items as $item) {
             $totalPrice += $item->quantity * $item->price_at_time;
         }
 
-        // 🔹 Tính lại discount_amount dựa trên voucher hiện tại (nếu có)
+        // 2. Tính phí ship
+        $shippingFee = $this->calculateShippingFeeByCity($request->receiver_city);
+
+        // 3. Tính giảm giá
+        $discountAmount = 0;
+
         if ($voucher) {
-            // Validate với subtotal
+
+            // Validate lại voucher với subtotal
             $validation = $voucherService->validateVoucher($voucher, $user->id, $totalPrice);
             if (!$validation['valid']) {
                 $voucherService->removeFromCart($cart);
@@ -235,20 +237,21 @@ class CheckoutController extends Controller
                     ->with('error', $validation['errors'][0] ?? 'Mã giảm giá không hợp lệ.');
             }
 
-            // Kiểm tra có áp dụng được cho cart không
+            // Check voucher có áp dụng cho item đã chọn hay không
             if (!$voucherService->canApplyToCart($voucher, $cart)) {
                 $voucherService->removeFromCart($cart);
                 return redirect()->route('cart.index')
                     ->with('error', 'Mã giảm giá không áp dụng cho sản phẩm trong giỏ hàng.');
             }
 
-            // Tính lại số tiền giảm
-            $discountAmount = $voucherService->calculateDiscount($voucher, $totalPrice);
-        } else {
-            $discountAmount = 0;
+            // Tính giảm giá theo subtotal
+            $discountAmount = abs($voucherService->calculateDiscount($voucher, $totalPrice));
         }
 
-        $finalAmount = $totalPrice - $discountAmount + $shippingFee;
+        // 4. Final amount
+        $finalAmount = max(0, $totalPrice - $discountAmount + $shippingFee);
+
+
 
         // Ghép lại địa chỉ đầy đủ để lưu vào đơn
         $cityName      = $locations[$request->receiver_city]['name'] ?? '';
@@ -475,8 +478,17 @@ class CheckoutController extends Controller
             }
         } catch (\Throwable $e) {
             DB::rollBack();
-            \Log::error('Checkout error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
-            // dd($e->getMessage()); // bật khi cần debug
+
+            \Log::error('Checkout error', [
+                'user_id' => $user->id,
+                'voucher_id' => $voucher ? $voucher->id : null,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+
             return redirect()->route('checkout.index')
                 ->with('error', 'Có lỗi xảy ra khi đặt hàng, vui lòng thử lại sau.');
         }
@@ -524,11 +536,11 @@ class CheckoutController extends Controller
             'ho_chi_minh' => [
                 'name' => 'TP Hồ Chí Minh',
                 'districts' => [
-                    'quan_1'      => '1',
-                    'quan_3'      => '3',
-                    'quan_5'      => '5',
-                    'quan_7'      => '7',
-                    'quan_10'     => '10',
+                    'quan_1'      => 'Quận 1',
+                    'quan_3'      => 'Quận 3',
+                    'quan_5'      => 'Quận 5',
+                    'quan_7'      => 'Quận 7',
+                    'quan_10'     => 'Quận 10',
                     'go_vap'      => 'Gò Vấp',
                     'binh_thanh'  => 'Bình Thạnh',
                     'phu_nhuan'   => 'Phú Nhuận',

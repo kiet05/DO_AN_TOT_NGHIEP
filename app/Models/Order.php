@@ -48,6 +48,7 @@ class Order extends Model
     public const STATUS_PREPARING = 'preparing';  // Chờ lấy hàng / Chuẩn bị
     public const STATUS_SHIPPING  = 'shipping';   // Đang giao
     public const STATUS_SHIPPED = 'shipped';  // Đã giao
+    public const STATUS_COMPLETED = 'completed';  // Đã giao
     public const STATUS_RETURNED  = 'returned';   // Trả hàng
     public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
     public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
@@ -63,6 +64,7 @@ class Order extends Model
             self::STATUS_PREPARING => 'Chờ chuẩn bị',
             self::STATUS_SHIPPING  => 'Đang giao',
             self::STATUS_SHIPPED => 'Đã giao',
+            self::STATUS_COMPLETED => 'Hoàn Thành',
             self::STATUS_RETURNED  => 'Trả hàng',
             self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
             self::STATUS_CANCELLED => 'Đã hủy',
@@ -245,5 +247,9 @@ class Order extends Model
         $canon = $this->canonicalStatus();
 
         return $canon === 'cancelled';
+    }
+    public function voucherUsage()
+    {
+        return $this->hasOne(VoucherUsage::class, 'order_id');
     }
 }

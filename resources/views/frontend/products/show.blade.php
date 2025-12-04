@@ -452,7 +452,8 @@
                                             data-group="{{ $name }}" data-type="color"
                                             data-image="{{ $colorImage }}">
                                             <span>{{ $val->value }}</span>
-                                            <span class="color-dot color-{{ $colorSlug }}"></span>
+                                            <span class="color-dot"
+                                                style="background: {{ $val->code ?? $val->value }}"></span>
                                         </button>
                                     @else
                                         <button class="attr-btn" data-attr="{{ $val->id }}"

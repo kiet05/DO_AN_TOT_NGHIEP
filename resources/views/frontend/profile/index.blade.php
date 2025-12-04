@@ -262,12 +262,13 @@
                                             @enderror
                                         </div>
 
-                                        
+
 
                                         <div>
                                             <label class="label">Quận / Huyện *</label>
-                                            <input type="text" name="district" class="input-field" placeholder="VD tên Quận: Cầu Giấy..."
-                                                value="{{ old('district') }}" required>
+                                            <input type="text" name="district" class="input-field"
+                                                placeholder="VD tên Quận: Cầu Giấy..." value="{{ old('district') }}"
+                                                required>
                                             @error('district')
                                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                             @enderror
@@ -275,21 +276,15 @@
 
                                         <div>
                                             <label class="label">Tỉnh / Thành phố *</label>
-                                            <input type="text" name="province" class="input-field" placeholder="VD tên Thành phố: Hà Nội..."
-                                                value="{{ old('province') }}" required>
+                                            <input type="text" name="province" class="input-field"
+                                                placeholder="VD tên Thành phố: Hà Nội..." value="{{ old('province') }}"
+                                                required>
                                             @error('province')
                                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                                             @enderror
                                         </div>
 
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <input type="checkbox" name="is_default" id="is_default"
-                                                class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                {{ old('is_default') ? 'checked' : '' }}>
-                                            <label for="is_default" class="text-xs text-gray-600">
-                                                Đặt làm địa chỉ mặc định
-                                            </label>
-                                        </div>
+
                                     </div>
 
                                     <div class="flex items-center justify-end">

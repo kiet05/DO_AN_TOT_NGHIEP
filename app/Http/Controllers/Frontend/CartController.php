@@ -45,13 +45,11 @@ class CartController extends Controller
         $cart->calculateTotal();
 
         // 🔹 Tự động áp dụng voucher tốt nhất nếu chưa có voucher hoặc muốn tìm voucher tốt hơn
-       if ($cart->items->count() > 0) {
-    $voucherService = app(\App\Services\VoucherService::class); 
-    $this->autoApplyBestVoucher($voucherService);
+        // 🔹 Chỉ auto-apply nếu:
+        // - Chưa có voucher
+        // - Và user chưa tắt tự động voucher
 
-    $cart->refresh();
-    $cart->load('voucher');
-}
+
 
         // 🔹 Lấy danh sách voucher có thể áp dụng (để hiển thị popup giống Shopee)
         $suggestedVouchers = [];
@@ -646,7 +644,8 @@ class CartController extends Controller
                 'message' => 'Không tìm thấy giỏ hàng'
             ], 404);
         }
-
+        // ❗ TẮT tự động áp voucher từ giờ trở đi
+        Session::put('disable_auto_voucher', true);
         // Sử dụng VoucherService để xóa voucher
         $result = $voucherService->removeFromCart($cart);
 

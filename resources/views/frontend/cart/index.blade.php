@@ -574,15 +574,23 @@
 
                             <div class="summary-row">
                                 <span class="summary-label">Giảm giá:</span>
+                                @php
+                                    $discount = 0;
+                                    if ($cart->voucher && $cart->discount_amount > 0) {
+                                        $discount = round($cart->discount_amount);
+                                    }
+                                @endphp
+
                                 <span class="summary-value" id="cart-discount">
-                                    {{ number_format(round($cart->discount_amount ?? 0), 0, ',', '.') }}₫
+                                    {{ number_format($discount, 0, ',', '.') }}₫
                                 </span>
+
                             </div>
 
                             <div class="summary-row">
                                 <span class="summary-label summary-total">Tổng cộng:</span>
                                 <span class="summary-value summary-total" id="cart-total">
-                                    {{ number_format(round($initialSubtotal - ($cart->discount_amount ?? 0)), 0, ',', '.') }}₫
+                                    {{ number_format($initialSubtotal - $discount, 0, ',', '.') }}₫
                                 </span>
                             </div>
 
