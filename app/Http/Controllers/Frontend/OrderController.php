@@ -106,8 +106,8 @@ class OrderController extends Controller
         $order->load([
             'items.product',
             'items.productVariant',   // 👈 thêm dòng này để lấy ảnh biến thể
-            // chỉnh theo tên relationship thực tế của bạn
-            // 'statusHistories', // nếu sau này bạn thêm lịch sử trạng thái
+            'statusHistories',
+            'voucherUsage' // ✅ THÊM DÒNG NÀY
         ]);
 
         return view('frontend.order.show', compact('order'));

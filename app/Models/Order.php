@@ -41,14 +41,14 @@ class Order extends Model
     | HẰNG SỐ TRẠNG THÁI ĐƠN HÀNG
     |--------------------------------------------------------------------------
     */
-    public const STATUS_PENDING        = 'pending';        // Chờ xử lý
-    public const STATUS_CONFIRMED      = 'confirmed';      // Chờ xác nhận
-    public const STATUS_PREPARING      = 'preparing';      // Chuẩn bị / đóng gói
-    public const STATUS_SHIPPING       = 'shipping';       // Đang giao
-    public const STATUS_SHIPPED        = 'shipped';        // Đã giao
-    public const STATUS_RETURN_PENDING = 'return_pending'; // Đang yêu cầu trả hàng
-    public const STATUS_RETURNED       = 'returned';       // Đã trả hàng xong
-    public const STATUS_CANCELLED      = 'cancelled';      // Đã hủy
+    public const STATUS_PENDING   = 'pending';    // Chờ xử lý
+    public const STATUS_CONFIRMED = 'confirmed';  // Chờ xác nhận
+    public const STATUS_PREPARING = 'preparing';  // Chờ lấy hàng / Chuẩn bị
+    public const STATUS_SHIPPING  = 'shipping';   // Đang giao
+    public const STATUS_SHIPPED = 'shipped';  // Đã giao
+    public const STATUS_RETURNED  = 'returned';   // Trả hàng
+    public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
+    public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
 
     /**
      * Danh sách trạng thái + label tiếng Việt
@@ -56,14 +56,14 @@ class Order extends Model
     public static function statusOptions(): array
     {
         return [
-            self::STATUS_PENDING        => 'Chờ xử lý',
-            self::STATUS_CONFIRMED      => 'Chờ xác nhận',
-            self::STATUS_PREPARING      => 'Chờ chuẩn bị',
-            self::STATUS_SHIPPING       => 'Đang giao',
-            self::STATUS_SHIPPED        => 'Đã giao',
-            self::STATUS_RETURN_PENDING => 'Chờ hoàn hàng',
-            self::STATUS_RETURNED       => 'Hoàn / Trả hàng',
-            self::STATUS_CANCELLED      => 'Đã hủy',
+            self::STATUS_PENDING   => 'Chờ xử lý',
+            self::STATUS_CONFIRMED => 'Chờ xác nhận',
+            self::STATUS_PREPARING => 'Chờ chuẩn bị',
+            self::STATUS_SHIPPING  => 'Đang giao',
+            self::STATUS_SHIPPED => 'Đã giao',
+            self::STATUS_RETURNED  => 'Trả hàng',
+            self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
+            self::STATUS_CANCELLED => 'Đã hủy',
         ];
     }
 
@@ -258,5 +258,9 @@ class Order extends Model
         $canon = $this->canonicalStatus();
 
         return $canon === 'cancelled';
+    }
+    public function voucherUsage()
+    {
+        return $this->hasOne(VoucherUsage::class, 'order_id');
     }
 }

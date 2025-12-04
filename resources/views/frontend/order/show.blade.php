@@ -62,12 +62,25 @@
             ' ,',
         );
 
-        // Tiền
-        $subtotal = $order->subtotal ?? $order->items->sum(fn($i) => (float) $i->price * (int) $i->quantity);
+        // ✅ SỬA: Tính toán đúng
+        $subtotal = $order->total_price ?? $order->items->sum(fn($i) => (float) $i->price * (int) $i->quantity);
         $shippingFee = $order->shipping_fee ?? 0;
-        $discountTotal = $order->discount_total ?? 0;
 
-        $grandTotal = $subtotal + $shippingFee - $discountTotal;
+        // Tính discount từ voucher_usage hoặc tính ngược từ final_amount
+        $discountTotal = 0;
+        if ($order->voucher_id) {
+            // Cách 1: Lấy từ VoucherUsage nếu có relationship
+            if ($order->relationLoaded('voucherUsage') && $order->voucherUsage) {
+                $discountTotal = $order->voucherUsage->discount_amount ?? 0;
+            } else {
+                // Cách 2: Tính ngược từ final_amount
+                $discountTotal = $subtotal + $shippingFee - $order->final_amount;
+                $discountTotal = max(0, $discountTotal);
+            }
+        }
+
+        // ✅ QUAN TRỌNG: Dùng final_amount đã lưu trong DB
+        $grandTotal = $order->final_amount;
     @endphp
 
     <div class="order-detail-wrapper">

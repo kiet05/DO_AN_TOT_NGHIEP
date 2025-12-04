@@ -438,6 +438,22 @@
                                     </tbody>
 
                                     @if ($order->orderItems && $order->orderItems->count())
+                                        @php
+                                            // Tính discount từ voucher
+                                            $discountAmount = 0;
+
+                                            if ($order->voucher_id) {
+                                                // Cách 1: Lấy từ VoucherUsage nếu có relationship
+                                                if ($order->relationLoaded('voucherUsage') && $order->voucherUsage) {
+                                                    $discountAmount = $order->voucherUsage->discount_amount ?? 0;
+                                                } else {
+                                                    // Cách 2: Tính ngược từ final_amount
+                                                    $totalBeforeDiscount = $subTotal + $order->shipping_fee;
+                                                    $discountAmount = $totalBeforeDiscount - $order->final_amount;
+                                                    $discountAmount = max(0, $discountAmount); // Đảm bảo không âm
+                                                }
+                                            }
+                                        @endphp
                                         <tfoot class="table-light">
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Tạm tính</th>
@@ -445,6 +461,21 @@
                                                     {{ number_format($subTotal, 0, ',', '.') }}đ
                                                 </th>
                                             </tr>
+                                            {{-- ✅ THÊM DÒNG GIẢM GIÁ --}}
+                                            @if ($discountAmount > 0)
+                                                <tr>
+                                                    <th colspan="5" class="text-end text-muted">
+                                                        Giảm giá
+                                                        @if ($order->voucher)
+                                                            <span
+                                                                class="badge bg-success ms-2">{{ $order->voucher->code }}</span>
+                                                        @endif
+                                                    </th>
+                                                    <th class="text-end text-success">
+                                                        − {{ number_format($discountAmount, 0, ',', '.') }}đ
+                                                    </th>
+                                                </tr>
+                                            @endif
                                             <tr>
                                                 <th colspan="5" class="text-end text-muted">Phí ship</th>
                                                 <th class="text-end">
