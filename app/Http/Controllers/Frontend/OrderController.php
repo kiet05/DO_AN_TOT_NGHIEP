@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Frontend;
 
-use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\ReturnItem;
+use App\Models\ReturnModel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Frontend\CartController;
 
 
 class OrderController extends Controller
@@ -92,7 +95,7 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        
+
         // Không cho xem đơn của người khác
         if ($order->user_id !== auth()->id()) { // đổi field nếu khác
             abort(403);
@@ -111,7 +114,7 @@ class OrderController extends Controller
     }
     protected function ensureOwner(Order $order): void
     {
-        
+
         if ($order->user_id !== auth()->id()) {
             abort(403);
         }
@@ -164,42 +167,42 @@ class OrderController extends Controller
 
     /** KHÁCH BẤM "ĐÃ NHẬN HÀNG" */
     public function received(Request $request, Order $order)
-{
-    $this->ensureOwner($order);
+    {
+        $this->ensureOwner($order);
 
-    // Chỉ cho xác nhận khi đơn đang giao
-    if (!in_array($order->order_status, ['shipping', 'shipped'], true)) {
+        // Chỉ cho xác nhận khi đơn đang giao
+        if (!in_array($order->order_status, ['shipping', 'shipped'], true)) {
+            return redirect()
+                ->route('order.index', $order)
+                ->with('error', 'Chỉ xác nhận đã nhận hàng với đơn đang giao.');
+        }
+
+        DB::transaction(function () use ($order) {
+            // Cập nhật trạng thái đơn
+            $order->order_status      = 'shipped';
+            $order->status_changed_at = now();
+
+            // Nếu thanh toán chưa xong (COD chưa thanh toán) -> đánh dấu đã thanh toán
+            if ($order->payment_status !== 'paid') {
+                $order->payment_status = 'paid';
+            }
+
+            $order->save();
+
+            // Ghi log lịch sử trạng thái
+            if (method_exists($order, 'statusHistories')) {
+                $order->statusHistories()->create([
+                    'status'   => 'shipped',
+                    'note'     => 'Khách xác nhận đã nhận hàng, tự động đánh dấu thanh toán nếu chưa có',
+                    'order_id' => $order->id,
+                ]);
+            }
+        });
+
         return redirect()
             ->route('order.index', $order)
-            ->with('error', 'Chỉ xác nhận đã nhận hàng với đơn đang giao.');
+            ->with('success', 'Bạn đã xác nhận đã nhận được hàng. Đơn hàng đã chuyển sang trạng thái "Đã giao".');
     }
-
-    DB::transaction(function () use ($order) {
-        // Cập nhật trạng thái đơn
-        $order->order_status      = 'shipped';
-        $order->status_changed_at = now();
-
-        // Nếu thanh toán chưa xong (COD chưa thanh toán) -> đánh dấu đã thanh toán
-        if ($order->payment_status !== 'paid') {
-            $order->payment_status = 'paid';
-        }
-
-        $order->save();
-
-        // Ghi log lịch sử trạng thái
-        if (method_exists($order, 'statusHistories')) {
-            $order->statusHistories()->create([
-                'status'   => 'shipped',
-                'note'     => 'Khách xác nhận đã nhận hàng, tự động đánh dấu thanh toán nếu chưa có',
-                'order_id' => $order->id,
-            ]);
-        }
-    });
-
-    return redirect()
-        ->route('order.index', $order)
-        ->with('success', 'Bạn đã xác nhận đã nhận được hàng. Đơn hàng đã chuyển sang trạng thái "Đã giao".');
-}
 
 
     /** FORM TRẢ HÀNG / HOÀN TIỀN */
@@ -225,40 +228,76 @@ class OrderController extends Controller
                 ->with('error', 'Đơn hàng hiện không thể yêu cầu trả hàng / hoàn tiền.');
         }
 
+        // validate dữ liệu form
         $data = $request->validate([
-            'return_reason' => 'required|string|max:1000',
-            'return_image'  => 'nullable|image|max:2048',
+            'return_reason'          => 'required|string|max:1000',
+            'return_image'           => 'nullable|image|max:2048',
+            'refund_account_number'  => 'nullable|string|max:255',
         ]);
 
+        // upload ảnh minh chứng (nếu có)
         $path = null;
         if ($request->hasFile('return_image')) {
             $path = $request->file('return_image')->store('order_returns', 'public');
         }
 
+        // ⚠️ DÙNG QUAN HỆ items (KHÔNG phải orderItems)
+        $order->load('items');
+        dd([
+        'order_id' => $order->id,
+        'items_relation' => $order->items->toArray(),
+        'items_query' => OrderItem::where('order_id', $order->id)->get()->toArray(),
+    ]);
         DB::transaction(function () use ($order, $data, $path) {
-            $order->return_reason = $data['return_reason'];
 
+            // 1. Tạo bản ghi trong returns
+            $ret = ReturnModel::create([
+                'order_id'      => $order->id,
+                'user_id'       => $order->user_id,
+                'reason'        => $data['return_reason'],
+                'proof_image'   => $path,
+                'evidence_urls' => null,
+                'status'        => 0,          // pending
+                'refund_method' => null,
+                'refund_amount' => 0,
+            ]);
+
+            // 2. Đổ các sản phẩm của đơn sang return_items
+            foreach ($order->items as $item) {
+                ReturnItem::create([
+                    'return_id'     => $ret->id,
+                    'order_item_id' => $item->id,
+                    'quantity'      => $item->quantity ?? 1,
+                    'image_proof'   => null,
+                    'status'        => 0,
+                ]);
+            }
+            // 3. Update nhanh trên bảng orders
+            $order->return_reason = $data['return_reason'];
             if ($path) {
                 $order->return_image_path = $path;
             }
-
-            // 👇 chỉ set sang trạng thái "yêu cầu trả hàng", chưa final
-            $order->order_status      = 'return_pending';
+            $order->order_status      = Order::STATUS_RETURN_PENDING;
             $order->status_changed_at = now();
             $order->save();
 
+            // 4. Ghi lịch sử trạng thái (nếu có)
             if (method_exists($order, 'statusHistories')) {
                 $order->statusHistories()->create([
-                    'status'   => 'return_pending',
-                    'note'     => 'Khách hàng yêu cầu trả hàng / hoàn tiền',
+                    'status'   => Order::STATUS_RETURN_PENDING,
+                    'note'     => 'Khách hàng yêu cầu trả hàng / hoàn tiền (return #' . $ret->id . ')',
                     'order_id' => $order->id,
                 ]);
             }
         });
 
+        // ❌ bỏ dd() đi, không cần nữa
+        // dd($order->items->toArray());
+
         return redirect()->route('order.index')
             ->with('success', 'Đã gửi yêu cầu trả hàng / hoàn tiền, vui lòng chờ shop xác nhận.');
     }
+
 
 
     /** MUA LẠI ĐƠN ĐÃ HỦY – THÊM LẠI VÀO GIỎ */

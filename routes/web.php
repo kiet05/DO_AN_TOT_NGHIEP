@@ -93,7 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');});
+    Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
+});
 
 // ============================
 
@@ -198,11 +199,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/my-orders/{order}/reorder', [FrontendOrderController::class, 'reorder'])
         ->name('order.reorder');
 
-Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.create');
-// Trong middleware auth
-Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])
-    ->name('vnpay.return');
-
+    Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.create');
+    // Trong middleware auth
+    Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])
+        ->name('vnpay.return');
 });
 
 
@@ -352,8 +352,6 @@ Route::prefix('admin')
             ->name('contacts.index');
         Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
             ->name('contacts.show');
-
-        
     });
 
 // Payment routes (outside admin)
