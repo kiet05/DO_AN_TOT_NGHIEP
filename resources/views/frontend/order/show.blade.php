@@ -14,6 +14,8 @@
             'shipped' => ['label' => 'Đã giao', 'badge' => 'bg-success'],
             'return_pending' => ['label' => 'Đang chờ hoàn', 'badge' => 'bg-warning text-dark'],
             'returned' => ['label' => 'Hoàn hàng', 'badge' => 'bg-success'],
+            'return_waiting_customer' => ['label' => 'Vui lý xác nhận', 'badge' => 'bg-warning text-dark'],
+            'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
             'cancelled' => ['label' => 'Đã hủy', 'badge' => 'bg-dark'],
         ];
 

@@ -199,10 +199,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/my-orders/{order}/reorder', [FrontendOrderController::class, 'reorder'])
         ->name('order.reorder');
 
-    Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.create');
+    Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.creaate');
     // Trong middleware auth
     Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])
         ->name('vnpay.return');
+    // KH xác nhận đã nhận được tiền hoàn
+    Route::post('/my-orders/returns/{return}/confirm-received', [FrontendOrderController::class, 'confirmRefundReceived'])
+        ->name('order.return.confirmReceived');
 });
 
 

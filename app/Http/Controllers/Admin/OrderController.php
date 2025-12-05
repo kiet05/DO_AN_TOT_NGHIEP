@@ -74,6 +74,8 @@ class OrderController extends Controller
             'cancelled',  // Hủy
             'returned',   // Hoàn hàng
             'return_pending',   // Hoàn hàng
+            'return_waiting_customer', // Chờ xác nhận hoàn hàng
+            'returned_completed', // Hoàn thành trả hàng
         ];
     }
 

@@ -21,15 +21,23 @@ class ReturnModel extends Model
         'refund_amount',
         'approved_by',
         'decided_at',
-        'evidence_urls'
+        'evidence_urls',
+        'action_type',
     ];
-    protected $casts = ['evidence_urls' => 'array', 'decided_at' => 'datetime'];
+
+    protected $casts = [
+        'evidence_urls' => 'array',
+        'decided_at'    => 'datetime',
+        'status'        => 'integer',
+        'refund_amount' => 'decimal:2',
+    ];
 
     const PENDING = 0;
     const APPROVED = 1;
     const REJECTED = 2;
     const REFUNDING = 3;
     const COMPLETED = 4;
+    const WAITING_CUSTOMER_CONFIRM = 5;
 
     public function items()
     {
@@ -50,8 +58,13 @@ class ReturnModel extends Model
 
     public function getStatusLabelAttribute()
     {
-        return [0 => 'pending', 1 => 'approved', 2 => 'rejected', 3 => 'refunding', 4 => 'completed'][$this->status] ?? 'pending';
+        return [
+            self::PENDING                  => 'pending',
+            self::APPROVED                 => 'approved',
+            self::REJECTED                 => 'rejected',
+            self::REFUNDING                => 'refunding',
+            self::COMPLETED                => 'completed',
+            self::WAITING_CUSTOMER_CONFIRM => 'waiting_customer_confirm',
+        ][$this->status] ?? 'pending';
     }
-
 }
-

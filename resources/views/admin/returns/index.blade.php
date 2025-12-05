@@ -60,12 +60,14 @@
                                         <tbody>
                                             @foreach ($returns as $r)
                                                 @php
+                                                    // Cập nhật danh sách trạng thái và màu của các badge
                                                     $labels = [
                                                         0 => 'Chờ duyệt',
                                                         1 => 'Đã duyệt',
                                                         2 => 'Từ chối',
                                                         3 => 'Đang hoàn tiền',
                                                         4 => 'Hoàn tất',
+                                                        5 => 'Chờ khách xác nhận',
                                                     ];
                                                     $badges = [
                                                         0 => 'secondary',
@@ -73,6 +75,17 @@
                                                         2 => 'danger',
                                                         3 => 'warning',
                                                         4 => 'success',
+                                                        5 => 'info',
+                                                    ];
+
+                                                    // Cập nhật phương thức hoàn tiền
+                                                    $refundMethods = [
+                                                        'wallet' => 'Ví điện tử',
+                                                        'manual' => 'Hoàn tiền thủ công',
+                                                    ];
+                                                    $refundBadges = [
+                                                        'wallet' => 'info',
+                                                        'manual' => 'secondary',
                                                     ];
                                                 @endphp
                                                 <tr>
@@ -81,9 +94,11 @@
                                                     <td>{{ $r->user->full_name ?? ($r->user->name ?? 'User ' . $r->user_id) }}
                                                     </td>
                                                     <td>{{ number_format($r->refund_amount, 0, ',', '.') }} đ</td>
-                                                    <td>{{ $r->refund_method ?? '-' }}</td>
-                                                    <td><span
-                                                            class="badge text-bg-{{ $badges[$r->status] ?? 'secondary' }}">{{ $labels[$r->status] ?? $r->status }}</span>
+                                                    <td>{{ $refundMethods[$r->refund_method] ?? '-' }}</td>
+                                                    <td>
+                                                        <span
+                                                            class="badge bg-{{ $badges[$r->status] ?? 'secondary' }}">{{ $labels[$r->status] ?? 'Unknown' }}
+                                                        </span>
                                                     </td>
                                                     <td>{{ optional($r->created_at)->format('d/m/Y H:i') }}</td>
                                                     <td><a href="{{ route('admin.returns.show', $r->id) }}"
@@ -101,5 +116,4 @@
             </div>
         </div>
     </section>
-
 @endsection

@@ -26,6 +26,8 @@
         .cancelled {        background: #dc3545; }  /* Hủy         */
         .returned {         background: #fd7e14; }  /* Hoàn hàng   */
         .return_pending {   background: #ffb007; }  /* Chờ hoàn hàng */
+        .return_waiting_customer { background: #6610f2; } /* Chờ xác nhận hoàn hàng */
+        .returned_completed { background: #20c997; } /* Xác nhận đã hoàn hàng */
 
         .payment-paid {
             color: #28a745;
@@ -79,6 +81,8 @@
                                         <option value="cancelled"       @selected(request('status')=='cancelled')>Hủy</option>
                                         <option value="returned"        @selected(request('status')=='returned')>Hoàn hàng</option>
                                         <option value="return_pending"  @selected(request('status')=='return_pending')>Chờ hoàn hàng</option>
+                                        <option value="return_waiting_customer"  @selected(request('status')=='return_waiting_customer')>Chờ xác nhận hoàn hàng</option>
+                                        <option value="returned_completed"  @selected(request('status')=='returned_completed')>Xác nhận đã hoàn hàng</option>
                                     </select>
 
                                     {{-- Tìm theo ID (chấp nhận 87 hoặc #00087) --}}

@@ -15,6 +15,14 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
             $table->text('reason');
+
+            $table->enum('action_type', [
+                'refund_full',
+                'refund_partial',
+                'exchange_product',
+                'exchange_variant',
+            ])->default('refund_full');
+
             $table->string('proof_image', 255)->nullable();
             $table->json('evidence_urls')->nullable();
 

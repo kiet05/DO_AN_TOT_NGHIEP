@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\ReturnModel;
+use App\Models\Order;
 use App\Models\Wallet;
-use App\Models\WalletTransaction;
+use App\Models\ReturnModel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class ReturnRequestController extends Controller
 {
@@ -36,8 +37,8 @@ class ReturnRequestController extends Controller
             'order',
             'items.orderItem.product',
             'items.orderItem.productVariant', // nếu có
+            'items.orderItem.productVariant.attributes.attribute',
         ])->findOrFail($id);
-
         return view('admin.returns.show', compact('ret'));
     }
 
@@ -50,32 +51,32 @@ class ReturnRequestController extends Controller
 
         $ret = ReturnModel::with('order')->findOrFail($id);
 
+        // Nhờ casts 'status' => 'integer' nên so sánh này ổn
         if ($ret->status !== ReturnModel::PENDING) {
             return back()->with('error', 'Trạng thái không hợp lệ, chỉ duyệt yêu cầu đang chờ.');
         }
 
-        $ret->status        = ReturnModel::APPROVED;
+        $ret->status        = ReturnModel::WAITING_CUSTOMER_CONFIRM;
         $ret->approved_by   = Auth::id();
         $ret->decided_at    = now();
-        $ret->refund_method = $data['refund_method'] ?? 'wallet';
-        $ret->refund_amount = $data['refund_amount'] ?? 0;
+        $ret->refund_method = $data['refund_method'] ?? ($ret->refund_method ?? 'wallet');
+        $ret->refund_amount = $data['refund_amount'] ?? ($ret->refund_amount ?? 0);
         $ret->save();
 
-        if ($ret->order && $ret->order->order_status !== 'returned') {
-            $ret->order->order_status      = 'return_pending';
-            $ret->order->status_changed_at = now();
-            $ret->order->save();
-        }
+        // Cập nhật trạng thái đơn hàng: chờ hoàn hàng
+        $this->setOrderStatusOnApprove($ret);
 
         return back()->with('success', 'Đã duyệt yêu cầu trả hàng / hoàn tiền.');
     }
+
 
     public function reject($id)
     {
         $ret = ReturnModel::with('order')->findOrFail($id);
 
-        if (! in_array($ret->status, [ReturnModel::PENDING, ReturnModel::APPROVED], true)) {
-            return back()->with('error', 'Trạng thái không hợp lệ để từ chối.');
+        // Chỉ cho từ chối khi đang pending
+        if ($ret->status !== ReturnModel::PENDING) {
+            return back()->with('error', 'Chỉ được từ chối yêu cầu đang chờ duyệt.');
         }
 
         $ret->status        = ReturnModel::REJECTED;
@@ -85,11 +86,8 @@ class ReturnRequestController extends Controller
         $ret->refund_amount = 0;
         $ret->save();
 
-        if ($ret->order && $ret->order->order_status === 'return_pending') {
-            $ret->order->order_status      = 'shipped';
-            $ret->order->status_changed_at = now();
-            $ret->order->save();
-        }
+        // Trả đơn về trạng thái đã giao
+        $this->setOrderStatusOnReject($ret);
 
         return back()->with('success', 'Đã từ chối yêu cầu hoàn hàng.');
     }
@@ -110,7 +108,7 @@ class ReturnRequestController extends Controller
 
     public function refundAuto($id)
     {
-        $ret = ReturnModel::findOrFail($id);
+        $ret = ReturnModel::with('order')->findOrFail($id);
 
         if (! in_array($ret->status, [ReturnModel::APPROVED, ReturnModel::REFUNDING], true)) {
             return back()->with('error', 'Trạng thái không hợp lệ (chỉ hoàn khi ĐÃ DUYỆT hoặc ĐANG HOÀN).');
@@ -149,17 +147,22 @@ class ReturnRequestController extends Controller
                 ],
             ]);
 
-            $ret->status = ReturnModel::COMPLETED;
+            // ✅ HOÀN VÍ XONG → CHỜ KHÁCH XÁC NHẬN
+            $ret->status     = ReturnModel::WAITING_CUSTOMER_CONFIRM;
+            $ret->decided_at = now();
             $ret->save();
+
+            // Đơn hàng: chờ khách xác nhận đã nhận tiền / hàng đổi
+            $this->setOrderStatusOnWaitingCustomer($ret);
         });
 
-        return back()->with('success', 'Đã hoàn tiền vào ví và hoàn tất yêu cầu.');
+        return back()->with('success', 'Đã hoàn tiền vào ví. Đang chờ khách xác nhận đã nhận tiền.');
     }
-
     public function refundManual($id)
     {
-        $ret = ReturnModel::findOrFail($id);
+        $ret = ReturnModel::with('order')->findOrFail($id);
 
+        // Kiểm tra trạng thái trước khi chuyển đổi
         if (! in_array($ret->status, [ReturnModel::APPROVED, ReturnModel::REFUNDING], true)) {
             return back()->with('error', 'Trạng thái không hợp lệ (chỉ hoàn khi ĐÃ DUYỆT hoặc ĐANG HOÀN).');
         }
@@ -168,9 +171,77 @@ class ReturnRequestController extends Controller
             return back()->with('error', 'Phương thức không phải hoàn thủ công.');
         }
 
-        $ret->status = ReturnModel::COMPLETED;
-        $ret->save();
+        // Bắt đầu giao dịch DB
+        DB::transaction(function () use ($ret) {
+            // ✅ Chuyển trạng thái từ đã duyệt hoặc đang hoàn sang "chờ khách xác nhận"
+            $ret->status     = ReturnModel::WAITING_CUSTOMER_CONFIRM; // Cập nhật status = 5
+            $ret->decided_at = now(); // Lưu thời gian quyết định
+            $ret->save(); // Lưu thay đổi
 
-        return back()->with('success', 'Đã đánh dấu hoàn tất hoàn tiền.');
+            // Đơn hàng: chờ khách xác nhận
+            $this->setOrderStatusOnWaitingCustomer($ret); // Hàm cập nhật trạng thái cho đơn hàng nếu cần
+        });
+
+        // Trả về thông báo thành công
+        return back()->with('success', 'Đã đánh dấu đã hoàn tiền cho khách. Đang chờ khách xác nhận.');
+    }
+
+    private function setOrderStatusOnApprove(ReturnModel $ret): void
+    {
+        if (! $ret->order_id) {
+            return;
+        }
+
+        // ✅ Khi admin bấm DUYỆT → đơn chuyển sang trạng thái CHỜ KHÁCH XÁC NHẬN
+        Order::whereKey($ret->order_id)
+            ->update([
+                'order_status'      => Order::STATUS_RETURN_WAITING_CUSTOMER,
+                'status_changed_at' => now(),
+            ]);
+    }
+
+    private function setOrderStatusOnReject(ReturnModel $ret): void
+    {
+        if (! $ret->order_id) {
+            return;
+        }
+
+        // Chỉ trả về shipped nếu hiện tại đang ở return_pending
+        Order::whereKey($ret->order_id)
+            ->where('order_status', Order::STATUS_RETURN_PENDING)
+            ->update([
+                'order_status'      => Order::STATUS_SHIPPED,
+                'status_changed_at' => now(),
+            ]);
+    }
+
+    private function setOrderStatusOnCompleted(ReturnModel $ret): void
+    {
+        if (! $ret->order_id) {
+            return;
+        }
+
+        // Tuỳ 4 loại action_type
+        $newStatus = in_array($ret->action_type, ['refund_full', 'refund_partial'], true)
+            ? Order::STATUS_RETURNED     // Hoàn tiền (toàn bộ / 1 phần) -> đơn coi như Hoàn/Trả hàng
+            : Order::STATUS_SHIPPED;     // Đổi sản phẩm / đổi size màu -> xử lý xong coi như ĐÃ GIAO
+
+        Order::whereKey($ret->order_id)
+            ->update([
+                'order_status'      => $newStatus,
+                'status_changed_at' => now(),
+            ]);
+    }
+
+    private function setOrderStatusOnWaitingCustomer(ReturnModel $ret): void
+    {
+        if (! $ret->order_id) {
+            return;
+        }
+
+        Order::whereKey($ret->order_id)->update([
+            'order_status'      => Order::STATUS_RETURN_WAITING_CUSTOMER,
+            'status_changed_at' => now(),
+        ]);
     }
 }

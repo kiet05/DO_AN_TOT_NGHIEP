@@ -436,6 +436,14 @@
                                 $statusClass = 'badge-status badge-status-completed';
                                 $statusLabel = 'Hoàn / Trả hàng';
                                 break;
+                            case 'return_waiting_customer':
+                                $statusClass = 'badge-status badge-status-completed';
+                                $statusLabel = 'Vui lòng xác nhận đã được hoàn tiền';
+                                break;
+                            case 'returned_completed':
+                                $statusClass = 'badge-status badge-status-completed';
+                                $statusLabel = 'Đã hoàn thành hoàn hàng';
+                                break;
                             case 'cancelled':
                                 $statusClass = 'badge-status badge-status-cancelled';
                                 $statusLabel = 'Đã hủy';
@@ -543,6 +551,26 @@
                                         class="btn btn-sm btn-outline-warning ms-2">
                                         Trả hàng / Hoàn tiền
                                     </a>
+                                @endif
+
+                                {{-- 👉 NÚT: KHÁCH XÁC NHẬN ĐÃ NHẬN TIỀN HOÀN --}}
+                                @php
+                                    $returnNeedConfirm = optional($order->returns ?? collect())
+                                        ->where('user_id', auth()->id())
+                                        ->where('status', \App\Models\ReturnModel::WAITING_CUSTOMER_CONFIRM)
+                                        ->sortByDesc('id')
+                                        ->first();
+                                @endphp
+
+                                @if ($returnNeedConfirm)
+                                    <form action="{{ route('order.return.confirmReceived', $returnNeedConfirm->id) }}"
+                                        method="POST" class="d-inline"
+                                        onsubmit="return confirm('Bạn đã nhận đủ số tiền hoàn chưa?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-success ms-2">
+                                            Tôi đã nhận tiền hoàn
+                                        </button>
+                                    </form>
                                 @endif
 
                                 @if ($order->canBeReorderedByCustomer())
