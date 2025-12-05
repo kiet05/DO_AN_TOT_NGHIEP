@@ -15,7 +15,7 @@ class ProductVariant extends Model
         'sku',
         'price',
         'quantity',
-        'image_url', 
+        'image_url',
         'status',
     ];
 
@@ -29,6 +29,33 @@ class ProductVariant extends Model
         return $this->belongsToMany(AttributeValue::class, 'product_variant_attributes', 'product_variant_id', 'attribute_value_id');
     }
 
+    public function getAttributeSummaryAttribute(): ?string
+    {
+        // nạp thêm attributes + attribute (bảng attributes)
+        $this->loadMissing('attributes.attribute');
+
+        // KHÔNG dùng $this->attributes (vì đó là mảng field nội bộ của Model)
+        $values = $this->getRelation('attributes');
+
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        return $values->map(function ($val) {
+            // bảng attributes có cột name (Size, Màu sắc,...)
+            $attrName = $val->attribute->name ?? null;
+            $value    = $val->value ?? '';
+
+            $label = match (strtolower((string) $attrName)) {
+                'size'     => 'Kích cỡ',
+                'color'    => 'Màu sắc',
+                'material' => 'Chất liệu', 
+                default    => $attrName, // nếu sau này thêm thuộc tính khác thì giữ nguyên
+            };
+
+            return $attrName ? "{$attrName}: {$value}" : $value;
+        })->join(' | ');
+    }
     public function attributeValues()
     {
         return $this->belongsToMany(AttributeValue::class, 'product_variant_attributes');

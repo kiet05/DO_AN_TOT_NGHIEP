@@ -46,8 +46,11 @@ class Order extends Model
     public const STATUS_PREPARING = 'preparing';  // Chờ lấy hàng / Chuẩn bị
     public const STATUS_SHIPPING  = 'shipping';   // Đang giao
     public const STATUS_SHIPPED = 'shipped';  // Đã giao
+    public const STATUS_COMPLETED = 'completed';  // Hoàn thành
     public const STATUS_RETURNED  = 'returned';   // Trả hàng
     public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
+    public const STATUS_RETURN_WAITING_CUSTOMER = 'return_waiting_customer'; // Chờ xác nhận hoàn hàng
+    public const STATUS_RETURNED_COMPLETED = 'returned_completed'; // Hoàn thành trả hàng
     public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
 
     /**
@@ -60,9 +63,12 @@ class Order extends Model
             self::STATUS_CONFIRMED => 'Chờ xác nhận',
             self::STATUS_PREPARING => 'Chờ chuẩn bị',
             self::STATUS_SHIPPING  => 'Đang giao',
+            self::STATUS_COMPLETED => 'Hoàn thành',
             self::STATUS_SHIPPED => 'Đã giao',
             self::STATUS_RETURNED  => 'Trả hàng',
             self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
+            self::STATUS_RETURN_WAITING_CUSTOMER => 'Chờ xác nhận hoàn hàng',
+            self::STATUS_RETURNED_COMPLETED => 'Đã hoàn thành hoàn hàng',
             self::STATUS_CANCELLED => 'Đã hủy',
         ];
     }

@@ -48,7 +48,19 @@
                                                     Không tìm thấy đơn hàng
                                                 @endif
                                             </p>
-
+                                            <p class="mb-1">
+                                                <strong>Hình thức yêu cầu:</strong>
+                                                @php
+                                                    $actionLabel =
+                                                        [
+                                                            'refund_full' => 'Hoàn tiền toàn bộ đơn hàng',
+                                                            'refund_partial' => 'Hoàn tiền một phần (một vài sản phẩm)',
+                                                            'exchange_product' => 'Đổi sang sản phẩm khác',
+                                                            'exchange_variant' => 'Đổi size / màu',
+                                                        ][$ret->action_type] ?? $ret->action_type;
+                                                @endphp
+                                                {{ $actionLabel }}
+                                            </p>
                                             <p class="mt-2">
                                                 <strong>Lý do:</strong><br>
                                                 {!! nl2br(e($ret->reason ?? ($ret->order->return_reason ?? '(Không có)'))) !!}
@@ -97,12 +109,14 @@
                                             <div class="sherah-table p-0">
                                                 <table class="product-overview-table">
                                                     <thead>
-                                                        <tr>
-                                                            <th style="width: 70px;">Ảnh</th>
-                                                            <th>Sản phẩm</th>
-                                                            <th style="width: 120px;">Thuộc tính</th>
-                                                            <th style="width: 90px;">SL yêu cầu</th>
-                                                            <th style="width: 110px;">Giá / SP</th>
+                                                        <tr style="text-center;">
+                                                            <th style="width: 70px; text-align: center;">Ảnh</th>
+                                                            <th style="width: 200px; text-align: center;">Sản phẩm</th>
+                                                            <th style="width: 120px; text-align: center;">Thuộc tính</th>
+                                                            <th style="width: 90px; text-align: center;">SL hóa đơn</th>
+                                                            <th style="width: 90px; text-align: center;">SL yêu cầu hoàn
+                                                            </th>
+                                                            <th style="width: 90px; text-align: center;">Giá / SP</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -131,7 +145,17 @@
                                                                     @endif
                                                                 </td>
                                                                 <td>
-                                                                    {{ $item->quantity }}
+                                                                    @if ($variant)
+                                                                        {{ $variant->attribute_summary ?? 'N/A' }}
+                                                                    @else
+                                                                        <span class="text-muted">- Không có -</span>
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    {{ $orderItem->quantity ?? 0 }}
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    {{ $item->quantity ?? 0 }}
                                                                 </td>
                                                                 <td>
                                                                     {{ number_format($orderItem->price ?? 0, 0, ',', '.') }}
@@ -140,7 +164,7 @@
                                                             </tr>
                                                         @empty
                                                             <tr>
-                                                                <td colspan="4" class="text-muted text-center">
+                                                                <td colspan="6" class="text-muted text-center">
                                                                     Không có dòng sản phẩm nào trong yêu cầu hoàn hàng.
                                                                 </td>
                                                             </tr>
@@ -172,10 +196,10 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Phương thức</label>
                                                     <select name="refund_method" class="form-select">
-                                                        <option value="wallet"
+                                                        {{-- <option value="wallet"
                                                             {{ old('refund_method', $ret->refund_method) === 'wallet' ? 'selected' : '' }}>
                                                             Hoàn về ví
-                                                        </option>
+                                                        </option> --}}
                                                         <option value="manual"
                                                             {{ old('refund_method', $ret->refund_method) === 'manual' ? 'selected' : '' }}>
                                                             Hoàn thủ công (chuyển khoản / tiền mặt)
@@ -196,7 +220,7 @@
 
                                             <form action="{{ route('admin.returns.reject', $ret->id) }}" method="POST">
                                                 @csrf
-                                                @if (in_array($ret->status, [0, 1], true))
+                                                @if ($ret->status === 0)
                                                     <button type="submit" class="btn btn-outline-danger w-100">
                                                         Từ chối
                                                     </button>
@@ -245,6 +269,7 @@
                                                             2 => 'Đã từ chối',
                                                             3 => 'Đang hoàn tiền',
                                                             4 => 'Hoàn tất',
+                                                            5 => 'Chờ khách xác nhận',
                                                         ][$ret->status] ?? $ret->status;
                                                 @endphp
                                                 {{ $statusText }}
