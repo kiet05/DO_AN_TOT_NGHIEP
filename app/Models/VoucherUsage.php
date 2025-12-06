@@ -22,4 +22,13 @@ class VoucherUsage extends Model
     {
         return $this->belongsTo(Voucher::class);
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

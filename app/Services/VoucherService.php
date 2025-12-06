@@ -99,28 +99,26 @@ class VoucherService
      * Tính số tiền giảm giá
      */
     public function calculateDiscount(Voucher $voucher, float $subtotal): float
-    {
-        $discountAmount = 0;
+{
+    $discountAmount = 0;
 
-        if ($voucher->discount_type === 'percentage') {
-            $discountAmount = ($subtotal * $voucher->discount_value) / 100;
-            
-            // Áp dụng max_discount nếu có
-            if ($voucher->max_discount && $discountAmount > $voucher->max_discount) {
-                $discountAmount = $voucher->max_discount;
-            }
-        } elseif ($voucher->discount_type === 'fixed') {
-            $discountAmount = $voucher->discount_value;
-            
-            // Không được giảm nhiều hơn tổng tiền
-            if ($discountAmount > $subtotal) {
-                $discountAmount = $subtotal;
-            }
+    if ($voucher->type === 'percent') {
+        $discountAmount = ($subtotal * $voucher->value) / 100;
+
+        if ($voucher->max_discount && $discountAmount > $voucher->max_discount) {
+            $discountAmount = $voucher->max_discount;
         }
+    } elseif ($voucher->type === 'fixed') {
+        $discountAmount = $voucher->value;
 
-        // Làm tròn về số nguyên
-        return round($discountAmount);
+        if ($discountAmount > $subtotal) {
+            $discountAmount = $subtotal;
+        }
     }
+
+    return round($discountAmount);
+}
+
 
     /**
      * Tìm voucher tốt nhất cho cart
@@ -240,12 +238,16 @@ class VoucherService
                 continue;
             }
 
-            $result[] = [
-                'id' => $voucher->id,
-                'code' => $voucher->code,
-                'name' => $voucher->name,
-                'discount_amount' => $discountAmount,
-            ];
+           $result[] = [
+    'id' => $voucher->id,
+    'code' => $voucher->code,
+    'name' => $voucher->name,
+    'type' => $voucher->type,
+    'value' => $voucher->value,
+    'max_discount' => $voucher->max_discount,
+    'discount_amount' => $discountAmount,
+];
+
         }
 
         // Sắp xếp giảm dần theo discount
@@ -301,10 +303,14 @@ class VoucherService
                 'success' => true,
                 'message' => 'Áp dụng mã giảm giá thành công',
                 'voucher' => [
-                    'code' => $voucher->code,
-                    'name' => $voucher->name,
-                    'discount_amount' => $discountAmount,
-                ],
+    'code' => $voucher->code,
+    'name' => $voucher->name,
+    'type' => $voucher->type,
+    'value' => $voucher->value,
+    'max_discount' => $voucher->max_discount,
+    'discount_amount' => $discountAmount,
+],
+
                 'subtotal' => $subtotal,
                 'discount' => $discountAmount,
                 'total' => round($subtotal - $discountAmount),

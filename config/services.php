@@ -35,12 +35,11 @@ return [
         ],
     ],
  'vnpay' => [
-    'app_id' => env('VNP_APP_ID'),
-    'key1'   => env('VNP_APP_KEY1'),
-    'key2'   => env('VNP_APP_KEY2'),
-    'endpoint' => env('VNP_ENDPOINT', 'https://sandbox.vnpayment.vn/v2'),
-    'callback_domain' => env('VNP_CALLBACK_DOMAIN', 'https://abc123.ngrok.io'),  // Nếu cần
-],
+        'tmn_code'    => env('VNPAY_TMN_CODE'),
+        'hash_secret' => env('VNPAY_HASH_SECRET'),
+        'url'         => 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+        'return_url'  => env('APP_URL') . '/vnpay/return',
+    ],
 
 
 

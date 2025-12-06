@@ -282,16 +282,17 @@
                                     <form method="POST" action="{{ route('admin.orders.updateStatus', $order) }}"
                                         class="d-flex align-items-center gap-2">
                                         @csrf
-                                        <select name="status" class="form-select form-select-sm w-auto">
+                                        <select name="status" id="order-status-select"
+                                            class="form-select form-select-sm w-auto">
                                             @foreach ($allowedNext as $st)
                                                 <option value="{{ $st }}">
                                                     {{ $labelStatus[$st] ?? ucfirst($st) }}
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary">
-                                            Cập nhật
-                                        </button>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                            onclick="return confirmUpdateStatus()">Cập nhật</button>
+
                                     </form>
                                 @else
                                     <div class="alert alert-light border d-flex align-items-center p-2 mb-0">
@@ -344,11 +345,12 @@
                                             <strong>Lý do hoàn hàng:</strong>
                                             {{ $shortReason }}
                                         </div>
-                                        <a href="#" {{-- TODO: thay '#' bằng route trang quản lý hoàn hàng, ví dụ:
+                                        {{-- <a href="{{ route('admin.return_orders.show', $order->id) }}"
+                                            TODO: thay '#' bằng route trang quản lý hoàn hàng, ví dụ:
                                                 route('admin.return_orders.show', $order->id)
-                                            --}} class="btn btn-sm btn-outline-primary">
+                                             class="btn btn-sm btn-outline-primary">
                                             Xem chi tiết
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 @endif
 
@@ -388,13 +390,17 @@
                                                         ? $variant->attributeValues->pluck('value')->join(', ')
                                                         : null;
 
-                                                if ($product && $product->image_main) {
+                                                // Ảnh theo biến thể (ưu tiên), fallback về ảnh sản phẩm
+                                                if ($variant && $variant->image_url) {
+                                                    $img = asset('storage/' . $variant->image_url);
+                                                } elseif ($product && $product->image_main) {
                                                     $img = asset('storage/' . $product->image_main);
                                                 } elseif ($product && $product->images && $product->images->first()) {
                                                     $img = asset('storage/' . $product->images->first()->image_path);
                                                 } else {
                                                     $img = 'https://placehold.co/300x300?text=IMG';
                                                 }
+
                                             @endphp
                                             <tr>
                                                 <td>
@@ -523,4 +529,11 @@
             }
         }
     </style>
+    <script>
+        function confirmUpdateStatus() {
+            let select = document.getElementById('order-status-select');
+            let text = select.options[select.selectedIndex].text;
+            return confirm("Bạn có chắc muốn cập nhật trạng thái thành: " + text + "  ?");
+        }
+    </script>
 @endpush

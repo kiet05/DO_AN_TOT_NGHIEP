@@ -30,10 +30,15 @@ class Order extends Model
         'cancel_reason',
         'return_reason',
         'return_image_path',   // ảnh khách up khi yêu cầu hoàn hàng
+        'vnp_txn_ref',
+        'vnp_response',
+        'vnp_transaction_no',
     ];
 
     protected $casts = [
         'status_changed_at' => 'datetime',
+        'vnp_response' => 'array', // Để Laravel tự động parse JSON
+
     ];
 
     /*
@@ -65,6 +70,7 @@ class Order extends Model
             self::STATUS_SHIPPING  => 'Đang giao',
             self::STATUS_COMPLETED => 'Hoàn thành',
             self::STATUS_SHIPPED => 'Đã giao',
+            self::STATUS_COMPLETED => 'Hoàn thành',
             self::STATUS_RETURNED  => 'Trả hàng',
             self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
             self::STATUS_RETURN_WAITING_CUSTOMER => 'Chờ xác nhận hoàn hàng',
