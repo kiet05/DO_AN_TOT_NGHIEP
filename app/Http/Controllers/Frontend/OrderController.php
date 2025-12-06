@@ -268,6 +268,7 @@ class OrderController extends Controller
 
             // 2. Đổ các sản phẩm của đơn sang return_items
             foreach ($order->items as $item) {
+
                 ReturnItem::create([
                     'return_id'     => $ret->id,
                     'order_item_id' => $item->id,

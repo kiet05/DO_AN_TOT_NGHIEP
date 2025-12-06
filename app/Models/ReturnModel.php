@@ -67,4 +67,10 @@ class ReturnModel extends Model
             self::WAITING_CUSTOMER_CONFIRM => 'waiting_customer_confirm',
         ][$this->status] ?? 'pending';
     }
+
+
+    public function orderItem()
+    {
+        return $this->belongsTo(OrderItem::class, 'order_item_id');
+    }
 }

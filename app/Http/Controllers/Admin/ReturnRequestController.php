@@ -45,29 +45,45 @@ class ReturnRequestController extends Controller
     public function approve($id, Request $request)
     {
         $data = $request->validate([
-            'refund_amount' => ['nullable', 'numeric', 'min:0'],
             'refund_method' => ['nullable', 'in:manual,wallet'],
         ]);
 
-        $ret = ReturnModel::with('order')->findOrFail($id);
+        $ret = ReturnModel::with([
+            'items.orderItem'
+        ])->findOrFail($id);
 
-        // Nhờ casts 'status' => 'integer' nên so sánh này ổn
         if ($ret->status !== ReturnModel::PENDING) {
             return back()->with('error', 'Trạng thái không hợp lệ, chỉ duyệt yêu cầu đang chờ.');
         }
 
+        // ---- TÍNH TIỀN HOÀN TỰ ĐỘNG ----
+        $totalRefund = 0;
+
+        foreach ($ret->items as $item) {
+            $orderItem = $item->orderItem;
+
+            if (!$orderItem) continue;
+
+            // Giá sau giảm cho mỗi 1 sản phẩm
+            $unitPrice = $orderItem->final_amount / $orderItem->quantity;
+
+            // Tiền hoàn = đơn giá sau voucher * số lượng hoàn
+            $totalRefund += $unitPrice * $item->quantity;
+        }
+
+        // Lưu vào DB
         $ret->status        = ReturnModel::WAITING_CUSTOMER_CONFIRM;
         $ret->approved_by   = Auth::id();
         $ret->decided_at    = now();
-        $ret->refund_method = $data['refund_method'] ?? ($ret->refund_method ?? 'wallet');
-        $ret->refund_amount = $data['refund_amount'] ?? ($ret->refund_amount ?? 0);
+        $ret->refund_method = $data['refund_method'] ?? 'wallet';
+        $ret->refund_amount = $totalRefund;
         $ret->save();
 
-        // Cập nhật trạng thái đơn hàng: chờ hoàn hàng
         $this->setOrderStatusOnApprove($ret);
 
-        return back()->with('success', 'Đã duyệt yêu cầu trả hàng / hoàn tiền.');
+        return back()->with('success', 'Đã duyệt yêu cầu. Tiền hoàn đã được tính tự động.');
     }
+
 
 
     public function reject($id)

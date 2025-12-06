@@ -23,7 +23,7 @@ class VoucherFactory extends Factory
 
         return [
             'code' => strtoupper(Str::random(8)),
-            'discount_type' => $type,
+            'type' => $type,
             'discount_value' => $type === 'percentage'
                 ? $this->faker->numberBetween(5, 50)   
                 : $this->faker->randomFloat(2, 10000, 500000),

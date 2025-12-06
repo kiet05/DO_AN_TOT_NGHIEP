@@ -54,12 +54,18 @@
                                             <td>{{ $item->name }}</td>
                                             <td>{{ $item->type == 'percent' ? 'Giảm %' : 'Giảm tiền' }}</td>
                                             <td>
-                                                {{ $item->value }}{{ $item->type == 'percent' ? '%' : ' đ' }}
-                                                @if ($item->max_discount)
-                                                    <small class="text-muted d-block">Tối đa:
-                                                        {{ number_format($item->max_discount) }}đ</small>
+                                                @if ($item->type === 'percent')
+                                                    {{ rtrim(rtrim(number_format($item->value, 2), '0'), '.') }}%
+                                                    @if ($item->max_discount)
+                                                        <small class="text-muted d-block">
+                                                            Tối đa: {{ number_format($item->max_discount) }}đ
+                                                        </small>
+                                                    @endif
+                                                @elseif ($item->type === 'fixed')
+                                                    {{ number_format($item->value) }}đ
                                                 @endif
                                             </td>
+
                                             <td>
                                                 @if ($item->apply_type === 'all')
                                                     Tất cả

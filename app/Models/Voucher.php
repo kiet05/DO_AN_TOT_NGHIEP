@@ -12,19 +12,17 @@ class Voucher extends Model
     protected $fillable = [
         'code',
         'name',
-        'discount_type',
-        'discount_value',
-        'type',
-        'value',
+        'type',      // Giữ
+        'value',     // Giữ
         'max_discount',
         'min_order_value',
         'apply_type',
         'usage_limit',
         'start_at',
         'end_at',
-        'expired_at',
         'is_active',
     ];
+
     protected $casts = [
         'start_at' => 'datetime',
         'end_at'   => 'datetime',
@@ -107,7 +105,7 @@ class Voucher extends Model
     public function isInValidTime(): bool
     {
         $now = now();
-        
+
         if ($this->start_at && $this->start_at->isFuture()) {
             return false;
         }
@@ -140,11 +138,11 @@ class Voucher extends Model
         return $query->where('is_active', true)
             ->where(function ($q) use ($now) {
                 $q->whereNull('start_at')
-                  ->orWhere('start_at', '<=', $now);
+                    ->orWhere('start_at', '<=', $now);
             })
             ->where(function ($q) use ($now) {
                 $q->whereNull('end_at')
-                  ->orWhere('end_at', '>=', $now);
+                    ->orWhere('end_at', '>=', $now);
             });
     }
 

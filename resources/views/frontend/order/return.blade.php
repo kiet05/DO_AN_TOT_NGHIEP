@@ -55,6 +55,187 @@
                                             </div>
                                         @endforeach
                                     </div>
+                                    {{-- 2B. Chọn sản phẩm muốn trả  --}} {{-- >>> BỔ SUNG --}}
+                                    <div class="return-section mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="section-dot me-2"></span>
+                                            <h6 class="mb-0">Sản phẩm muốn trả / hoàn tiền</h6>
+                                        </div>
+
+                                        <p class="text-muted small mb-3">
+                                            Chọn sản phẩm và số lượng bạn muốn trả. Nếu chọn "Hoàn tiền toàn bộ", bạn vẫn có
+                                            thể tùy chỉnh số lượng.
+                                        </p>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered align-middle small">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="40">Chọn</th>
+                                                        <th>Sản phẩm</th>
+                                                        <th width="120">Đã mua</th>
+                                                        <th width="120">Trả lại</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($order->items ?? $order->orderItems as $item)
+                                                        @php
+                                                            // === LẤY ẢNH ĐÚNG CHUẨN NHƯ TRANG SHOW ===
+                                                            $product = $item->product ?? null;
+                                                            $variant = $item->productVariant ?? null;
+
+                                                            if ($variant && $variant->image_url) {
+                                                                // Ảnh biến thể
+                                                                $thumb = asset('storage/' . $variant->image_url);
+                                                            } elseif ($product && $product->image_main) {
+                                                                // Ảnh chính sản phẩm
+                                                                $thumb = asset('storage/' . $product->image_main);
+                                                            } else {
+                                                                // Không có → dùng ảnh trống
+                                                                $thumb = asset('images/no-image.png');
+                                                            }
+
+                                                            // === LẤY TÊN BIẾN THỂ GIỐNG TRANG SHOW ===
+                                                            if ($variant) {
+                                                                // 1. ưu tiên variant->name
+                                                                $variantText = $variant->name ?? null;
+
+                                                                // 2. nếu không có → ghép thuộc tính (Đen / Size L)
+                                                                if (
+                                                                    !$variantText &&
+                                                                    $variant->attributes &&
+                                                                    $variant->attributes->count()
+                                                                ) {
+                                                                    $variantText = $variant->attributes
+                                                                        ->pluck('value')
+                                                                        ->join(' / ');
+                                                                }
+                                                            } else {
+                                                                // fallback cho đơn cũ
+                                                                $variantText =
+                                                                    $item->variant_name ??
+                                                                    ($item->variant ?? ($item->options ?? null));
+                                                            }
+
+                                                            // === GIÁ ===
+                                                            $original = number_format($item->price, 0, ',', '.');
+                                                            $discounted = number_format(
+                                                                $item->final_amount / $item->quantity,
+                                                                0,
+                                                                ',',
+                                                                '.',
+                                                            );
+                                                        @endphp
+
+                                                        <tr>
+                                                            {{-- Checkbox --}}
+                                                            <td class="text-center">
+                                                                <input type="checkbox"
+                                                                    class="form-check-input js-return-item-toggle"
+                                                                    name="return_items[{{ $item->id }}][checked]">
+                                                            </td>
+
+                                                            {{-- Sản phẩm --}}
+                                                            <td style="width: 360px;">
+                                                                <div class="d-flex align-items-center gap-2">
+
+                                                                    {{-- Ảnh --}}
+                                                                    <img src="{{ $thumb }}" alt="product"
+                                                                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
+
+                                                                    <div>
+                                                                        {{-- Tên sp --}}
+                                                                        <strong>{{ $item->product_name }}</strong><br>
+
+                                                                        {{-- Biến thể --}}
+                                                                        @if ($variantText)
+                                                                            <span class="text-muted">Size/màu sắc/chất liệu:
+                                                                                {{ $variantText }}</span><br>
+                                                                        @endif
+
+                                                                        {{-- Giá --}}
+                                                                        @php
+                                                                            // 1. Tính tổng gốc theo items (giá chưa áp voucher)
+                                                                            $originalTotal = 0;
+                                                                            foreach (
+                                                                                $order->items ?? $order->orderItems
+                                                                                as $it
+                                                                            ) {
+                                                                                $originalTotal +=
+                                                                                    $it->price * $it->quantity;
+                                                                            }
+
+                                                                            // 2. Tổng sau khi đã trừ voucher — giống trang index
+                                                                            $finalTotal =
+                                                                                $order->grand_total ??
+                                                                                ($order->final_amount ??
+                                                                                    ($order->total_price ??
+                                                                                        ($order->total ?? 0)));
+
+                                                                            // 3. Số tiền giảm từ voucher
+                                                                            $voucherDiscount = max(
+                                                                                0,
+                                                                                $originalTotal - $finalTotal,
+                                                                            );
+                                                                        @endphp
+
+                                                                        <div class="">
+                                                                            <div>
+                                                                                <strong>Giá gốc:</strong>
+                                                                                {{ number_format($originalTotal, 0, ',', '.') }}đ
+                                                                            </div>
+
+                                                                            @if ($voucherDiscount > 0)
+                                                                                <div>
+                                                                                    <strong>Giảm từ voucher:</strong>
+                                                                                    -{{ number_format($voucherDiscount, 0, ',', '.') }}đ
+                                                                                </div>
+                                                                            @endif
+
+                                                                            <div>
+                                                                                <strong>Tổng tiền:</strong>
+                                                                                {{ number_format($finalTotal, 0, ',', '.') }}đ
+                                                                            </div>
+                                                                        </div>
+
+
+
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+
+                                                            {{-- Đã mua --}}
+                                                            <td class="text-center">{{ $item->quantity }}</td>
+
+                                                            {{-- Trả lại --}}
+                                                            <td>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm js-return-qty"
+                                                                    name="return_items[{{ $item->id }}][quantity]"
+                                                                    value="0" min="0"
+                                                                    max="{{ $item->quantity }}" disabled>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.querySelectorAll('.js-return-item-toggle').forEach(cb => {
+                                                cb.addEventListener('change', function() {
+                                                    const row = this.closest('tr');
+                                                    const qty = row.querySelector('.js-return-qty');
+                                                    qty.disabled = !this.checked;
+
+                                                    if (!this.checked) qty.value = 0;
+                                                });
+                                            });
+                                        });
+                                    </script>
 
                                     {{-- 2. Lý do trả hàng / hoàn tiền --}}
                                     <div class="return-section mb-4">
@@ -212,7 +393,8 @@
                                     </div>
 
                                     <div class="d-flex flex-wrap gap-2 mt-3">
-                                        <button type="submit" class="btn btn-warning px-4">
+                                        <button type="submit" class="btn btn-warning px-4"
+                                            onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu này không?');">
                                             Gửi yêu cầu
                                         </button>
                                         <a href="{{ route('order.index') }}" class="btn btn-outline-secondary">
