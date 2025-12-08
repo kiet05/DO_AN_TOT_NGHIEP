@@ -585,17 +585,17 @@
                     </div>
 
                     {{-- FORM ĐÁNH GIÁ --}}
-                    @auth
+                    {{-- @auth
                         <div class="card mb-4">
                             <div class="card-body">
                                 <h5 class="card-title mb-3">Viết đánh giá của bạn</h5>
 
                                 <form action="{{ route('products.reviews.store', $product->id) }}" method="POST"
                                     enctype="multipart/form-data">
-                                    @csrf
+                                    @csrf --}}
 
                                     {{-- Sao --}}
-                                    <div class="mb-3">
+                                    {{-- <div class="mb-3">
                                         <label class="form-label d-block">Đánh giá sản phẩm này</label>
                                         <div class="rating-stars">
                                             <input type="hidden" name="rating" id="ratingInput"
@@ -608,19 +608,19 @@
                                         @error('rating')
                                             <div class="text-danger small">{{ $message }}</div>
                                         @enderror
-                                    </div>
+                                    </div> --}}
 
                                     {{-- Nội dung --}}
-                                    <div class="mb-3">
+                                    {{-- <div class="mb-3">
                                         <label class="form-label">Nội dung đánh giá</label>
                                         <textarea name="comment" rows="4" class="form-control @error('comment') is-invalid @enderror" required>{{ old('comment') }}</textarea>
                                         @error('comment')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
-                                    </div>
+                                    </div> --}}
 
                                     {{-- Ảnh --}}
-                                    <div class="mb-3">
+                                    {{-- <div class="mb-3">
                                         <label class="form-label">Ảnh sản phẩm (tùy chọn)</label>
                                         <input type="file" name="image" class="form-control" accept="image/*">
                                         <small class="text-muted">Tối đa 2MB, jpg/png/webp.</small>
@@ -635,10 +635,10 @@
                         </div>
                     @else
                         <p>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đánh giá sản phẩm.</p>
-                    @endauth
+                    @endauth --}}
 
                     {{-- DANH SÁCH ĐÁNH GIÁ --}}
-                    <h5 class="mb-3">Đánh giá của khách hàng khác</h5>
+                    {{-- <h5 class="mb-3">Đánh giá của khách hàng khác</h5> --}}
 
                     @forelse ($reviews as $review)
                         <div class="review-card">

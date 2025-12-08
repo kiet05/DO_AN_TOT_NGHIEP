@@ -220,7 +220,7 @@ Route::prefix('admin')
 
         // Dashboard admin
         Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
-        Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
+        Route::resource('orders', OrderController::class);
 
         // ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
         Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile.index');
