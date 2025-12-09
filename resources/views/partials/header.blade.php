@@ -343,7 +343,7 @@
                                         <!-- End Header Alarm -->
 
                                         <!-- Reviews Pending (Admin) -->
-                                        @if(optional($authUser->role)->slug === 'admin')
+                                        {{-- @if(optional($authUser->role)->slug === 'admin')
                                             <div class="sherah-header__dropmenu" title="Đánh giá chờ duyệt">
                                                 <a href="{{ route('admin.reviews.index') }}" class="d-inline-block" style="color:inherit;text-decoration:none">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -354,7 +354,7 @@
                                                     @endif
                                                 </a>
                                             </div>
-                                        @endif
+                                        @endif --}}
 
                                         <!-- Header Author -->
                                         <div class="sherah-header__author sherah-flex__center--top">
