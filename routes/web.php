@@ -179,7 +179,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/profile/addresses/{address}', [UserController::class, 'updateAddress'])
         ->name('profile.addresses.update');
 
-    // 🔹 LỊCH SỬ ĐƠN HÀNG 
+    // 🔹 LỊCH SỬ ĐƠN HÀNG
     Route::get('/order', [FrontendOrderController::class, 'index'])->name('order.index');
     Route::get('/order/{order}', [FrontendOrderController::class, 'show'])->name('order.show');
     // Hủy đơn – form + xử lý
@@ -203,6 +203,8 @@ Route::middleware(['auth'])->group(function () {
     // Trong middleware auth
     Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])
         ->name('vnpay.return');
+    Route::get('/vnpay/return', [FrontendPaymentController::class, 'vnpayReturn'])
+        ->name('vnpay.return.callback');
     // KH xác nhận đã nhận được tiền hoàn
     Route::post('/my-orders/returns/{return}/confirm-received', [FrontendOrderController::class, 'confirmRefundReceived'])
         ->name('order.return.confirmReceived');
