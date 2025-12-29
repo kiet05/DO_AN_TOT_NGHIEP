@@ -110,7 +110,6 @@ class CheckoutController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
-
         $locations = $this->locationConfig();
         $cityCodes = array_keys($locations);
 
@@ -664,11 +663,18 @@ return redirect()
 
 private function createVNPayUrl($order)
 {
+    //echo $order;
+    error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+     date_default_timezone_set('Asia/Ho_Chi_Minh');
+
+    $vnp_Url = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+
+    //dd($order);
     $vnp_TmnCode    = config('vnpay.vnp_tmn_code');
     $vnp_HashSecret = config('vnpay.vnp_hash_secret');
-    $vnp_Url        = config('vnpay.vnp_url');
+    //$vnp_Url        = config('vnpay.vnp_url');
     $vnp_ReturnUrl  = config('vnpay.vnp_return_url');
-
+  
     $vnp_Params = [
         "vnp_Version"    => "2.1.0",
         "vnp_Command"    => "pay",
@@ -684,15 +690,21 @@ private function createVNPayUrl($order)
         "vnp_CreateDate" => date('YmdHis'),
     ];
 
+    // B1: sort
     ksort($vnp_Params);
 
-    // VNPay yêu cầu dùng http_build_query rồi urldecode
-    $hashData = urldecode(http_build_query($vnp_Params));
+    // B2: tự build chuỗi hash theo chuẩn VNPay
+    $hashData = "";
+    foreach ($vnp_Params as $key => $value) {
+        $hashData .= $key . "=" . $value . "&";
+    }
+    $hashData = rtrim($hashData, "&");
 
+    // B3: tạo hash
     $vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
-    // Gửi đi: query phải dùng http_build_query (tự encode đúng chuẩn)
-    $vnp_Params['vnp_SecureHash'] = $vnp_SecureHash;
+    // B4: Gắn hash vào URL (http_build_query OK vì chỉ dùng để gửi chứ không dùng để hash)
+    $vnp_Params["vnp_SecureHash"] = $vnp_SecureHash;
 
     return redirect($vnp_Url . "?" . http_build_query($vnp_Params));
 }
