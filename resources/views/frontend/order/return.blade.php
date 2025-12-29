@@ -33,194 +33,380 @@
 
                                     @php
                                         $actions = [
-                                            'Hoàn tiền toàn bộ đơn hàng',
-                                            'Hoàn tiền một phần (một vài sản phẩm)',
-                                            'Đổi sang sản phẩm khác',
-                                            'Đổi size / màu',
+                                            'refund_full' => 'Hoàn tiền toàn bộ đơn hàng',
+                                            'refund_partial' => 'Hoàn tiền một phần (một vài sản phẩm)',
+                                            'exchange_product' => 'Đổi sang sản phẩm khác',
+                                            'exchange_variant' => 'Đổi size / màu',
                                         ];
                                     @endphp
 
+
                                     <div class="row g-2">
-                                        @foreach ($actions as $idx => $action)
+                                        @foreach ($actions as $key => $label)
                                             <div class="col-md-6">
                                                 <div class="form-check action-pill">
                                                     <input class="form-check-input js-return-action" type="radio"
-                                                        name="return_action_fake" id="return_action_{{ $idx }}"
-                                                        value="{{ $action }}">
-                                                    <label class="form-check-label" for="return_action_{{ $idx }}">
-                                                        {{ $action }}
+                                                        name="return_action" id="return_action_{{ $key }}"
+                                                        value="{{ $key }}" data-label="{{ $label }}">
+                                                    <label class="form-check-label" for="return_action_{{ $key }}">
+                                                        {{ $label }}
                                                     </label>
                                                 </div>
                                             </div>
                                         @endforeach
                                     </div>
-                                </div>
-
-                                {{-- 2. Lý do trả hàng / hoàn tiền --}}
-                                <div class="return-section mb-4">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="section-dot me-2"></span>
-                                        <h6 class="mb-0">
-                                            Lý do trả hàng / hoàn tiền <span class="text-danger">*</span>
-                                        </h6>
-                                    </div>
-                                    <p class="text-muted small mb-3">
-                                        Chọn một hoặc nhiều lý do bên dưới, hoặc ghi rõ hơn ở phần “Mô tả chi tiết”.
-                                    </p>
-
-                                    @php
-                                        $reasons = [
-                                            'Sản phẩm bị lỗi / hư hỏng',
-                                            'Sản phẩm bị bể vỡ / móp méo khi vận chuyển',
-                                            'Giao sai sản phẩm so với đơn đặt hàng',
-                                            'Thiếu sản phẩm / thiếu phụ kiện',
-                                            'Sản phẩm khác mô tả / hình ảnh',
-                                            'Chất lượng không như mong đợi',
-                                            'Nhầm size / màu / mẫu mã',
-                                        ];
-                                    @endphp
-
-                                    <div class="reason-list mb-3">
-                                        @foreach ($reasons as $idx => $reason)
-                                            <div class="form-check reason-item">
-                                                <input class="form-check-input js-return-reason" type="checkbox"
-                                                    value="{{ $reason }}" id="reason_{{ $idx }}">
-                                                <label class="form-check-label" for="reason_{{ $idx }}">
-                                                    {{ $reason }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-
-                                        <div class="form-check reason-item mt-2">
-                                            <input class="form-check-input js-reason-other-toggle" type="checkbox"
-                                                id="reason_other_toggle">
-                                            <label class="form-check-label" for="reason_other_toggle">
-                                                Lý do khác
-                                            </label>
+                                    {{-- 2B. Chọn sản phẩm muốn trả  --}} {{-- >>> BỔ SUNG --}}
+                                    <div class="return-section mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="section-dot me-2"></span>
+                                            <h6 class="mb-0">Sản phẩm muốn trả / hoàn tiền</h6>
                                         </div>
 
-                                        <div class="mt-2 other-reason-wrapper d-none">
-                                            <textarea class="form-control form-control-sm js-other-reason" rows="3" placeholder="Nhập lý do khác của bạn..."></textarea>
+                                        <p class="text-muted small mb-3">
+                                            Chọn sản phẩm và số lượng bạn muốn trả. Nếu chọn "Hoàn tiền toàn bộ", bạn vẫn có
+                                            thể tùy chỉnh số lượng.
+                                        </p>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered align-middle small">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th width="40">Chọn</th>
+                                                        <th>Sản phẩm</th>
+                                                        <th width="120">Đã mua</th>
+                                                        <th width="120">Trả lại</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($order->items ?? $order->orderItems as $item)
+                                                        @php
+                                                            // === LẤY ẢNH ĐÚNG CHUẨN NHƯ TRANG SHOW ===
+                                                            $product = $item->product ?? null;
+                                                            $variant = $item->productVariant ?? null;
+
+                                                            if ($variant && $variant->image_url) {
+                                                                // Ảnh biến thể
+                                                                $thumb = asset('storage/' . $variant->image_url);
+                                                            } elseif ($product && $product->image_main) {
+                                                                // Ảnh chính sản phẩm
+                                                                $thumb = asset('storage/' . $product->image_main);
+                                                            } else {
+                                                                // Không có → dùng ảnh trống
+                                                                $thumb = asset('images/no-image.png');
+                                                            }
+
+                                                            // === LẤY TÊN BIẾN THỂ GIỐNG TRANG SHOW ===
+                                                            if ($variant) {
+                                                                // 1. ưu tiên variant->name
+                                                                $variantText = $variant->name ?? null;
+
+                                                                // 2. nếu không có → ghép thuộc tính (Đen / Size L)
+                                                                if (
+                                                                    !$variantText &&
+                                                                    $variant->attributes &&
+                                                                    $variant->attributes->count()
+                                                                ) {
+                                                                    $variantText = $variant->attributes
+                                                                        ->pluck('value')
+                                                                        ->join(' / ');
+                                                                }
+                                                            } else {
+                                                                // fallback cho đơn cũ
+                                                                $variantText =
+                                                                    $item->variant_name ??
+                                                                    ($item->variant ?? ($item->options ?? null));
+                                                            }
+
+                                                            // === GIÁ ===
+                                                            $original = number_format($item->price, 0, ',', '.');
+                                                            $discounted = number_format(
+                                                                $item->final_amount / $item->quantity,
+                                                                0,
+                                                                ',',
+                                                                '.',
+                                                            );
+                                                        @endphp
+
+                                                        <tr>
+                                                            {{-- Checkbox --}}
+                                                            <td class="text-center">
+                                                                <input type="checkbox"
+                                                                    class="form-check-input js-return-item-toggle"
+                                                                    name="return_items[{{ $item->id }}][checked]">
+                                                            </td>
+
+                                                            {{-- Sản phẩm --}}
+                                                            <td style="width: 360px;">
+                                                                <div class="d-flex align-items-center gap-2">
+
+                                                                    {{-- Ảnh --}}
+                                                                    <img src="{{ $thumb }}" alt="product"
+                                                                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
+
+                                                                    <div>
+                                                                        {{-- Tên sp --}}
+                                                                        <strong>{{ $item->product_name }}</strong><br>
+
+                                                                        {{-- Biến thể --}}
+                                                                        @if ($variantText)
+                                                                            <span class="text-muted">Size/màu sắc/chất liệu:
+                                                                                {{ $variantText }}</span><br>
+                                                                        @endif
+
+                                                                        {{-- Giá --}}
+                                                                        @php
+                                                                            // 1. Tính tổng gốc theo items (giá chưa áp voucher)
+                                                                            $originalTotal = 0;
+                                                                            foreach (
+                                                                                $order->items ?? $order->orderItems
+                                                                                as $it
+                                                                            ) {
+                                                                                $originalTotal +=
+                                                                                    $it->price * $it->quantity;
+                                                                            }
+
+                                                                            // 2. Tổng sau khi đã trừ voucher — giống trang index
+                                                                            $finalTotal =
+                                                                                $order->grand_total ??
+                                                                                ($order->final_amount ??
+                                                                                    ($order->total_price ??
+                                                                                        ($order->total ?? 0)));
+
+                                                                            // 3. Số tiền giảm từ voucher
+                                                                            $voucherDiscount = max(
+                                                                                0,
+                                                                                $originalTotal - $finalTotal,
+                                                                            );
+                                                                        @endphp
+
+                                                                        <div class="">
+                                                                            <div>
+                                                                                <strong>Giá gốc:</strong>
+                                                                                {{ number_format($originalTotal, 0, ',', '.') }}đ
+                                                                            </div>
+
+                                                                            @if ($voucherDiscount > 0)
+                                                                                <div>
+                                                                                    <strong>Giảm từ voucher:</strong>
+                                                                                    -{{ number_format($voucherDiscount, 0, ',', '.') }}đ
+                                                                                </div>
+                                                                            @endif
+
+                                                                            <div>
+                                                                                <strong>Tổng tiền:</strong>
+                                                                                {{ number_format($finalTotal, 0, ',', '.') }}đ
+                                                                            </div>
+                                                                        </div>
+
+
+
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+
+                                                            {{-- Đã mua --}}
+                                                            <td class="text-center">{{ $item->quantity }}</td>
+
+                                                            {{-- Trả lại --}}
+                                                            <td>
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm js-return-qty"
+                                                                    name="return_items[{{ $item->id }}][quantity]"
+                                                                    value="0" min="0"
+                                                                    max="{{ $item->quantity }}" disabled>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+
+                                            </table>
                                         </div>
                                     </div>
 
-                                    {{-- Mô tả chi tiết thêm --}}
-                                    <label class="form-label small fw-semibold mb-1">
-                                        Mô tả chi tiết tình trạng sản phẩm
-                                    </label>
-                                    <textarea class="form-control form-control-sm js-detail-note" rows="3"
-                                        placeholder="Ví dụ: Hộp bị móp 1 góc, chai bên trong bị nứt nhẹ..."></textarea>
+                                    <script>
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.querySelectorAll('.js-return-item-toggle').forEach(cb => {
+                                                cb.addEventListener('change', function() {
+                                                    const row = this.closest('tr');
+                                                    const qty = row.querySelector('.js-return-qty');
+                                                    qty.disabled = !this.checked;
 
-                                    {{-- input ẩn: backend vẫn nhận return_reason như cũ --}}
-                                    <input type="hidden" name="return_reason" id="return_reason_input"
-                                        value="{{ old('return_reason') }}">
+                                                    if (!this.checked) qty.value = 0;
+                                                });
+                                            });
+                                        });
+                                    </script>
 
-                                    @error('return_reason')
-                                        <div class="text-danger small mt-2">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- 3. Ảnh / chứng từ --}}
-                                <div class="return-section mb-4">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="section-dot me-2"></span>
-                                        <h6 class="mb-0">
-                                            Ảnh minh chứng <small class="text-muted fw-normal">(khuyến khích)</small>
-                                        </h6>
-                                    </div>
-                                    <p class="text-muted small mb-2">
-                                        Bạn vui lòng chụp rõ sản phẩm, lỗi gặp phải, bao bì bên ngoài hoặc hóa đơn để shop
-                                        hỗ trợ nhanh hơn.
-                                    </p>
-
-                                    <div class="row g-3 align-items-center">
-                                        <div class="col-md-7">
-                                            <input type="file" name="return_image"
-                                                class="form-control @error('return_image') is-invalid @enderror"
-                                                accept="image/*">
-                                            <small class="text-muted d-block mt-1">
-                                                Dung lượng tối đa 2MB, định dạng jpg / png / webp.
-                                            </small>
-                                            @error('return_image')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-5">
-                                            <div class="photo-hint small text-muted">
-                                                Gợi ý:
-                                                <ul class="mb-0 ps-3">
-                                                    <li>Toàn cảnh sản phẩm</li>
-                                                    <li>Vị trí lỗi cận cảnh</li>
-                                                    <li>Vỏ hộp / bao bì bên ngoài</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- 4. Thông tin nhận tiền hoàn (chỉ hiện nếu đơn COD) --}}
-                                @php
-                                    // Tuỳ field thực tế của bạn: payment_method / payment_method_code / ...
-                                    $methodRaw = strtolower(
-                                        (string) ($order->payment_method ??
-                                            $order->payment_method_code ??
-                                            $order->payment_method_slug ??
-                                            ''),
-                                    );
-                                    $isCod = in_array($methodRaw, ['cod', 'cash_on_delivery', 'thanh_toan_khi_nhan_hang']);
-                                @endphp
-
-                                @if ($isCod)
+                                    {{-- 2. Lý do trả hàng / hoàn tiền --}}
                                     <div class="return-section mb-4">
                                         <div class="d-flex align-items-center mb-2">
                                             <span class="section-dot me-2"></span>
                                             <h6 class="mb-0">
-                                                Thông tin nhận tiền hoàn (COD)
+                                                Lý do trả hàng / hoàn tiền <span class="text-danger">*</span>
+                                            </h6>
+                                        </div>
+                                        <p class="text-muted small mb-3">
+                                            Chọn một hoặc nhiều lý do bên dưới, hoặc ghi rõ hơn ở phần “Mô tả chi tiết”.
+                                        </p>
+
+                                        @php
+                                            $reasons = [
+                                                'Sản phẩm bị lỗi / hư hỏng',
+                                                'Sản phẩm bị bể vỡ / móp méo khi vận chuyển',
+                                                'Giao sai sản phẩm so với đơn đặt hàng',
+                                                'Thiếu sản phẩm / thiếu phụ kiện',
+                                                'Sản phẩm khác mô tả / hình ảnh',
+                                                'Chất lượng không như mong đợi',
+                                                'Nhầm size / màu / mẫu mã',
+                                            ];
+                                        @endphp
+
+                                        <div class="reason-list mb-3">
+                                            @foreach ($reasons as $idx => $reason)
+                                                <div class="form-check reason-item">
+                                                    <input class="form-check-input js-return-reason" type="checkbox"
+                                                        value="{{ $reason }}" id="reason_{{ $idx }}">
+                                                    <label class="form-check-label" for="reason_{{ $idx }}">
+                                                        {{ $reason }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+
+                                            <div class="form-check reason-item mt-2">
+                                                <input class="form-check-input js-reason-other-toggle" type="checkbox"
+                                                    id="reason_other_toggle">
+                                                <label class="form-check-label" for="reason_other_toggle">
+                                                    Lý do khác
+                                                </label>
+                                            </div>
+
+                                            <div class="mt-2 other-reason-wrapper d-none">
+                                                <textarea class="form-control form-control-sm js-other-reason" rows="3" placeholder="Nhập lý do khác của bạn..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        {{-- Mô tả chi tiết thêm --}}
+                                        <label class="form-label small fw-semibold mb-1">
+                                            Mô tả chi tiết tình trạng sản phẩm
+                                        </label>
+                                        <textarea class="form-control form-control-sm js-detail-note" rows="3"
+                                            placeholder="Ví dụ: Hộp bị móp 1 góc, chai bên trong bị nứt nhẹ..."></textarea>
+
+                                        {{-- input ẩn: backend vẫn nhận return_reason như cũ --}}
+                                        <input type="hidden" name="return_reason" id="return_reason_input"
+                                            value="{{ old('return_reason') }}">
+
+                                        @error('return_reason')
+                                            <div class="text-danger small mt-2">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    {{-- 3. Ảnh / chứng từ --}}
+                                    <div class="return-section mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="section-dot me-2"></span>
+                                            <h6 class="mb-0">
+                                                Ảnh minh chứng <small class="text-muted fw-normal">(khuyến khích)</small>
                                             </h6>
                                         </div>
                                         <p class="text-muted small mb-2">
-                                            Vui lòng nhập số tài khoản ngân hàng mà bạn muốn nhận tiền hoàn.
+                                            Bạn vui lòng chụp rõ sản phẩm, lỗi gặp phải, bao bì bên ngoài hoặc hóa đơn để
+                                            shop
+                                            hỗ trợ nhanh hơn.
                                         </p>
 
-                                        <input type="text"
-                                            name="refund_account_number"
-                                            class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
-                                            value="{{ old('refund_account_number') }}"
-                                            placeholder="Ví dụ: 0123456789 - MB Bank - NGUYEN VAN A">
-
-                                        @error('refund_account_number')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-
-                                        <small class="text-muted d-block mt-1">
-                                            Nếu bạn không cung cấp, CSKH sẽ liên hệ lại để xác nhận phương thức hoàn tiền.
-                                        </small>
+                                        <div class="row g-3 align-items-center">
+                                            <div class="col-md-7">
+                                                <input type="file" name="return_image"
+                                                    class="form-control @error('return_image') is-invalid @enderror"
+                                                    accept="image/*">
+                                                <small class="text-muted d-block mt-1">
+                                                    Dung lượng tối đa 2MB, định dạng jpg / png / webp.
+                                                </small>
+                                                @error('return_image')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="col-md-5">
+                                                <div class="photo-hint small text-muted">
+                                                    Gợi ý:
+                                                    <ul class="mb-0 ps-3">
+                                                        <li>Toàn cảnh sản phẩm</li>
+                                                        <li>Vị trí lỗi cận cảnh</li>
+                                                        <li>Vỏ hộp / bao bì bên ngoài</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                @endif
 
-                                {{-- 5. Ghi chú cho shop (không bắt buộc) --}}
-                                <div class="return-section mb-4">
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="section-dot me-2"></span>
-                                        <h6 class="mb-0">Ghi chú thêm cho shop</h6>
+                                    {{-- 4. Thông tin nhận tiền hoàn (chỉ hiện nếu đơn COD) --}}
+                                    @php
+                                        // Tuỳ field thực tế của bạn: payment_method / payment_method_code / ...
+                                        $methodRaw = strtolower(
+                                            (string) ($order->payment_method ??
+                                                ($order->payment_method_code ?? ($order->payment_method_slug ?? ''))),
+                                        );
+                                        $isCod = in_array($methodRaw, [
+                                            'cod',
+                                            'cash_on_delivery',
+                                            'thanh_toan_khi_nhan_hang',
+                                        ]);
+                                    @endphp
+
+                                    @if ($isCod)
+                                        <div class="return-section mb-4">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="section-dot me-2"></span>
+                                                <h6 class="mb-0">
+                                                    Thông tin nhận tiền hoàn (COD)
+                                                </h6>
+                                            </div>
+                                            <p class="text-muted small mb-2">
+                                                Vui lòng nhập số tài khoản ngân hàng mà bạn muốn nhận tiền hoàn.
+                                            </p>
+
+                                            <input type="text" name="refund_account_number"
+                                                class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
+                                                value="{{ old('refund_account_number') }}"
+                                                placeholder="Ví dụ: 0123456789 - MB Bank - NGUYEN VAN A">
+
+                                            @error('refund_account_number')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+
+                                            <small class="text-muted d-block mt-1">
+                                                Nếu bạn không cung cấp, CSKH sẽ liên hệ lại để xác nhận phương thức hoàn
+                                                tiền.
+                                            </small>
+                                        </div>
+                                    @endif
+
+                                    {{-- 5. Ghi chú cho shop (không bắt buộc) --}}
+                                    <div class="return-section mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="section-dot me-2"></span>
+                                            <h6 class="mb-0">Ghi chú thêm cho shop</h6>
+                                        </div>
+                                        <textarea class="form-control form-control-sm js-extra-note" rows="2"
+                                            placeholder="Ví dụ: Muốn đổi sang size M, xin hỗ trợ nhận hàng tại giờ hành chính..."></textarea>
                                     </div>
-                                    <textarea class="form-control form-control-sm js-extra-note" rows="2"
-                                        placeholder="Ví dụ: Muốn đổi sang size M, xin hỗ trợ nhận hàng tại giờ hành chính..."></textarea>
-                                </div>
 
-                                <div class="d-flex flex-wrap gap-2 mt-3">
-                                    <button type="submit" class="btn btn-warning px-4">
-                                        Gửi yêu cầu
-                                    </button>
-                                    <a href="{{ route('order.index') }}" class="btn btn-outline-secondary">
-                                        Quay lại danh sách
-                                    </a>
-                                </div>
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+                                        <button type="submit" class="btn btn-warning px-4"
+                                            onclick="return confirm('Bạn có chắc chắn muốn gửi yêu cầu này không?');">
+                                            Gửi yêu cầu
+                                        </button>
+                                        <a href="{{ route('order.index') }}" class="btn btn-outline-secondary">
+                                            Quay lại danh sách
+                                        </a>
+                                    </div>
 
-                                <p class="text-muted small mt-3">
-                                    Sau khi gửi yêu cầu, bộ phận CSKH sẽ liên hệ lại để xác nhận thông tin và hướng dẫn bạn
-                                    quy trình giao nhận sản phẩm trả hàng / hoàn tiền.
-                                </p>
+                                    <p class="text-muted small mt-3">
+                                        Sau khi gửi yêu cầu, bộ phận CSKH sẽ liên hệ lại để xác nhận thông tin và hướng dẫn
+                                        bạn
+                                        quy trình giao nhận sản phẩm trả hàng / hoàn tiền.
+                                    </p>
                             </form>
                         </div>
                     </div>

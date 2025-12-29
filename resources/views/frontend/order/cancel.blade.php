@@ -69,13 +69,16 @@
                                 </div>
 
                                 <div class="d-flex gap-2 mt-4">
-                                    <button type="submit" class="btn btn-danger px-4">
+                                    <button type="submit" class="btn btn-danger px-4"
+                                        onclick="return confirm('Bạn có chắc chắn muốn xác nhận hủy đơn hàng này không?');">
                                         Xác nhận hủy đơn
                                     </button>
+
                                     <a href="{{ route('order.index') }}" class="btn btn-outline-secondary">
                                         Quay lại danh sách
                                     </a>
                                 </div>
+
                             </form>
                         </div>
                     </div>

@@ -36,11 +36,12 @@ class OrderController extends Controller
             'shipping'   => 'Đang giao',
             'shipped'    => 'Đã giao',
             'returned'   => 'Hoàn / Trả hàng',
+            'return_waiting_customer' => 'Chờ xác nhận hoàn hàng',
             'cancelled'  => 'Đã hủy',
         ];
 
         $query = Order::where('user_id', $userId)
-            ->with(['items.product', 'items.productVariant'])
+            ->with(['items.product', 'items.productVariant', 'returns'])
             ->latest('created_at');
 
         // Lọc theo tab trạng thái
@@ -51,7 +52,11 @@ class OrderController extends Controller
         } elseif ($status !== 'all') {
             $query->where('order_status', $status);
         }
-
+        if ($status === 'return_waiting_customer') {
+            $query->whereHas('returns', function ($q) {
+                $q->where('status', \App\Models\ReturnModel::WAITING_CUSTOMER_CONFIRM);
+            });
+        }
         // 🔍 Tìm kiếm theo ID đơn + tên / ID sản phẩm
         if ($keyword !== '') {
             $isNumeric = ctype_digit($keyword);
@@ -230,10 +235,12 @@ class OrderController extends Controller
 
         // validate dữ liệu form
         $data = $request->validate([
+            'return_action'         => 'required|in:refund_full,refund_partial,exchange_product,exchange_variant',
             'return_reason'          => 'required|string|max:1000',
             'return_image'           => 'nullable|image|max:2048',
             'refund_account_number'  => 'nullable|string|max:255',
         ]);
+
 
         // upload ảnh minh chứng (nếu có)
         $path = null;
@@ -241,13 +248,9 @@ class OrderController extends Controller
             $path = $request->file('return_image')->store('order_returns', 'public');
         }
 
-        // ⚠️ DÙNG QUAN HỆ items (KHÔNG phải orderItems)
+        // DÙNG QUAN HỆ items
         $order->load('items');
-        dd([
-        'order_id' => $order->id,
-        'items_relation' => $order->items->toArray(),
-        'items_query' => OrderItem::where('order_id', $order->id)->get()->toArray(),
-    ]);
+
         DB::transaction(function () use ($order, $data, $path) {
 
             // 1. Tạo bản ghi trong returns
@@ -257,13 +260,15 @@ class OrderController extends Controller
                 'reason'        => $data['return_reason'],
                 'proof_image'   => $path,
                 'evidence_urls' => null,
-                'status'        => 0,          // pending
+                'status'        => ReturnModel::PENDING,
                 'refund_method' => null,
                 'refund_amount' => 0,
+                'action_type'   => $data['return_action'],
             ]);
 
             // 2. Đổ các sản phẩm của đơn sang return_items
             foreach ($order->items as $item) {
+
                 ReturnItem::create([
                     'return_id'     => $ret->id,
                     'order_item_id' => $item->id,
@@ -291,7 +296,6 @@ class OrderController extends Controller
             }
         });
 
-        // ❌ bỏ dd() đi, không cần nữa
         // dd($order->items->toArray());
 
         return redirect()->route('order.index')
@@ -331,5 +335,47 @@ class OrderController extends Controller
         return redirect()
             ->route('cart.index')   // route hiển thị giỏ ở bước 1
             ->with('success', 'Đã thêm lại các sản phẩm trong đơn vào giỏ hàng.');
+    }
+
+    public function confirmRefundReceived($id)
+    {
+        $ret = ReturnModel::with('order')->findOrFail($id);
+
+        // Không cho xác nhận hộ người khác
+        if ($ret->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Chỉ cho xác nhận khi đang ở trạng thái CHỜ KH XÁC NHẬN
+        if ($ret->status !== ReturnModel::WAITING_CUSTOMER_CONFIRM) {
+            return redirect()
+                ->route('order.index')
+                ->with('error', 'Yêu cầu này không ở trạng thái chờ xác nhận tiền.');
+        }
+
+        $ret->status = ReturnModel::COMPLETED;
+        $ret->save();
+
+        // Cập nhật trạng thái đơn: hóa đơn
+        if ($ret->order_id) {
+            Order::whereKey($ret->order_id)
+                ->update([
+                    'order_status'      => Order::STATUS_RETURNED_COMPLETED,
+                    'status_changed_at' => now(),
+                ]);
+        }
+
+        // Ghi lịch sử trạng thái đơn (nếu có)
+        if ($ret->order && method_exists($ret->order, 'statusHistories')) {
+            $ret->order->statusHistories()->create([
+                'status'   => \App\Models\Order::STATUS_RETURNED,
+                'note'     => 'Khách xác nhận đã nhận tiền hoàn (return #' . $ret->id . ')',
+                'order_id' => $ret->order->id,
+            ]);
+        }
+
+        return redirect()
+            ->route('order.index')
+            ->with('success', 'Bạn đã xác nhận đã nhận tiền hoàn. Cảm ơn bạn!');
     }
 }

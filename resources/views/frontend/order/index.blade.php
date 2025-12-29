@@ -436,6 +436,14 @@
                                 $statusClass = 'badge-status badge-status-completed';
                                 $statusLabel = 'Hoàn / Trả hàng';
                                 break;
+                            case 'return_waiting_customer':
+                                $statusClass = 'badge-status badge-status-completed';
+                                $statusLabel = 'Vui lòng xác nhận đã được hoàn tiền';
+                                break;
+                            case 'returned_completed':
+                                $statusClass = 'badge-status badge-status-completed';
+                                $statusLabel = 'Đã hoàn thành hoàn hàng';
+                                break;
                             case 'cancelled':
                                 $statusClass = 'badge-status badge-status-cancelled';
                                 $statusLabel = 'Đã hủy';
@@ -444,11 +452,21 @@
 
                         // payment_status: 'paid' / 'unpaid'
                         $paymentStatus = $order->payment_status ?? null;
-                        $paymentLabel = $paymentStatus === 'paid' ? 'Đã thanh toán' : 'Thanh toán khi nhận hàng';
+                        $paymentLabel = $paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán';
                         $paymentClass =
                             $paymentStatus === 'paid'
                                 ? 'badge-payment badge-payment-paid'
                                 : 'badge-payment badge-payment-unpaid';
+                        $paymentMethod = $order->payment_method ?? 'cod';
+
+                        $paymentMethodLabel =
+                            [
+                                'cod' => 'Thanh toán khi nhận hàng (COD)',
+                                'bank' => 'Chuyển khoản ngân hàng',
+                                'vnpay' => 'Thanh toán VNPay',
+                                'momo' => 'Thanh toán MoMo',
+                                'wallet' => 'Ví điện tử',
+                            ][$paymentMethod] ?? ucfirst($paymentMethod);
 
                         $total =
                             $order->grand_total ??
@@ -466,6 +484,10 @@
                                 </span>
                             </div>
                             <div class="order-header-right">
+                                {{-- ⭐ HIỂN THỊ PHƯƠNG THỨC THANH TOÁN ⭐ --}}
+                                <span class="badge-payment" style="background:#e0f2fe; color:#0369a1;">
+                                    {{ $paymentMethodLabel }}
+                                </span>
                                 <span class="{{ $paymentClass }}">{{ $paymentLabel }}</span>
                                 <span class="{{ $statusClass }}">{{ $statusLabel }}</span>
                             </div>
@@ -527,7 +549,8 @@
 
                                 @if ($order->canBeCancelledByCustomer())
                                     <a href="{{ route('order.cancel.form', $order) }}"
-                                        class="btn btn-sm btn-outline-danger ms-2">
+                                        class="btn btn-sm btn-outline-danger ms-2"
+                                        onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
                                         Hủy đơn
                                     </a>
                                 @elseif ($order->canBeConfirmedReceivedByCustomer())
@@ -540,9 +563,30 @@
                                     </form>
                                 @elseif ($order->canRequestReturnByCustomer())
                                     <a href="{{ route('order.return.form', $order) }}"
-                                        class="btn btn-sm btn-outline-warning ms-2">
+                                        class="btn btn-sm btn-outline-warning ms-2"
+                                        onclick="return confirm('Bạn có chắc chắn muốn hoàn/trả đơn hàng này không?');">
                                         Trả hàng / Hoàn tiền
                                     </a>
+                                @endif
+
+                                {{-- 👉 NÚT: KHÁCH XÁC NHẬN ĐÃ NHẬN TIỀN HOÀN --}}
+                                @php
+                                    $returnNeedConfirm = optional($order->returns ?? collect())
+                                        ->where('user_id', auth()->id())
+                                        ->where('status', \App\Models\ReturnModel::WAITING_CUSTOMER_CONFIRM)
+                                        ->sortByDesc('id')
+                                        ->first();
+                                @endphp
+
+                                @if ($returnNeedConfirm)
+                                    <form action="{{ route('order.return.confirmReceived', $returnNeedConfirm->id) }}"
+                                        method="POST" class="d-inline"
+                                        onsubmit="return confirm('Bạn đã nhận đủ số tiền hoàn chưa?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-success ms-2">
+                                            Tôi đã nhận tiền hoàn
+                                        </button>
+                                    </form>
                                 @endif
 
                                 @if ($order->canBeReorderedByCustomer())

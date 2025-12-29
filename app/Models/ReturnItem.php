@@ -11,8 +11,15 @@ class ReturnItem extends Model
     use HasFactory;
 
     protected $table = 'return_items';
-    
-    protected $fillable = ['return_id', 'order_item_id', 'quantity', 'image_proof', 'note', 'status',];
+
+    protected $fillable = [
+        'return_id',
+        'order_item_id',
+        'quantity',
+        'image_proof',
+        'note',
+        'status',
+    ];
 
     public function return()
     {

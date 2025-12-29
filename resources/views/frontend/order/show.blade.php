@@ -14,6 +14,8 @@
             'shipped' => ['label' => 'Đã giao', 'badge' => 'bg-success'],
             'return_pending' => ['label' => 'Đang chờ hoàn', 'badge' => 'bg-warning text-dark'],
             'returned' => ['label' => 'Hoàn hàng', 'badge' => 'bg-success'],
+            'return_waiting_customer' => ['label' => 'Vui lý xác nhận', 'badge' => 'bg-warning text-dark'],
+            'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
             'cancelled' => ['label' => 'Đã hủy', 'badge' => 'bg-dark'],
         ];
 
@@ -255,7 +257,20 @@
 
                             <div class="small text-muted mb-0">
                                 Phương thức thanh toán:
-                                <strong>{{ $order->payment_method_label ?? ($order->payment_method ?? 'Thanh toán khi nhận hàng') }}</strong><br>
+                                @php
+                                    $method = strtolower($order->payment_method);
+
+                                    $methodLabel = match ($method) {
+                                        'cod', 'cash_on_delivery' => 'Thanh toán khi nhận hàng',
+                                        'bank_transfer' => 'Chuyển khoản ngân hàng',
+                                        'momo' => 'Ví MoMo',
+                                        'vnpay' => 'VNPay',
+                                        default => $order->payment_method_label ?? 'Thanh toán khi nhận hàng',
+                                    };
+                                @endphp
+
+                                <strong>{{ $methodLabel }}</strong>
+                                <br>
                                 Trạng thái thanh toán:
                                 @php
                                     $paymentStatus = $order->payment_status;
@@ -318,8 +333,27 @@
                                                     $thumb = null;
                                                 }
 
-                                                $variantText =
-                                                    $item->variant_name ?? ($item->variant ?? ($item->options ?? ''));
+                                                // Xử lý tên biến thể
+                                                if ($variant) {
+                                                    // 1. Nếu bảng variants có 'name' → ưu tiên
+                                                    $variantText = $variant->name ?? null;
+
+                                                    // 2. Nếu không có 'name' → build từ attributes (VD: Đen / Size L)
+                                                    if (
+                                                        !$variantText &&
+                                                        $variant->attributes &&
+                                                        $variant->attributes->count()
+                                                    ) {
+                                                        $variantText = $variant->attributes
+                                                            ->pluck('value')
+                                                            ->join(' / ');
+                                                    }
+                                                } else {
+                                                    // fallback cho đơn cũ
+                                                    $variantText =
+                                                        $item->variant_name ??
+                                                        ($item->variant ?? ($item->options ?? null));
+                                                }
                                             @endphp
                                             <tr>
                                                 <td>

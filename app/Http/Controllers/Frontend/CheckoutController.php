@@ -403,6 +403,40 @@ class CheckoutController extends Controller
                 // Trừ số lượng tồn kho (atomic operation trong transaction)
                 $variant->decrement('quantity', $item->quantity);
             }
+            // ===============================================
+            // 🔥 APPLY DISCOUNT THEO TỪNG ORDER ITEM
+            // ===============================================
+            if ($voucher) {
+
+                // Lấy lại danh sách order items
+                $orderItems = $order->items()->get();
+
+                foreach ($orderItems as $item) {
+
+                    $price = $item->price * $item->quantity;
+
+                    if ($voucher->type == 'percent') {
+                        $discount = ($price * $voucher->value) / 100;
+                    } else {
+                        $discount = $voucher->value;
+                    }
+
+                    // Không cho giảm nhiều hơn tiền sản phẩm
+                    if ($discount > $price) {
+                        $discount = $price;
+                    }
+
+                    $item->discount      = (int) $discount;
+                    $item->final_amount  = (int) ($price - $discount);
+                    $item->voucher_id    = $voucher->id;
+
+                    $item->save();
+                }
+
+                // Sau khi cập nhật từng item → cập nhật lại final_amount của ORDER
+                $order->final_amount = $order->items->sum('final_amount') + $shippingFee;
+                $order->save();
+            }
 
             // 🔹 Đóng giỏ hàng
             $cart->status = 2;
