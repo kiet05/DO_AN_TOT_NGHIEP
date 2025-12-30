@@ -134,7 +134,65 @@ class ReportController extends Controller
         $chartLabels = $revenuePerDay->pluck('day');
         $chartData   = $revenuePerDay->pluck('total');
 
-        // ===== 12. Trả dữ liệu sang view =====
+        // ===== 12. Báo cáo sản phẩm (FULL LIST) =====
+        $productReport = collect();
+        if (Schema::hasTable('order_items')) {
+            $productReport = DB::table('order_items as oi')
+                ->join('products as p', 'p.id', '=', 'oi.product_id')
+                ->join('orders as o', 'o.id', '=', 'oi.order_id')
+                ->whereBetween('o.created_at', [$from, $to])
+                ->where('o.order_status', 'completed')
+                ->select(
+                    'p.id',
+                    'p.name',
+                    DB::raw('SUM(oi.quantity) as qty'),
+                    DB::raw('SUM(oi.quantity * oi.price) as revenue')
+                )
+                ->groupBy('p.id', 'p.name')
+                ->orderByDesc('revenue')
+                ->get();
+
+            $totalRevenue = max($totals->revenue, 1);
+            $productReport->transform(function ($row) use ($totalRevenue) {
+                $row->percent = round($row->revenue / $totalRevenue * 100, 2);
+                return $row;
+            });
+        }
+
+        // ===== 13. Sản phẩm tồn kho cao nhưng bán chậm =====
+        $slowMovingProducts = collect();
+        if (Schema::hasTable('order_items')) {
+            $slowMovingProducts = DB::table('product_variants as pv')
+                ->join('products as p', 'p.id', '=', 'pv.product_id')
+                ->leftJoin('order_items as oi', 'oi.product_id', '=', 'p.id')
+                ->leftJoin('orders as o', function ($join) use ($from, $to) {
+                    $join->on('o.id', '=', 'oi.order_id')
+                        ->where('o.order_status', 'completed')
+                        ->whereBetween('o.created_at', [$from, $to]);
+                })
+                ->select(
+                    'p.id',
+                    'p.name',
+                    'pv.sku',
+                    'pv.quantity',
+                    DB::raw('COALESCE(SUM(oi.quantity), 0) as sold_qty')
+                )
+                ->groupBy('p.id', 'p.name', 'pv.sku', 'pv.quantity')
+                ->having('pv.quantity', '>=', 20)
+                ->having('sold_qty', '<=', 5)
+                ->orderByDesc('pv.quantity')
+                ->get();
+        }
+        // ===== 14. Thời gian xử lý đơn hàng (AVG) =====
+        $orderProcessingStats = (clone $baseOrders)
+            ->where('order_status', 'completed')
+            ->selectRaw('
+                COUNT(*) as total_orders,
+                AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_hours_to_complete
+            ')
+            ->first();
+
+            // ===== 15. Trả dữ liệu sang view =====
         return view('admin.reports.index', compact(
             'from',
             'to',
@@ -144,11 +202,16 @@ class ReportController extends Controller
             'ordersByStatus',
             'topProducts',
             'lowStock',
-            'topCoupons',
+
             'revenueByPayment',
+            'productReport',
+            'slowMovingProducts',
+            'topCoupons',
+            'orderProcessingStats',
             'chartLabels',
             'chartData'
         ));
+
     }
 
     // ========================

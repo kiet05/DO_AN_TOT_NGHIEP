@@ -425,7 +425,6 @@ class CheckoutController extends Controller
                     if ($discount > $price) {
                         $discount = $price;
                     }
-
                     $item->discount      = (int) $discount;
                     $item->final_amount  = (int) ($price - $discount);
                     $item->voucher_id    = $voucher->id;
