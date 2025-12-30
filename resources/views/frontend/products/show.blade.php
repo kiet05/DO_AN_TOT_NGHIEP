@@ -1095,5 +1095,43 @@
                 }
             }
         });
+    document.querySelectorAll('form[action*="reviews"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const btn = this.querySelector('button[type="submit"]');
+        const formData = new FormData(this);
+        btn.disabled = true;
+        btn.innerText = 'Đang gửi...';
+
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                confirm(data.message); // Thông báo thành công
+                // Ẩn form hoặc disable button
+                btn.disabled = true;
+                btn.innerText = 'Đã đánh giá';
+            } else {
+                alert(data.message); // Thông báo lỗi (chưa mua)
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Có lỗi xảy ra, vui lòng thử lại!');
+        })
+        .finally(() => {
+            if (!btn.disabled) btn.innerText = 'Gửi';
+        });
+    });
+});
+
     </script>
 @endpush

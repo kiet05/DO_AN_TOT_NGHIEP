@@ -354,33 +354,44 @@
                                         ]);
                                     @endphp
 
-                                    @if ($isCod)
-                                        <div class="return-section mb-4">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <span class="section-dot me-2"></span>
-                                                <h6 class="mb-0">
-                                                    Thông tin nhận tiền hoàn (COD)
-                                                </h6>
-                                            </div>
-                                            <p class="text-muted small mb-2">
-                                                Vui lòng nhập số tài khoản ngân hàng mà bạn muốn nhận tiền hoàn.
-                                            </p>
+                                 @if ($isCod)
+    <div class="return-section mb-4">
+        <div class="d-flex align-items-center mb-2">
+            <span class="section-dot me-2"></span>
+            <h6 class="mb-0">
+                Thông tin nhận tiền hoàn (COD)
+            </h6>
+        </div>
 
-                                            <input type="text" name="refund_account_number"
-                                                class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
-                                                value="{{ old('refund_account_number') }}"
-                                                placeholder="Ví dụ: 0123456789 - MB Bank - NGUYEN VAN A">
+        <p class="text-muted small mb-2">
+            Vui lòng nhập số tài khoản ngân hàng mà bạn muốn nhận tiền hoàn.
+        </p>
 
-                                            @error('refund_account_number')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+        <input type="text" name="refund_account_number"
+               class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
+               value="{{ old('refund_account_number', $ret->refund_account_number ?? '') }}"
+               placeholder="Ví dụ: 0123456789 - MB Bank - NGUYEN VAN A">
 
-                                            <small class="text-muted d-block mt-1">
-                                                Nếu bạn không cung cấp, CSKH sẽ liên hệ lại để xác nhận phương thức hoàn
-                                                tiền.
-                                            </small>
-                                        </div>
-                                    @endif
+        @error('refund_account_number')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+
+        <small class="text-muted d-block mt-1">
+           @if (isset($ret) && $ret->refund_account_number)
+    <small class="text-muted d-block mt-1">
+        Số tài khoản hiện tại: {{ $ret->refund_account_number }}
+    </small>
+@else
+    <small class="text-muted d-block mt-1">
+        Số tài khoản nhận tiền hoàn: Chưa có
+    </small>
+@endif
+
+        </small>
+    </div>
+@endif
+
+
 
                                     {{-- 5. Ghi chú cho shop (không bắt buộc) --}}
                                     <div class="return-section mb-4">

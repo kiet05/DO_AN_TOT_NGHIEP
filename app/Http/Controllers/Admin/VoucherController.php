@@ -75,7 +75,7 @@ class VoucherController extends Controller
             'min_order_value' => 'nullable|numeric|min:0',
 
             'apply_type'  => 'required|in:all,products,categories',
-            'usage_limit' => 'nullable|integer|min:1',
+            'usage_limit' => 'required|integer|min:1',
 
             'start_at' => 'nullable|date',
             'end_at'   => 'nullable|date|after_or_equal:start_at',
@@ -128,6 +128,7 @@ class VoucherController extends Controller
             'end_at.after_or_equal' => 'Thời gian kết thúc phải sau hoặc bằng thời gian bắt đầu.',
 
             // USAGE LIMIT
+            'usage_limit.required' => 'Lượt sử dụng không được để trống.',
             'usage_limit.integer' => 'Lượt sử dụng phải là số nguyên.',
             'usage_limit.min'     => 'Lượt sử dụng tối thiểu là 1.',
         ]);
@@ -171,7 +172,7 @@ class VoucherController extends Controller
             'min_order_value' => 'nullable|numeric|min:0',
 
             'apply_type'  => 'required|in:all,products,categories',
-            'usage_limit' => 'nullable|integer|min:1',
+            'usage_limit' => 'required|integer|min:1',
 
             'start_at' => 'nullable|date',
             'end_at'   => 'nullable|date|after_or_equal:start_at',
@@ -224,6 +225,7 @@ class VoucherController extends Controller
             'end_at.after_or_equal' => 'Thời gian kết thúc phải sau hoặc bằng thời gian bắt đầu.',
 
             // USAGE LIMIT
+            'usage_limit.required' => 'Lượt sử dụng không được để trống.',
             'usage_limit.integer' => 'Lượt sử dụng phải là số nguyên.',
             'usage_limit.min'     => 'Lượt sử dụng tối thiểu là 1.',
         ]);

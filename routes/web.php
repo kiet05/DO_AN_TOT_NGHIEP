@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\ReviewController;
@@ -38,7 +39,7 @@ use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReturnRequestController;
-
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 use App\Http\Controllers\Frontend\UserController;
 use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
@@ -95,6 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
 });
+Route::post('/ai/chat', [AiChatController::class, 'chat'])->name('ai.chat');
 
 // ============================
 
@@ -357,6 +359,10 @@ Route::prefix('admin')
             ->name('contacts.index');
         Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
             ->name('contacts.show');
+
+     Route::resource('brands', BrandController::class)
+    ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
     });
 
 // Payment routes (outside admin)

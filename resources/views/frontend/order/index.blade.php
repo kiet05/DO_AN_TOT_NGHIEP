@@ -269,18 +269,37 @@
             font-size: 15px;
         }
 
-        .order-actions {
+      .order-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            align-items: flex-start;
         }
 
         .btn-order-outline,
         .btn-order-primary {
             border-radius: 999px;
-            padding: 4px 12px;
+            padding: 6px 14px;
             font-size: 12px;
+            min-width: 110px;
+            text-align: center;
+            white-space: nowrap;
         }
+        
+        .review-wrapper {
+            width: 100%;
+            margin-top: 8px;
+        }
+        
+        .review-toggle-btn {
+            border-radius: 4px;
+            padding: 6px 14px;
+            font-size: 12px;
+            min-width: 110px;
+            text-align: center;
+            white-space: nowrap;
+        }
+
 
         .btn-order-outline {
             border-color: #2563eb;
@@ -342,6 +361,7 @@
             border-color: #2563eb;
             color: #ffffff;
         }
+        
     </style>
 
     <div class="orders-page">
@@ -440,10 +460,10 @@
                                 $statusClass = 'badge-status badge-status-completed';
                                 $statusLabel = 'Vui lòng xác nhận đã được hoàn tiền';
                                 break;
-                            case 'returned_completed':
-                                $statusClass = 'badge-status badge-status-completed';
-                                $statusLabel = 'Đã hoàn thành hoàn hàng';
-                                break;
+                            //  case 'returned_completed':
+                            //    $statusClass = 'badge-status badge-status-completed';
+                            //   $statusLabel = 'Đã hoàn thành hoàn hàng';
+                            //   break;
                             case 'cancelled':
                                 $statusClass = 'badge-status badge-status-cancelled';
                                 $statusLabel = 'Đã hủy';
@@ -543,9 +563,11 @@
                             </div>
 
                             <div class="order-actions">
+
                                 <a href="{{ route('order.show', $order) }}" class="btn btn-sm btn-outline-primary">
                                     Chi tiết đơn
                                 </a>
+@if (!in_array($canon, ['completed']))
 
                                 @if ($order->canBeCancelledByCustomer())
                                     <a href="{{ route('order.cancel.form', $order) }}"
@@ -568,7 +590,7 @@
                                         Trả hàng / Hoàn tiền
                                     </a>
                                 @endif
-
+@endif
                                 {{-- 👉 NÚT: KHÁCH XÁC NHẬN ĐÃ NHẬN TIỀN HOÀN --}}
                                 @php
                                     $returnNeedConfirm = optional($order->returns ?? collect())
@@ -588,6 +610,69 @@
                                         </button>
                                     </form>
                                 @endif
+                                {{-- ⭐ ĐÁNH GIÁ ĐƠN HÀNG (CHỈ KHI ĐÃ GIAO) ⭐ --}}
+                                {{-- ⭐ ĐÁNH GIÁ ĐƠN HÀNG (CHỈ KHI ĐÃ GIAO) ⭐ --}}
+                                @if (in_array($canon, ['shipped', 'completed']))
+                                    @foreach ($order->items as $item)
+                                        @php
+                                            $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+                                                ->where('product_id', $item->product_id)
+                                                ->where('order_item_id', $item->id)
+                                                ->exists();
+                                        @endphp
+
+                                        @if (!$hasReviewed)
+                                            <div class="mb-3 d-flex gap-2 align-items-start">
+                                                <!-- Nút mở form đánh giá -->
+                                                <button class="btn btn-sm btn-outline-warning review-toggle-btn"
+                                                    type="button" data-item="{{ $item->id }}">
+                                                    Đánh giá
+                                                </button>
+                                                <!-- Form đánh giá ẩn -->
+                                                <div id="reviewForm-{{ $item->id }}" class="card p-3 shadow-sm mt-2"
+                                                    style="display:none; max-width:500px; flex-basis:100%;">
+                                                    <form action="{{ route('products.reviews.store', $item->product_id) }}"
+                                                        method="POST" enctype="multipart/form-data"
+                                                        onsubmit="submitReview(event, {{ $item->id }}, '{{ $item->product_name }}')">
+                                                        @csrf
+                                                        {{-- Sao --}}
+                                                        <div class="mb-2 d-flex gap-1 stars-wrapper"
+                                                            data-item="{{ $item->id }}">
+                                                            <input type="hidden" name="rating"
+                                                                id="ratingInput-{{ $item->id }}" value="0">
+                                                            @for ($i = 1; $i <= 5; $i++)
+                                                                <span class="star" data-value="{{ $i }}"
+                                                                    style="cursor:pointer; font-size:22px; color:#ccc;">★</span>
+                                                            @endfor
+                                                        </div>
+
+                                                        {{-- Nội dung --}}
+                                                        <div class="mb-2">
+                                                            <textarea name="comment" class="form-control" rows="2" placeholder="Viết nhận xét..." required></textarea>
+                                                        </div>
+
+                                                        {{-- Ảnh --}}
+                                                        <div class="mb-2">
+                                                            <input type="file" name="image" class="form-control"
+                                                                accept="image/*">
+                                                        </div>
+
+                                                        <button type="submit" class="btn btn-dark btn-sm"
+                                                            id="reviewBtn-{{ $item->id }}">
+                                                            Gửi
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="mb-2 text-success">
+                                                Bạn đã đánh giá sản phẩm: {{ $item->product_name }}
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                @endif
+
+
 
                                 @if ($order->canBeReorderedByCustomer())
                                     <form action="{{ route('order.reorder', $order) }}" method="POST" class="d-inline">
@@ -611,3 +696,84 @@
         </div>
     </div>
 @endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle form
+        document.querySelectorAll('.review-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const itemId = btn.dataset.item;
+                if (itemId) {
+                    const form = document.getElementById('reviewForm-' + itemId);
+                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Chọn sao
+        document.querySelectorAll('.stars-wrapper').forEach(wrapper => {
+            const itemId = wrapper.dataset.item;
+            const stars = wrapper.querySelectorAll('.star');
+            const input = document.getElementById('ratingInput-' + itemId);
+
+            stars.forEach((star, index) => {
+                star.addEventListener('click', function() {
+                    input.value = star.dataset.value;
+                    stars.forEach(s => s.style.color = '#ccc');
+                    for (let i = 0; i <= index; i++) {
+                        stars[i].style.color = '#f0ad4e';
+                    }
+                });
+            });
+        });
+    });
+
+    function submitReview(event, itemId, productName) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = document.getElementById('reviewBtn-' + itemId);
+        const formData = new FormData(form);
+
+        btn.disabled = true;
+        btn.innerText = 'Đang gửi...';
+
+        fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json' // <- rất quan trọng
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Disable nút đánh giá
+                    const toggleBtn = document.querySelector(`.review-toggle-btn[data-item='${itemId}']`);
+                    if (toggleBtn) {
+                        toggleBtn.disabled = true;
+                        toggleBtn.style.opacity = 0.5;
+                        toggleBtn.innerText = 'Đã đánh giá';
+                    }
+
+                    // Ẩn form
+                    document.getElementById('reviewForm-' + itemId).style.display = 'none';
+
+                    // Thêm thông báo
+                    const div = document.createElement('div');
+                    div.className = 'mb-2 text-success';
+                    div.innerText = data.message;
+                    toggleBtn.parentNode.insertBefore(div, toggleBtn.nextSibling);
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra!');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Có lỗi xảy ra, vui lòng thử lại!');
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = 'Gửi';
+            });
+    }
+</script>

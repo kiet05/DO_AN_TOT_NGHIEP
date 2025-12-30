@@ -528,12 +528,13 @@
                             <div class="voucher-section mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="summary-label">Mã giảm giá</span>
-                                    @if (!empty($suggestedVouchers))
+                                 {{--   @if (!empty($suggestedVouchers))
                                         <button type="button" class="btn btn-link btn-sm p-0 text-primary"
                                             onclick="openVoucherModal()">
                                             <i class="fas fa-ticket-alt me-1"></i> Chọn ưu đãi
                                         </button>
                                     @endif
+                                    --}}
                                 </div>
 
                                 @if ($cart->voucher)
@@ -560,13 +561,14 @@
                                                 <i class="fas fa-check"></i> Áp dụng
                                             </button>
                                         </div>
-                                        <div class="mt-2 small text-muted">
+                                       {{--  <div class="mt-2 small text-muted">
                                             Hoặc
                                             <button type="button" class="btn btn-link btn-sm p-0"
                                                 onclick="openVoucherModal()">
                                                 chọn từ danh sách ưu đãi
                                             </button>
                                         </div>
+                                        --}} 
                                         <div id="voucher-message" class="mt-2"></div>
                                     </div>
                                 @endif

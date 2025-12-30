@@ -18,6 +18,7 @@ class ReturnModel extends Model
         'proof_image',
         'status',
         'refund_method',
+        'refund_account_number',
         'refund_amount',
         'approved_by',
         'decided_at',

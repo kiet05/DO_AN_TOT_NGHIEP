@@ -57,10 +57,6 @@ class OrderController extends Controller
             'returned'   => [],
         ];
     }
-
-
-
-
     // Trạng thái CHUẨN dùng để hiển thị/validate chính
     private function allowedStatuses(): array
     {
@@ -75,7 +71,7 @@ class OrderController extends Controller
             'returned',   // Hoàn hàng
             'return_pending',   // Hoàn hàng
             'return_waiting_customer', // Chờ xác nhận hoàn hàng
-            'returned_completed', // Hoàn thành trả hàng
+            // 'returned_completed', // Hoàn thành trả hàng
         ];
     }
 

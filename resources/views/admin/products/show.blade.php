@@ -310,6 +310,9 @@
                                                                                 @case('pending')
                                                                                     Chờ xử lý
                                                                                 @break
+                                                                                @case('confirmed')
+                                                                                    Chờ chuẩn bị
+                                                                                @break
 
                                                                                 @case('shipping')
                                                                                     Đang giao
@@ -321,6 +324,12 @@
 
                                                                                 @case('cancelled')
                                                                                     Đã hủy
+                                                                                @break
+                                                                                @case('returned')
+                                                                                    Đã hoàn hàng
+                                                                                @break
+                                                                                @case('shipped')
+                                                                                    Đã giao
                                                                                 @break
 
                                                                                 @default

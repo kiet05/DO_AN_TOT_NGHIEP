@@ -15,8 +15,9 @@
             'return_pending' => ['label' => 'Đang chờ hoàn', 'badge' => 'bg-warning text-dark'],
             'returned' => ['label' => 'Hoàn hàng', 'badge' => 'bg-success'],
             'return_waiting_customer' => ['label' => 'Vui lý xác nhận', 'badge' => 'bg-warning text-dark'],
-            'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
+           // 'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
             'cancelled' => ['label' => 'Đã hủy', 'badge' => 'bg-dark'],
+            'completed' => ['label' => 'Hoàn thành', 'badge' => 'bg-success'],
         ];
 
         $currentStatus = $order->order_status;
@@ -35,6 +36,7 @@
             'return_pending' => 'Đang chờ hoàn',
             'returned' => 'Hoàn hàng',
             'cancelled' => 'Đã hủy',
+            'completed' => 'Hoàn thành',
         ];
 
         $statusOrder = array_keys($statusRow);

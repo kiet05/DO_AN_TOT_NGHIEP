@@ -69,7 +69,7 @@
                         $payTypeTxt = match ($order->payment_method ?? '') {
                             'cod' => 'Thanh toán khi nhận hàng (COD)',
                             'online' => 'Thanh toán online',
-                            default => 'Chưa xác định',
+                            default => 'VNPay',
                         };
                         $payTypeCls =
                             $order->payment_type === 'cod'
@@ -345,12 +345,10 @@
                                             <strong>Lý do hoàn hàng:</strong>
                                             {{ $shortReason }}
                                         </div>
-                                        {{-- <a href="{{ route('admin.return_orders.show', $order->id) }}"
-                                            TODO: thay '#' bằng route trang quản lý hoàn hàng, ví dụ:
-                                                route('admin.return_orders.show', $order->id)
-                                             class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('admin.returns.index') }}"
+                                            class="btn btn-sm btn-outline-primary">
                                             Xem chi tiết
-                                        </a> --}}
+                                        </a>
                                     </div>
                                 @endif
 

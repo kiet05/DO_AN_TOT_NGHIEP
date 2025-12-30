@@ -340,6 +340,11 @@
                                                 @endphp
                                                 {{ $methodLabel }}
                                             </p>
+{{-- Số tài khoản nhận tiền hoàn --}}
+                                            <p class="mb-1">
+                                                <strong>Số tài khoản nhận tiền hoàn:</strong>
+                                                {{ $ret->refund_account_number ?? '-' }}
+   
 
                                             <p class="mb-1">
                                                 <strong>Người duyệt:</strong>

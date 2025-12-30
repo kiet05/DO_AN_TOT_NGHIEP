@@ -38,6 +38,7 @@ class OrderController extends Controller
             'returned'   => 'Hoàn / Trả hàng',
             'return_waiting_customer' => 'Chờ xác nhận hoàn hàng',
             'cancelled'  => 'Đã hủy',
+            'completed'  => 'Hoàn thành',
         ];
 
         $query = Order::where('user_id', $userId)
@@ -49,12 +50,18 @@ class OrderController extends Controller
             $query->where('order_status', 'confirmed');
         } elseif ($status === 'returned') {
             $query->whereIn('order_status', ['return_pending', 'returned']);
+        } elseif ($status === 'shipped') {
+            // Hiển thị cả shipped + completed trong tab "Đã giao"
+            $query->whereIn('order_status', ['shipped', 'completed']);
         } elseif ($status !== 'all') {
             $query->where('order_status', $status);
         }
         if ($status === 'return_waiting_customer') {
             $query->whereHas('returns', function ($q) {
-                $q->where('status', \App\Models\ReturnModel::WAITING_CUSTOMER_CONFIRM);
+                $q->whereIn('status', [
+                    ReturnModel::PENDING,
+                    ReturnModel::WAITING_CUSTOMER_CONFIRM
+                ]);
             });
         }
         // 🔍 Tìm kiếm theo ID đơn + tên / ID sản phẩm
@@ -282,14 +289,14 @@ class OrderController extends Controller
             if ($path) {
                 $order->return_image_path = $path;
             }
-            $order->order_status      = Order::STATUS_RETURN_PENDING;
+            $order->order_status = Order::STATUS_RETURN_WAITING_CUSTOMER;
             $order->status_changed_at = now();
             $order->save();
 
             // 4. Ghi lịch sử trạng thái (nếu có)
             if (method_exists($order, 'statusHistories')) {
                 $order->statusHistories()->create([
-                    'status'   => Order::STATUS_RETURN_PENDING,
+                    'status'   => Order::STATUS_RETURN_WAITING_CUSTOMER,
                     'note'     => 'Khách hàng yêu cầu trả hàng / hoàn tiền (return #' . $ret->id . ')',
                     'order_id' => $order->id,
                 ]);
@@ -341,41 +348,45 @@ class OrderController extends Controller
     {
         $ret = ReturnModel::with('order')->findOrFail($id);
 
-        // Không cho xác nhận hộ người khác
+        // ❌ Không cho xác nhận hộ người khác
         if ($ret->user_id !== auth()->id()) {
             abort(403);
         }
 
-        // Chỉ cho xác nhận khi đang ở trạng thái CHỜ KH XÁC NHẬN
+        // ❌ Chỉ cho xác nhận khi đang chờ KH xác nhận tiền
         if ($ret->status !== ReturnModel::WAITING_CUSTOMER_CONFIRM) {
             return redirect()
                 ->route('order.index')
                 ->with('error', 'Yêu cầu này không ở trạng thái chờ xác nhận tiền.');
         }
 
-        $ret->status = ReturnModel::COMPLETED;
-        $ret->save();
+        DB::transaction(function () use ($ret) {
 
-        // Cập nhật trạng thái đơn: hóa đơn
-        if ($ret->order_id) {
-            Order::whereKey($ret->order_id)
-                ->update([
-                    'order_status'      => Order::STATUS_RETURNED_COMPLETED,
+            /** 1️⃣ Update trạng thái hoàn/trả */
+            $ret->update([
+                'status' => ReturnModel::COMPLETED,
+            ]);
+
+            /** 2️⃣ Update trạng thái đơn hàng → HOÀN / TRẢ */
+            if ($ret->order) {
+                $ret->order->update([
+                    'order_status'      => Order::STATUS_RETURNED, // 👈 chuẩn tab Hoàn / Trả
                     'status_changed_at' => now(),
                 ]);
-        }
+            }
 
-        // Ghi lịch sử trạng thái đơn (nếu có)
-        if ($ret->order && method_exists($ret->order, 'statusHistories')) {
-            $ret->order->statusHistories()->create([
-                'status'   => \App\Models\Order::STATUS_RETURNED,
-                'note'     => 'Khách xác nhận đã nhận tiền hoàn (return #' . $ret->id . ')',
-                'order_id' => $ret->order->id,
-            ]);
-        }
+            /** 3️⃣ GHI LOG LỊCH SỬ ĐƠN HÀNG (🔥 CÁI BẠN CẦN) */
+            if ($ret->order && method_exists($ret->order, 'statusHistories')) {
+                $ret->order->statusHistories()->create([
+                    'status'   => Order::STATUS_RETURNED,
+                    'note'     => 'Khách hàng xác nhận đã nhận tiền hoàn (return #' . $ret->id . ')',
+                    'order_id' => $ret->order->id,
+                ]);
+            }
+        });
 
         return redirect()
             ->route('order.index')
-            ->with('success', 'Bạn đã xác nhận đã nhận tiền hoàn. Cảm ơn bạn!');
+            ->with('success', 'Bạn đã xác nhận đã nhận tiền hoàn. Đơn hàng đã chuyển sang Hoàn / Trả hàng.');
     }
 }

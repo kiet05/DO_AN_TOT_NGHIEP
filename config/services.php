@@ -41,6 +41,9 @@ return [
         'return_url'  => env('APP_URL') . '/vnpay/return',
     ],
 
+'openai' => [
+    'key' => env('OPENAI_API_KEY'),
+],
 
 
 ];

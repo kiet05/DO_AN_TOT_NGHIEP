@@ -68,6 +68,13 @@
                             data-bs-parent="#sherahMenu">
                             <ul class="menu-bar__one-dropdown">
                                 <li>
+                                    <a href="{{ route('admin.brands.index') }}">
+                                        <span class="menu-bar__text">
+                                            <span class="menu-bar__name">Thương hiệu</span>
+                                        </span>
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="{{ route('admin.categories.index') }}">
                                         <span class="menu-bar__text">
                                             <span class="menu-bar__name">Danh mục</span>

@@ -76,6 +76,8 @@ class ReturnRequestController extends Controller
         $ret->approved_by   = Auth::id();
         $ret->decided_at    = now();
         $ret->refund_method = $data['refund_method'] ?? 'wallet';
+            $ret->refund_account_number = $request->input('refund_account_number'); // ✅
+
         $ret->refund_amount = $totalRefund;
         $ret->save();
 
