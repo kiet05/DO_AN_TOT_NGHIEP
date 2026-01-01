@@ -98,7 +98,7 @@
 
             {{-- KPI row 2 --}}
             <div class="row mg-top-10">
-              <div class="col-md-6 col-lg-4 mg-top-10">
+              <div class="col-md-6 col-lg-3 mg-top-10">
                 <div class="sherah-page-inner sherah-border sherah-default-bg">
                   <div class="sherah-page-title"><h4>Đơn hoàn thành</h4></div>
                   <div class="sherah-page-content">
@@ -110,7 +110,47 @@
                 </div>
               </div>
 
-              <div class="col-md-6 col-lg-4 mg-top-10">
+              <div class="col-md-6 col-lg-3 mg-top-10">
+                <div class="sherah-page-inner sherah-border sherah-default-bg">
+                  <div class="sherah-page-title">
+                    <h4>Đơn hàng đang giao</h4>
+                  </div>
+                  <div class="sherah-page-content">
+                    <a href="{{ route('admin.orders.index', array_merge(request()->only(['from','to']), ['status' => 'shipping'])) }}">
+                      <div class="h4 mb-0">
+                        {{ $totals->shipping_orders ?? 0 }}
+                      </div>
+                    </a>
+                    <small class="text-muted">
+                      Trong khoảng thời gian lọc
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Đơn hoàn hàng --}}
+              <div class="col-md-6 col-lg-3 mg-top-10">
+                <div class="sherah-page-inner sherah-border sherah-default-bg">
+                  <div class="sherah-page-title">
+                    <h4>Đơn hoàn hàng</h4>
+                  </div>
+                  <div class="sherah-page-content">
+                    <a href="{{ route('admin.orders.index', array_merge(request()->only(['from','to']), ['status' => 'returned'])) }}">
+                      <div class="h4 mb-0 text-warning">
+                        {{ $totals->returned_orders ?? 0 }}
+                      </div>
+                    </a>
+                    <small class="text-muted">
+                      Trong khoảng thời gian lọc
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+
+
+
+              <div class="col-md-6 col-lg-3 mg-top-10">
                 <div class="sherah-page-inner sherah-border sherah-default-bg">
                   <div class="sherah-page-title"><h4>Đơn bị huỷ</h4></div>
                   <div class="sherah-page-content">
@@ -122,34 +162,41 @@
                 </div>
               </div>
 
-              <div class="col-md-6 col-lg-4 mg-top-10">
-                <div class="sherah-page-inner sherah-border sherah-default-bg">
-                  <div class="sherah-page-title"><h4>Giá trị đơn trung bình</h4></div>
+              {{-- Order processing performance --}}
+            @if($orderProcessingStats && $orderProcessingStats->total_orders > 0)
+            <div class="row mg-top-10">
+
+              {{-- Giá trị đơn trung bình --}}
+              <div class="col-md-6 col-lg-6 mg-top-10">
+                <div class="sherah-page-inner sherah-border sherah-default-bg h-100">
+                  <div class="sherah-page-title">
+                    <h4>Giá trị đơn trung bình</h4>
+                  </div>
                   <div class="sherah-page-content">
                     <div class="h4 mb-0">
                       {{ number_format($avgOrderValue ?? 0, 0, ',', '.') }}đ
                     </div>
-                    <small class="text-muted">Chỉ tính đơn hoàn thành</small>
+                    <small class="text-muted">
+                      Chỉ tính đơn hoàn thành
+                    </small>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {{-- Order processing performance --}}
-            @if($orderProcessingStats && $orderProcessingStats->total_orders > 0)
-            <div class="row mg-top-10">
-              <div class="col-lg-12">
-                <div class="sherah-page-inner sherah-border sherah-default-bg">
+              {{-- Hiệu suất xử lý đơn hàng --}}
+              @if($orderProcessingStats && $orderProcessingStats->total_orders > 0)
+              <div class="col-md-6 col-lg-6 mg-top-10">
+                <div class="sherah-page-inner sherah-border sherah-default-bg h-100">
                   <div class="sherah-page-title">
                     <h4>Hiệu suất xử lý đơn hàng</h4>
                   </div>
                   <div class="sherah-page-content">
                     <div class="row">
-                      <div class="col-md-4">
+                      <div class="col-6">
                         <strong>Tổng đơn hoàn thành:</strong><br>
                         {{ $orderProcessingStats->total_orders }}
                       </div>
-                      <div class="col-md-4">
+                      <div class="col-6">
                         <strong>Thời gian xử lý TB:</strong><br>
                         {{ round($orderProcessingStats->avg_hours_to_complete, 1) }} giờ
                       </div>
@@ -157,8 +204,13 @@
                   </div>
                 </div>
               </div>
+              @endif
             </div>
             @endif
+
+            </div>
+
+            
 
             
             {{-- Charts --}}

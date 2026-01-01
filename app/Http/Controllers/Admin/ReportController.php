@@ -192,6 +192,20 @@ class ReportController extends Controller
             ')
             ->first();
 
+        // ===== 16. Danh sách đơn đã giao =====
+        $shippedOrders = (clone $baseOrders)
+            ->where('order_status', 'shipped')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
+        // ===== 17. Danh sách đơn đã huỷ / hoàn =====
+        $cancelledOrders = (clone $baseOrders)
+            ->whereIn('order_status', ['cancelled', 'returned'])
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get();
+
             // ===== 15. Trả dữ liệu sang view =====
         return view('admin.reports.index', compact(
             'from',
@@ -202,7 +216,8 @@ class ReportController extends Controller
             'ordersByStatus',
             'topProducts',
             'lowStock',
-
+            'shippedOrders',
+            'cancelledOrders',
             'revenueByPayment',
             'productReport',
             'slowMovingProducts',
