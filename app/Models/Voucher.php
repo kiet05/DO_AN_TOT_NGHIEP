@@ -12,8 +12,8 @@ class Voucher extends Model
     protected $fillable = [
         'code',
         'name',
-        'type',      // Giữ
-        'value',     // Giữ
+        'type',
+        'value', 
         'max_discount',
         'min_order_value',
         'apply_type',
