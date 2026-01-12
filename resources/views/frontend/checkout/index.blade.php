@@ -425,10 +425,10 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="checkout__input">
-                                            <p>Quận / Huyện<span>*</span></p>
+                                            <p>Phường / Xã <span>*</span></p>
                                             <select name="receiver_district" id="receiver_district" class="form-select"
                                                 data-selected="{{ $currentDistrict }}">
-                                                <option value="">-- Chọn quận / huyện --</option>
+                                                <option value="">-- Chọn phường / xã --</option>
                                                 @foreach ($districtOptions as $code => $name)
                                                     <option value="{{ $code }}" @selected($currentDistrict === $code)>
                                                         {{ $name }}</option>
@@ -724,7 +724,7 @@
 
             if (citySelect) citySelect.value = '';
             if (districtSelect) {
-                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+                districtSelect.innerHTML = '<option value="">-- Chọn phường / xã --</option>';
             }
 
             if (typeof window.updateTotals === 'function') {
@@ -770,7 +770,7 @@
             };
 
             const populateDistricts = (cityCode, preset) => {
-                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+                districtSelect.innerHTML = '<option value="">-- Chọn phường / xã --</option>';
                 if (!cityCode || !locationMap[cityCode]) return;
 
                 const districts = locationMap[cityCode].districts || {};
@@ -808,7 +808,7 @@
             if (citySelect.value) {
                 populateDistricts(citySelect.value, originalDistrict);
             } else {
-                districtSelect.innerHTML = '<option value="">-- Chọn quận / huyện --</option>';
+                districtSelect.innerHTML = '<option value="">-- Chọn phường / xã --</option>';
             }
             updateTotals();
 

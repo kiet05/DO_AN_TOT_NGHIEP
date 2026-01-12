@@ -46,9 +46,10 @@
                                                         <div class="form-group">
                                                             <label class="sherah-wc__form-label">Giá gốc</label>
                                                             <div class="form-group__input">
-                                                                <input class="sherah-wc__form-input"
+                                                                <input id="base-price" class="sherah-wc__form-input"
                                                                     placeholder="Nhập giá gốc" type="number" step="0.01"
                                                                     name="base_price" required>
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -376,6 +377,11 @@
                 priceInput.name = `variants[${variantIndex}][price]`;
                 statusInput.name = `variants[${variantIndex}][status]`;
                 imageInput.name = `variants[${variantIndex}][image]`;
+                // ✅ FILL GIÁ GỐC
+                const basePriceInput = document.getElementById('base-price');
+                if (basePriceInput && basePriceInput.value !== '') {
+                    priceInput.value = basePriceInput.value;
+                }
 
                 [size, color, material].forEach(function(attr) {
                     if (attr && attr.id) {

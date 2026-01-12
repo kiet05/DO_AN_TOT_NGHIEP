@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -68,11 +68,13 @@ class BrandController extends Controller
 
     public function destroy(Brand $brand)
     {
-        if ($brand->logo) {
-            Storage::disk('public')->delete($brand->logo);
+        if ($brand->products()->count() > 0) {
+            return redirect()->route('admin.brands.index')
+                ->with('error', 'Không thể xóa brand vì đã có sản phẩm liên kết!');
         }
-        $brand->delete();
 
-        return back()->with('success', 'Xóa brand thành công');
+        $brand->delete();
+        return redirect()->route('admin.brands.index')
+            ->with('success', 'Xóa brand thành công!');
     }
 }

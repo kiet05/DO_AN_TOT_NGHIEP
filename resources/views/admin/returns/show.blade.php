@@ -27,10 +27,8 @@
 
                             <div class="sherah-default-bg sherah-border mg-top-30">
                                 <div class="row">
-                                    {{-- CỘT TRÁI: THÔNG TIN YÊU CẦU + SẢN PHẨM --}}
                                     <div class="col-lg-8 col-12 p-4">
 
-                                        {{-- Thông tin khách & lý do --}}
                                         <div class="mb-3">
                                             <p class="mb-1">
                                                 <strong>Khách:</strong>
@@ -67,7 +65,6 @@
                                             </p>
                                         </div>
 
-                                        {{-- Ảnh minh chứng --}}
                                         <div class="mb-4">
                                             <h5 class="mb-2">Ảnh minh chứng</h5>
 
@@ -102,7 +99,6 @@
                                             @endif
                                         </div>
 
-                                        {{-- Sản phẩm trong yêu cầu --}}
                                         <div class="mt-4">
                                             <h5 class="mb-2">Sản phẩm liên quan</h5>
 
@@ -124,15 +120,14 @@
                                                     </thead>
                                                     <tbody>
                                                         @php
-                                                            // Tổng gốc của order (dùng để phân bổ voucher nếu voucher áp dụng toàn đơn)
                                                             $order = $ret->order;
                                                             $order_original_total = 0;
                                                             $order_final_total = 0;
+
                                                             if ($order && $order->orderItems) {
                                                                 foreach ($order->orderItems as $oi) {
                                                                     $order_original_total +=
                                                                         ($oi->price ?? 0) * ($oi->quantity ?? 0);
-                                                                    // try several possible fields for final line total
                                                                     $order_final_total +=
                                                                         $oi->final_amount ??
                                                                         ($oi->total_price ??
@@ -153,24 +148,19 @@
                                                                 $product = $orderItem?->product;
                                                                 $variant = $orderItem?->productVariant;
 
-                                                                // bảo vệ null
                                                                 $oi_price = $orderItem->price ?? 0;
                                                                 $oi_qty = $orderItem->quantity ?? 1;
 
-                                                                // line original total (giá gốc * qty)
                                                                 $line_original_total = $oi_price * $oi_qty;
 
-                                                                // Nếu orderItem đã lưu giá sau giảm (final_amount or final_price or total_price)
                                                                 $line_final_total_raw =
                                                                     $orderItem->final_amount ??
                                                                     ($orderItem->final_price ??
                                                                         ($orderItem->total_price ?? null));
 
                                                                 if ($line_final_total_raw !== null) {
-                                                                    // final total cho toàn dòng đã có sẵn
                                                                     $line_final_total = (float) $line_final_total_raw;
                                                                 } else {
-                                                                    // chia voucher theo tỉ lệ nếu order có giảm chung
                                                                     if (
                                                                         $order_original_total > 0 &&
                                                                         $order_discount_total > 0
@@ -186,30 +176,31 @@
                                                                         $line_original_total - $proportional_discount;
                                                                 }
 
-                                                                // đơn giá sau giảm (cho 1 sản phẩm)
                                                                 $unit_price_after =
                                                                     $oi_qty > 0 ? $line_final_total / $oi_qty : 0;
 
-                                                                // số lượng khách yêu cầu hoàn (trong return_item)
                                                                 $requested_qty = $item->quantity ?? 0;
 
-                                                                // tổng tiền hoàn cho dòng này = đơn giá sau giảm * số lượng trả
                                                                 $refund_total_line = $unit_price_after * $requested_qty;
 
-                                                                // cộng vào tổng trả chung
                                                                 $total_refund_sum += $refund_total_line;
                                                             @endphp
 
                                                             <tr>
-                                                                <td>
-                                                                    @if ($variant?->image_url)
-                                                                        <img src="{{ asset('storage/' . $variant->image_url) }}"
-                                                                            style="width:50px;height:50px;object-fit:cover;">
-                                                                    @elseif ($product?->image_main)
-                                                                        <img src="{{ asset('storage/' . $product->image_main) }}"
-                                                                            style="width:50px;height:50px;object-fit:cover;">
-                                                                    @endif
+                                                                <td style="text-align:center;">
+                                                                    <div class="return-product-thumb">
+                                                                        @if ($variant?->image_url)
+                                                                            <img
+                                                                                src="{{ asset('storage/' . $variant->image_url) }}">
+                                                                        @elseif ($product?->image_main)
+                                                                            <img
+                                                                                src="{{ asset('storage/' . $product->image_main) }}">
+                                                                        @else
+                                                                            <span class="text-muted small">No image</span>
+                                                                        @endif
+                                                                    </div>
                                                                 </td>
+
                                                                 <td>
                                                                     {{ $product?->name ?? 'Sản phẩm #' . ($orderItem->product_id ?? '') }}
                                                                     @if ($variant)
@@ -232,11 +223,8 @@
                                                                     {{ $requested_qty }}
                                                                 </td>
                                                                 <td style="text-align: right;">
-                                                                    {{-- Hiện đơn giá SAU khi đã chia voucher --}}
                                                                     <strong>{{ number_format($unit_price_after, 0, ',', '.') }}
                                                                         đ</strong>
-                                                                    <div class="text-muted small">(x{{ $oi_qty }}
-                                                                        tổng dòng)</div>
                                                                 </td>
                                                                 <td style="text-align: right;">
                                                                     <strong>{{ number_format($refund_total_line, 0, ',', '.') }}
@@ -257,7 +245,8 @@
                                                                     hoàn (tạm tính):</strong></td>
                                                             <td style="text-align:right;">
                                                                 <strong>{{ number_format($total_refund_sum, 0, ',', '.') }}
-                                                                    đ</strong></td>
+                                                                    đ</strong>
+                                                            </td>
                                                         </tr>
                                                     </tfoot>
                                                 </table>
@@ -266,23 +255,13 @@
 
                                     </div>
 
-                                    {{-- CỘT PHẢI: XỬ LÝ & THÔNG TIN HOÀN TIỀN --}}
                                     <div class="col-lg-4 col-12 sherah-border-left p-4">
 
-                                        {{-- FORM XỬ LÝ (Duyệt / Từ chối) --}}
                                         <div class="mb-4">
                                             <h5 class="mb-3">Xử lý</h5>
 
                                             <form action="{{ route('admin.returns.approve', $ret->id) }}" method="POST">
                                                 @csrf
-                                                <div class="mb-2">
-                                                    <label class="form-label">Số tiền hoàn</label>
-                                                    <input type="number" step="1000" min="0" name="refund_amount"
-                                                        value="{{ old('refund_amount', $ret->refund_amount ?? round($total_refund_sum)) }}"
-                                                        class="form-control">
-                                                    <small class="text-muted">Gợi ý: tổng tiền hoàn tạm tính đã hiện ở dưới
-                                                        bảng.</small>
-                                                </div>
 
                                                 <div class="mb-3">
                                                     <label class="form-label">Phương thức</label>
@@ -300,7 +279,7 @@
 
                                                 @if ($ret->status === \App\Models\ReturnModel::PENDING)
                                                     <button type="submit" class="btn btn-primary w-100 mb-2">
-                                                        Duyệt
+                                                        Duyệt (tự tính tiền hoàn)
                                                     </button>
                                                 @else
                                                     <button type="button" class="btn btn-secondary w-100 mb-2" disabled>
@@ -318,15 +297,54 @@
                                                     </button>
                                                 @endif
                                             </form>
+
+                                            @if ($ret->status === \App\Models\ReturnModel::APPROVED)
+                                                <form action="{{ route('admin.returns.refundAuto', $ret->id) }}"
+                                                    method="POST" class="mt-2">
+                                                    @csrf
+                                                    <button class="btn btn-success w-100">Hoàn tiền vào ví</button>
+                                                </form>
+
+                                                <form action="{{ route('admin.returns.refundManual', $ret->id) }}"
+                                                    method="POST" enctype="multipart/form-data" class="mt-2">
+                                                    @csrf
+                                                    <div class="mb-2">
+                                                        <label class="form-label small">
+                                                            Ảnh chứng minh đã hoàn tiền
+                                                        </label>
+                                                        <input type="file" name="refund_proof_image" class="form-control"
+                                                            accept="image/*">
+                                                    </div>
+
+                                                    <div class="mb-2">
+                                                        <label class="form-label small">
+                                                            Người duyệt
+                                                        </label>
+                                                        <input type="text" name="approved_by_name"
+                                                            class="form-control" placeholder="Nhập tên người duyệt"
+                                                            value="{{ old('approved_by_name', auth()->user()->name ?? '') }}">
+                                                    </div>
+
+                                                    <button class="btn btn-warning w-100">
+                                                        Xác nhận đã hoàn thủ công
+                                                    </button>
+
+                                                    {{-- <button class="btn btn-warning w-100">Đánh dấu đã hoàn thủ công</button> --}}
+                                                </form>
+                                            @endif
                                         </div>
 
-                                        {{-- THÔNG TIN HOÀN TIỀN --}}
                                         <div class="sherah-default-bg sherah-border p-3 mb-3">
                                             <h6 class="mb-3">Thông tin hoàn tiền</h6>
 
                                             <p class="mb-1">
-                                                <strong>Số tiền hoàn (gợi ý):</strong>
+                                                <strong>Số tiền hoàn (tạm tính):</strong>
                                                 {{ number_format($total_refund_sum, 0, ',', '.') }} đ
+                                            </p>
+
+                                            <p class="mb-1">
+                                                <strong>Số tiền hoàn (đã lưu):</strong>
+                                                {{ number_format($ret->refund_amount ?? 0, 0, ',', '.') }} đ
                                             </p>
 
                                             <p class="mb-1">
@@ -340,16 +358,44 @@
                                                 @endphp
                                                 {{ $methodLabel }}
                                             </p>
-{{-- Số tài khoản nhận tiền hoàn --}}
-                                            <p class="mb-1">
-                                                <strong>Số tài khoản nhận tiền hoàn:</strong>
-                                                {{ $ret->refund_account_number ?? '-' }}
-   
+                                            @if ($ret->refund_method === 'manual')
+                                                <p class="mb-1">
+                                                    <strong>Số tài khoản hoàn tiền:</strong>
+                                                    @if ($ret->refund_account_number)
+                                                        <span class="text-dark">
+                                                            {{ $ret->refund_account_number }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">Khách chưa cung cấp</span>
+                                                    @endif
+                                                </p>
+                                            @endif
+
+                                            @if ($ret->refund_proof_image)
+                                                <p class="mb-1">
+                                                    <strong>Ảnh chứng minh hoàn tiền:</strong>
+                                                </p>
+
+                                                <a href="{{ asset('storage/' . $ret->refund_proof_image) }}"
+                                                    target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                                                    Xem ảnh gốc
+                                                </a>
+
+                                                <div
+                                                    style="max-width:240px;
+                border:1px solid #eee;
+                padding:6px;
+                border-radius:8px;">
+                                                    <img src="{{ asset('storage/' . $ret->refund_proof_image) }}"
+                                                        style="width:100%; object-fit:contain;">
+                                                </div>
+                                            @endif
 
                                             <p class="mb-1">
                                                 <strong>Người duyệt:</strong>
-                                                {{ $ret->approver->name ?? '-' }}
+                                                {{ $ret->approved_by_name ?? '-' }}
                                             </p>
+
 
                                             <p class="mb-1">
                                                 <strong>Thời điểm:</strong>
@@ -373,7 +419,6 @@
                                             </p>
                                         </div>
 
-                                        {{-- THÔNG TIN ĐƠN HÀNG --}}
                                         @if ($ret->order)
                                             <div class="sherah-default-bg sherah-border p-3">
                                                 <h6 class="mb-3">Thông tin đơn hàng</h6>
@@ -386,7 +431,7 @@
                                                 </p>
                                                 <p class="mb-1">
                                                     <strong>Giá trị đơn (sau giảm):</strong>
-                                                    {{ number_format($ret->order->final_amount ?? ($order_final_total ?? 0), 0, ',', '.') }}₫
+                                                    {{ number_format($ret->order->final_amount ?? 0, 0, ',', '.') }}₫
                                                 </p>
                                                 <p class="mb-0">
                                                     <strong>Trạng thái đơn:</strong>
@@ -399,10 +444,31 @@
                                 </div>
                             </div>
 
-                        </div> {{-- /.sherah-dsinner --}}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    <style>
+        .return-product-thumb {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        .return-product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* ❗ quan trọng */
+        }
+    </style>
+
 @endsection

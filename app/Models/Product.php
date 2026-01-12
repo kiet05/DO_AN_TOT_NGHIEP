@@ -55,7 +55,12 @@ class Product extends Model
     }
 
     public function orderItems()
-{
-    return $this->hasMany(OrderItem::class, 'product_id', 'id');
-}
+    {
+        return $this->hasMany(OrderItem::class, 'product_id', 'id');
+    }
+    // Product.php
+    public function orders()
+    {
+        return $this->hasMany(OrderItem::class); // giả sử OrderItem lưu product_id
+    }
 }

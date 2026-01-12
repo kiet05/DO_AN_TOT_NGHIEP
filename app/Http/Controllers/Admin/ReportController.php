@@ -36,14 +36,23 @@ class ReportController extends Controller
         // ===== 3. Tổng quan đơn hàng & doanh thu =====
         $totals = (clone $baseOrders)
             ->selectRaw("
-                SUM(CASE WHEN order_status = 'completed' THEN final_amount ELSE 0 END) AS revenue,
-                COUNT(*) AS orders_count,
-                SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) AS completed_orders,
-                SUM(CASE WHEN order_status = 'pending'   THEN 1 ELSE 0 END) AS pending_orders,
-                SUM(CASE WHEN order_status = 'shipping'  THEN 1 ELSE 0 END) AS shipping_orders,
-                SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders
-            ")
+        SUM(CASE WHEN order_status = 'completed' THEN final_amount ELSE 0 END) AS revenue,
+        COUNT(*) AS orders_count,
+  -- ĐƠN HOÀN THÀNH (đang dùng trong view)
+        SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) AS completed_orders,
+        -- ĐÃ GIAO
+        SUM(CASE WHEN order_status = 'shipped' THEN 1 ELSE 0 END) AS shipped_orders,
+
+        -- ĐÃ HOÀN
+        SUM(CASE WHEN order_status = 'returned' THEN 1 ELSE 0 END) AS returned_orders,
+
+        -- KHÁC
+        SUM(CASE WHEN order_status = 'pending'   THEN 1 ELSE 0 END) AS pending_orders,
+        SUM(CASE WHEN order_status = 'shipping'  THEN 1 ELSE 0 END) AS shipping_orders,
+        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_orders
+    ")
             ->first();
+
 
         // ===== 4. AOV (Average Order Value) =====
         $avgOrderValue = $totals->completed_orders > 0
@@ -192,7 +201,7 @@ class ReportController extends Controller
             ')
             ->first();
 
-            // ===== 15. Trả dữ liệu sang view =====
+        // ===== 15. Trả dữ liệu sang view =====
         return view('admin.reports.index', compact(
             'from',
             'to',
@@ -211,7 +220,6 @@ class ReportController extends Controller
             'chartLabels',
             'chartData'
         ));
-
     }
 
     // ========================

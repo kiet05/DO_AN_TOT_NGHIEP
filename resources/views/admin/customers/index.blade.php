@@ -37,9 +37,9 @@
                   </form>
 
                   {{-- nút thêm mới --}}
-                  <a href="{{ route('admin.customers.create') }}" class="sherah-btn sherah-gbcolor">
+                  {{-- <a href="{{ route('admin.customers.create') }}" class="sherah-btn sherah-gbcolor">
                     + Thêm khách hàng
-                  </a>
+                  </a> --}}
                 </div>
               </div>
             </div>
@@ -88,13 +88,13 @@
 
 
                         {{-- SỬA --}}
-                        <form action="{{ route('admin.customers.edit', $u->id) }}" method="GET" class="mb-0">
+                        {{-- <form action="{{ route('admin.customers.edit', $u->id) }}" method="GET" class="mb-0">
                             <button type="submit"
                                     class="sherah-table__action"
                                     style="background:#10b981;color:#fff;padding:4px 10px;border-radius:4px;">
                                 Sửa
                             </button>
-                        </form>
+                        </form> --}}
 
 
                         {{-- KHÓA/MỞ --}}
@@ -110,7 +110,7 @@
                         </form>
 
                         {{-- XOÁ --}}
-                        <form method="POST"
+                        {{-- <form method="POST"
                               action="{{ route('admin.customers.destroy', $u->id) }}"
                               onsubmit="return confirm('Xác nhận xoá khách hàng này?')">
                           @csrf @method('DELETE')
@@ -119,7 +119,7 @@
                                   style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;">
                             Xoá
                           </button>
-                        </form>
+                        </form> --}}
 
                       </div>
                     </td>

@@ -35,6 +35,8 @@ class VoucherController extends Controller
     }
     public function edit(Voucher $voucher)
     {
+        $isUsed = $voucher->used_count > 0;
+
         $products   = Product::select('id', 'name')->get();
         $categories = Category::select('id', 'name')->get();
 
@@ -153,6 +155,11 @@ class VoucherController extends Controller
     // ========================================================================
     public function update(Request $request, Voucher $voucher)
     {
+        if ($voucher->used_count > 0) {
+            return redirect()->route('admin.vouchers.index')
+                ->with('error', 'Mã giảm giá đã được áp dụng, không thể chỉnh sửa!');
+        }
+
         $data = $request->validate([
             'code'  => 'required|string|max:50|unique:vouchers,code,' . $voucher->id,
             'name'  => 'required|string|max:255',
@@ -251,9 +258,26 @@ class VoucherController extends Controller
 
     public function destroy(Voucher $voucher)
     {
+        if ($voucher->used_count > 0) {
+            return redirect()->route('admin.vouchers.index')
+                ->with('error', 'Mã giảm giá đã được áp dụng, không thể xóa!');
+        }
+
         $voucher->delete();
-        return back()->with('success', 'Xóa voucher thành công');
+
+        return redirect()->route('admin.vouchers.index')
+            ->with('success', 'Xóa mã giảm giá thành công!');
     }
+    public function toggle(Voucher $voucher)
+    {
+        $voucher->is_active = !$voucher->is_active;
+        $voucher->save();
+
+        return redirect()->route('admin.vouchers.index')
+            ->with('success', 'Cập nhật trạng thái voucher thành công!');
+    }
+
+
     public function report(Voucher $voucher)
     {
         $usages = $voucher->usages()

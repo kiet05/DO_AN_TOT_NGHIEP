@@ -269,7 +269,7 @@
             font-size: 15px;
         }
 
-      .order-actions {
+        .order-actions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
@@ -285,12 +285,12 @@
             text-align: center;
             white-space: nowrap;
         }
-        
+
         .review-wrapper {
             width: 100%;
             margin-top: 8px;
         }
-        
+
         .review-toggle-btn {
             border-radius: 4px;
             padding: 6px 14px;
@@ -361,7 +361,6 @@
             border-color: #2563eb;
             color: #ffffff;
         }
-        
     </style>
 
     <div class="orders-page">
@@ -432,9 +431,6 @@
                                 $statusLabel = 'Chờ xác nhận';
                                 break;
                             case 'confirmed':
-                                $statusClass = 'badge-status badge-status-processing';
-                                $statusLabel = 'Chờ chuẩn bị';
-                                break;
                             case 'processing':
                                 $statusClass = 'badge-status badge-status-processing';
                                 $statusLabel = 'Đang chuẩn bị';
@@ -444,9 +440,12 @@
                                 $statusLabel = 'Đang giao';
                                 break;
                             case 'shipped':
+                                $statusClass = 'badge-status badge-status-shipped';
+                                $statusLabel = 'Đã giao hàng';
+                                break;
                             case 'completed':
                                 $statusClass = 'badge-status badge-status-completed';
-                                $statusLabel = 'Đã giao';
+                                $statusLabel = 'Hoàn thành';
                                 break;
                             case 'return_pending':
                                 $statusClass = 'badge-status badge-status-completed';
@@ -567,30 +566,53 @@
                                 <a href="{{ route('order.show', $order) }}" class="btn btn-sm btn-outline-primary">
                                     Chi tiết đơn
                                 </a>
-@if (!in_array($canon, ['completed']))
+                                @php
+                                    $latestReturn = optional($order->returns ?? collect())
+                                        ->where('user_id', auth()->id())
+                                        ->sortByDesc('id')
+                                        ->first();
+                                @endphp
 
-                                @if ($order->canBeCancelledByCustomer())
-                                    <a href="{{ route('order.cancel.form', $order) }}"
-                                        class="btn btn-sm btn-outline-danger ms-2"
-                                        onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
-                                        Hủy đơn
-                                    </a>
-                                @elseif ($order->canBeConfirmedReceivedByCustomer())
-                                    <form action="{{ route('order.received', $order) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Xác nhận bạn đã nhận được hàng?');">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-outline-success ms-2">
-                                            Đã nhận hàng
-                                        </button>
-                                    </form>
-                                @elseif ($order->canRequestReturnByCustomer())
-                                    <a href="{{ route('order.return.form', $order) }}"
-                                        class="btn btn-sm btn-outline-warning ms-2"
-                                        onclick="return confirm('Bạn có chắc chắn muốn hoàn/trả đơn hàng này không?');">
-                                        Trả hàng / Hoàn tiền
+                                @if ($latestReturn)
+                                    <a href="{{ route('order.return.track', $order) }}"
+                                        class="btn btn-sm btn-outline-info ms-2">
+                                        Theo dõi hoàn
                                     </a>
                                 @endif
-@endif
+
+                                @if ($canon === 'shipped')
+                                    <form action="{{ route('order.complete', $order) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Xác nhận đơn hàng đã hoàn tất?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success ms-2">
+                                            Hoàn thành đơn
+                                        </button>
+                                    </form>
+                                @endif
+
+                                @if (!in_array($canon, ['completed']))
+                                    @if ($order->canBeCancelledByCustomer())
+                                        <a href="{{ route('order.cancel.form', $order) }}"
+                                            class="btn btn-sm btn-outline-danger ms-2"
+                                            onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                                            Hủy đơn
+                                        </a>
+                                    @elseif ($order->canBeConfirmedReceivedByCustomer())
+                                        <form action="{{ route('order.received', $order) }}" method="POST"
+                                            class="d-inline" onsubmit="return confirm('Xác nhận bạn đã nhận được hàng?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-success ms-2">
+                                                Đã nhận hàng
+                                            </button>
+                                        </form>
+                                    @elseif ($order->canRequestReturnByCustomer())
+                                        <a href="{{ route('order.return.form', $order) }}"
+                                            class="btn btn-sm btn-outline-warning ms-2"
+                                            onclick="return confirm('Bạn có chắc chắn muốn hoàn/trả đơn hàng này không?');">
+                                            Trả hàng / Hoàn tiền
+                                        </a>
+                                    @endif
+                                @endif
                                 {{-- 👉 NÚT: KHÁCH XÁC NHẬN ĐÃ NHẬN TIỀN HOÀN --}}
                                 @php
                                     $returnNeedConfirm = optional($order->returns ?? collect())
@@ -610,69 +632,129 @@
                                         </button>
                                     </form>
                                 @endif
-                                {{-- ⭐ ĐÁNH GIÁ ĐƠN HÀNG (CHỈ KHI ĐÃ GIAO) ⭐ --}}
-                                {{-- ⭐ ĐÁNH GIÁ ĐƠN HÀNG (CHỈ KHI ĐÃ GIAO) ⭐ --}}
-                                @if (in_array($canon, ['shipped', 'completed']))
-                                    @foreach ($order->items as $item)
-                                        @php
-                                            $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+                                {{-- ⭐ FORM ĐÁNH GIÁ SẢN PHẨM SAU KHI NHẬN HÀNG ⭐ --}}
+                                @if (in_array($canon, ['shipped', 'completed']) && !$order->is_reviewed)
+                                    @php
+                                        // Lọc ra những sản phẩm chưa đánh giá
+                                        $itemsToReview = $order->items->filter(function ($item) {
+                                            return !\App\Models\Review::where('user_id', auth()->id())
                                                 ->where('product_id', $item->product_id)
                                                 ->where('order_item_id', $item->id)
                                                 ->exists();
-                                        @endphp
+                                        });
+                                    @endphp
 
-                                        @if (!$hasReviewed)
-                                            <div class="mb-3 d-flex gap-2 align-items-start">
-                                                <!-- Nút mở form đánh giá -->
-                                                <button class="btn btn-sm btn-outline-warning review-toggle-btn"
-                                                    type="button" data-item="{{ $item->id }}">
-                                                    Đánh giá
-                                                </button>
-                                                <!-- Form đánh giá ẩn -->
-                                                <div id="reviewForm-{{ $item->id }}" class="card p-3 shadow-sm mt-2"
-                                                    style="display:none; max-width:500px; flex-basis:100%;">
-                                                    <form action="{{ route('products.reviews.store', $item->product_id) }}"
-                                                        method="POST" enctype="multipart/form-data"
-                                                        onsubmit="submitReview(event, {{ $item->id }}, '{{ $item->product_name }}')">
-                                                        @csrf
-                                                        {{-- Sao --}}
-                                                        <div class="mb-2 d-flex gap-1 stars-wrapper"
-                                                            data-item="{{ $item->id }}">
-                                                            <input type="hidden" name="rating"
-                                                                id="ratingInput-{{ $item->id }}" value="0">
-                                                            @for ($i = 1; $i <= 5; $i++)
-                                                                <span class="star" data-value="{{ $i }}"
-                                                                    style="cursor:pointer; font-size:22px; color:#ccc;">★</span>
-                                                            @endfor
-                                                        </div>
-
-                                                        {{-- Nội dung --}}
-                                                        <div class="mb-2">
-                                                            <textarea name="comment" class="form-control" rows="2" placeholder="Viết nhận xét..." required></textarea>
-                                                        </div>
-
-                                                        {{-- Ảnh --}}
-                                                        <div class="mb-2">
-                                                            <input type="file" name="image" class="form-control"
-                                                                accept="image/*">
-                                                        </div>
-
-                                                        <button type="submit" class="btn btn-dark btn-sm"
-                                                            id="reviewBtn-{{ $item->id }}">
-                                                            Gửi
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
+                                    @if ($itemsToReview->isNotEmpty())
+                                        <!-- Nút đánh giá tổng -->
+                                        @if ($itemsToReview->isNotEmpty())
+                                            <!-- Nút đánh giá tổng -->
+                                            <button class="btn btn-sm btn-outline-warning review-toggle-btn" type="button"
+                                                data-order="{{ $order->id }}">
+                                                Đánh giá
+                                            </button>
                                         @else
-                                            <div class="mb-2 text-success">
-                                                Bạn đã đánh giá sản phẩm: {{ $item->product_name }}
-                                            </div>
+                                            <span class="text-success" style="font-size: 12px;">✓ Đã đánh giá</span>
                                         @endif
-                                    @endforeach
+
+                                        <!-- Wrapper chứa form từng sản phẩm (ẩn ban đầu) -->
+                                        <div class="review-wrapper" style="display:none; margin-top:8px;">
+                                            @foreach ($itemsToReview as $item)
+                                                @php
+                                                    $variant = $item->productVariant ?? null;
+                                                    $product = $item->product ?? null;
+
+                                                    // Ảnh hiển thị (ưu tiên biến thể, fallback ảnh chính sản phẩm)
+                                                    if ($variant && $variant->image_url) {
+                                                        $thumb = asset('storage/' . $variant->image_url);
+                                                    } elseif ($product && $product->image_main) {
+                                                        $thumb = asset('storage/' . $product->image_main);
+                                                    } else {
+                                                        $thumb = null;
+                                                    }
+
+                                                    // Xử lý text biến thể
+                                                    if ($variant) {
+                                                        $variantText = $variant->name ?? null;
+
+                                                        if (
+                                                            !$variantText &&
+                                                            $variant->attributes &&
+                                                            $variant->attributes->count()
+                                                        ) {
+                                                            // Ví dụ: "Đen / Size L / Cotton"
+                                                            $variantText = $variant->attributes
+                                                                ->pluck('value')
+                                                                ->join(' / ');
+                                                        }
+                                                    } else {
+                                                        $variantText =
+                                                            $item->variant_name ??
+                                                            ($item->variant ?? ($item->options ?? null));
+                                                    }
+                                                @endphp
+
+                                                <div class="mb-3">
+                                                    <!-- Hiển thị tên sản phẩm + biến thể + ảnh -->
+                                                    <div class="d-flex align-items-center mb-2 gap-2">
+                                                        @if ($thumb)
+                                                            <img src="{{ $thumb }}" alt="{{ $item->product_name }}"
+                                                                style="width:60px; height:60px; object-fit:cover; border-radius:6px;">
+                                                        @endif
+                                                        <div>
+                                                            <div style="font-weight:600;">
+                                                                {{ $item->product_name }}
+                                                                @if ($variantText)
+                                                                    - {{ $variantText }}
+                                                                @endif
+                                                                (x{{ $item->quantity }})
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Form đánh giá -->
+                                                    <div id="reviewForm-{{ $item->id }}" class="card p-3 shadow-sm"
+                                                        style="max-width:500px; flex-basis:100%;">
+                                                        <form
+                                                            action="{{ route('products.reviews.store', $item->product_id) }}"
+                                                            method="POST" enctype="multipart/form-data"
+                                                            onsubmit="submitReview(event, {{ $item->id }}, '{{ $item->product_name }}')">
+                                                            @csrf
+                                                            <input type="hidden" name="order_item_id"
+                                                                value="{{ $item->id }}">
+
+                                                            {{-- Sao --}}
+                                                            <div class="mb-2 d-flex gap-1 stars-wrapper"
+                                                                data-item="{{ $item->id }}">
+                                                                <input type="hidden" name="rating"
+                                                                    id="ratingInput-{{ $item->id }}" value="0">
+                                                                @for ($i = 1; $i <= 5; $i++)
+                                                                    <span class="star" data-value="{{ $i }}"
+                                                                        style="cursor:pointer; font-size:22px; color:#ccc;">★</span>
+                                                                @endfor
+                                                            </div>
+
+                                                            {{-- Nội dung --}}
+                                                            <div class="mb-2">
+                                                                <textarea name="comment" class="form-control" rows="2" placeholder="Viết nhận xét..." required></textarea>
+                                                            </div>
+
+                                                            {{-- Ảnh --}}
+                                                            <div class="mb-2">
+                                                                <input type="file" name="image" class="form-control"
+                                                                    accept="image/*">
+                                                            </div>
+
+                                                            <button type="submit" class="btn btn-dark btn-sm"
+                                                                id="reviewBtn-{{ $item->id }}">
+                                                                Gửi
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 @endif
-
-
 
                                 @if ($order->canBeReorderedByCustomer())
                                     <form action="{{ route('order.reorder', $order) }}" method="POST" class="d-inline">
@@ -698,18 +780,21 @@
 @endsection
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle form
+        // Toggle form tổng - SỬA ĐỂ HỖ TRỢ NHIỀU ĐƠN HÀNG
         document.querySelectorAll('.review-toggle-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                const itemId = btn.dataset.item;
-                if (itemId) {
-                    const form = document.getElementById('reviewForm-' + itemId);
-                    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                const orderId = btn.dataset.order;
+                const wrapper = btn.closest('.order-actions').querySelector('.review-wrapper');
+
+                if (wrapper) {
+                    wrapper.style.display = wrapper.style.display === 'none' ? 'block' : 'none';
+                    btn.textContent = wrapper.style.display === 'none' ? 'Đánh giá' :
+                        'Ẩn đánh giá';
                 }
             });
         });
 
-        // Chọn sao
+        // JS chọn sao vẫn giữ nguyên cho từng sản phẩm
         document.querySelectorAll('.stars-wrapper').forEach(wrapper => {
             const itemId = wrapper.dataset.item;
             const stars = wrapper.querySelectorAll('.star');
@@ -727,53 +812,56 @@
         });
     });
 
-    function submitReview(event, itemId, productName) {
-        event.preventDefault();
-        const form = event.target;
-        const btn = document.getElementById('reviewBtn-' + itemId);
-        const formData = new FormData(form);
 
-        btn.disabled = true;
-        btn.innerText = 'Đang gửi...';
+    function submitReview(event, itemId) {
+        event.preventDefault();
+
+        const form = event.target;
+        const submitBtn = document.getElementById('reviewBtn-' + itemId);
+        const wrapper = form.closest('.review-wrapper');
+        const toggleBtn = wrapper.parentElement.querySelector('.review-toggle-btn');
+
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Đang gửi...';
+
+        const formData = new FormData(form);
 
         fetch(form.action, {
                 method: 'POST',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json' // <- rất quan trọng
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
                 },
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
-                if (data.success) {
-                    // Disable nút đánh giá
-                    const toggleBtn = document.querySelector(`.review-toggle-btn[data-item='${itemId}']`);
+                if (!data.success) {
+                    throw new Error(data.message || 'Lỗi đánh giá');
+                }
+
+                alert('✅ ' + data.message);
+
+                /* ✅ XOÁ HẲN FORM SẢN PHẨM */
+                const reviewBlock = form.closest('.mb-3');
+                if (reviewBlock) {
+                    reviewBlock.remove();
+                }
+
+                /* ✅ NẾU HẾT SẢN PHẨM */
+                if (wrapper.querySelectorAll('.mb-3').length === 0) {
+                    wrapper.remove();
+
                     if (toggleBtn) {
-                        toggleBtn.disabled = true;
-                        toggleBtn.style.opacity = 0.5;
-                        toggleBtn.innerText = 'Đã đánh giá';
+                        toggleBtn.outerHTML =
+                            '<span class="text-success" style="font-size:12px;">✓ Đã đánh giá</span>';
                     }
-
-                    // Ẩn form
-                    document.getElementById('reviewForm-' + itemId).style.display = 'none';
-
-                    // Thêm thông báo
-                    const div = document.createElement('div');
-                    div.className = 'mb-2 text-success';
-                    div.innerText = data.message;
-                    toggleBtn.parentNode.insertBefore(div, toggleBtn.nextSibling);
-                } else {
-                    alert(data.message || 'Có lỗi xảy ra!');
                 }
             })
             .catch(err => {
-                console.error(err);
-                alert('Có lỗi xảy ra, vui lòng thử lại!');
-            })
-            .finally(() => {
-                btn.disabled = false;
-                btn.innerText = 'Gửi';
+                alert(err.message || 'Có lỗi xảy ra!');
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Gửi';
             });
     }
 </script>

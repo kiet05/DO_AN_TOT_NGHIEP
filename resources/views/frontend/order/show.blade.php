@@ -15,7 +15,7 @@
             'return_pending' => ['label' => 'Đang chờ hoàn', 'badge' => 'bg-warning text-dark'],
             'returned' => ['label' => 'Hoàn hàng', 'badge' => 'bg-success'],
             'return_waiting_customer' => ['label' => 'Vui lý xác nhận', 'badge' => 'bg-warning text-dark'],
-           // 'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
+            // 'returned_completed' => ['label' => 'Đã hoàn', 'badge' => 'bg-success'],
             'cancelled' => ['label' => 'Đã hủy', 'badge' => 'bg-dark'],
             'completed' => ['label' => 'Hoàn thành', 'badge' => 'bg-success'],
         ];
@@ -128,11 +128,28 @@
                     <div class="status-flow-grid">
                         @foreach ($statusRow as $key => $label)
                             @php
-                                $idx = $statusIndex[$key];
-                                $isDone = $currentIndex !== null && $idx <= $currentIndex;
+                                $isDone = false;
+
+                                $mainFlow = ['pending', 'confirmed', 'processing', 'shipping', 'shipped', 'completed'];
+                                $returnFlow = ['return_pending', 'returned'];
+
+                                if (in_array($currentStatus, $mainFlow) && in_array($key, $mainFlow)) {
+                                    $isDone = array_search($key, $mainFlow) <= array_search($currentStatus, $mainFlow);
+                                }
+
+                                if (in_array($currentStatus, $returnFlow) && in_array($key, $returnFlow)) {
+                                    $isDone =
+                                        array_search($key, $returnFlow) <= array_search($currentStatus, $returnFlow);
+                                }
+
+                                if ($currentStatus === 'cancelled' && $key === 'cancelled') {
+                                    $isDone = true;
+                                }
+
                                 $isCurrent = $currentStatus === $key;
                                 $history = $historyByStatus[$key] ?? null;
                             @endphp
+
                             <div
                                 class="status-flow-cell
                                     {{ $isDone ? 'status-flow-cell-done' : '' }}
@@ -466,19 +483,51 @@
                     hoặc gửi tin nhắn cho fanpage của shop.
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    {{-- XÁC NHẬN ĐÃ NHẬN HÀNG --}}
+                    @if ($currentStatus === 'shipping')
+                        <form action="{{ route('order.received', $order) }}" method="POST"
+                            onsubmit="return confirm('Bạn xác nhận đã nhận được hàng?');">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-success">
+                                Tôi đã nhận được hàng
+                            </button>
+                        </form>
+                    @endif
+                    {{-- HOÀN THÀNH ĐƠN --}}
+                    @if ($currentStatus === 'shipped')
+                        <form action="{{ route('order.complete', $order) }}" method="POST"
+                            onsubmit="return confirm('Bạn xác nhận hoàn thành đơn hàng này?');">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-success">
+                                Hoàn thành đơn
+                            </button>
+                        </form>
+                    @endif
+
                     {{-- Yêu cầu trả hàng / hoàn tiền --}}
                     @if (method_exists($order, 'canBeReturnedByCustomer')
                             ? $order->canBeReturnedByCustomer()
-                            : in_array($currentStatus, ['completed']))
+                            : in_array($currentStatus, ['shipped']))
                         <a href="{{ route('order.return.form', $order) }}" class="btn btn-sm btn-outline-warning">
                             Yêu cầu trả hàng / hoàn tiền
                         </a>
                     @endif
 
+                    {{-- Thanh toán lại VNPay --}}
+                    @if ($order->payment_method === 'vnpay' && $order->payment_status === 'unpaid')
+                        <form method="POST" action="{{ route('vnpay.repay', $order->id) }}">
+                            @csrf
+                            <button class="btn btn-warning w-100">
+                                🔁 Tiếp tục thanh toán VNPay
+                            </button>
+                        </form>
+                    @endif
+
+
                     {{-- Hủy đơn --}}
                     @if (method_exists($order, 'canBeCancelledByCustomer')
                             ? $order->canBeCancelledByCustomer()
-                            : in_array($currentStatus, ['pending', 'confirmed', 'processing']))
+                            : in_array($currentStatus, ['pending', 'confirmed']))
                         <a href="{{ route('order.cancel.form', $order) }}" class="btn btn-sm btn-outline-danger">
                             Hủy đơn hàng
                         </a>

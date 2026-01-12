@@ -3,6 +3,20 @@
 @section('content')
     <section class="sherah-adashboard sherah-show">
         <div class="container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-12">
                     <div class="sherah-body">
@@ -209,7 +223,8 @@
                                                                 </tr>
                                                             @empty
                                                                 <tr>
-                                                                    <td colspan="8" class="text-center py-4 text-muted">
+                                                                    <td colspan="8"
+                                                                        class="text-center py-4 text-muted">
                                                                         Không có sản phẩm nào trong danh mục này.
                                                                     </td>
                                                                 </tr>

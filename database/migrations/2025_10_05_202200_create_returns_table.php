@@ -37,7 +37,7 @@ return new class extends Migration
             // người duyệt và thời điểm quyết định
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('decided_at')->nullable();
-
+            $table->timestamp('restocked_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
 

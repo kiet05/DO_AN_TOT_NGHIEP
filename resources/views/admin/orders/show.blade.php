@@ -34,11 +34,35 @@
                             <a href="{{ route('admin.orders.invoice.pdf', $order->id) }}" class="btn btn-primary">
                                 <i class="fa fa-download me-1"></i> PDF
                             </a>
-                            <button class="btn btn-dark" onclick="window.print()">
+                            {{-- <button class="btn btn-dark" onclick="window.print()">
                                 <i class="fa fa-print me-1"></i> In
-                            </button>
+                            </button> --}}
                         </div>
                     </div>
+                    {{-- 🔔 Thông báo hệ thống --}}
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                            <i class="fa fa-exclamation-triangle me-1"></i>
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                            <i class="fa fa-check-circle me-1"></i>
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+                            <i class="fa fa-exclamation-circle me-1"></i>
+                            {{ session('warning') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
 
                     @php
                         // Chuẩn hoá trạng thái từ dữ liệu cũ
@@ -194,6 +218,21 @@
                                     <strong>{{ $order->created_at?->format('H:i d/m/Y') }}</strong>
                                 </div>
 
+                                {{-- ⏳ Thông báo tự động hoàn thành --}}
+                                @if ($canon === 'shipped' && $order->shipped_at)
+                                    <div class="small text-warning mb-2">
+                                        @php
+                                            $end = \Carbon\Carbon::parse($order->shipped_at)->addDays(3);
+                                            $diff = now()->diff($end);
+                                        @endphp
+
+                                        ⏳ Tự động hoàn thành sau:
+                                        <strong>
+                                            {{ $diff->d }} ngày {{ $diff->h }} giờ {{ $diff->i }} phút
+                                        </strong>
+
+                                    </div>
+                                @endif
 
 
                                 <div class="small text-muted mb-3">
@@ -340,7 +379,8 @@
                                         $firstPart = preg_split('/\s*\|\s*/', $returnReason)[0] ?? $returnReason;
                                         $shortReason = \Illuminate\Support\Str::limit($firstPart, 80);
                                     @endphp
-                                    <div class="alert alert-warning d-flex justify-content-between align-items-center mt-3">
+                                    <div
+                                        class="alert alert-warning d-flex justify-content-between align-items-center mt-3">
                                         <div class="small">
                                             <strong>Lý do hoàn hàng:</strong>
                                             {{ $shortReason }}

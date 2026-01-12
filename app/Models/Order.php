@@ -33,6 +33,7 @@ class Order extends Model
         'vnp_txn_ref',
         'vnp_response',
         'vnp_transaction_no',
+         'completed_at',
     ];
 
     protected $casts = [
@@ -87,8 +88,7 @@ class Order extends Model
     {
         return [
             self::STATUS_PENDING,
-            self::STATUS_CONFIRMED,
-            self::STATUS_PREPARING,
+
         ];
     }
 
@@ -223,8 +223,10 @@ class Order extends Model
     {
         $canon = $this->canonicalStatus();
 
-        return in_array($canon, ['pending', 'confirmed', 'processing', 'preparing'], true);
+        // ❗ CHỈ cho hủy khi còn chờ xác nhận
+        return $canon === self::STATUS_PENDING;
     }
+
 
     /**
      * KH được phép bấm "Đã nhận hàng" khi đơn đang giao

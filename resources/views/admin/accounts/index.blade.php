@@ -11,10 +11,10 @@
                                 <div class="col-12 sherah-flex-between">
                                     <!-- Sherah Breadcrumb -->
                                     <div class="sherah-breadcrumb">
-                                        <h2 class="sherah-breadcrumb__title">Sản phẩm</h2>
+                                        <h2 class="sherah-breadcrumb__title">Tài khoản Admin</h2>
                                         <ul class="sherah-breadcrumb__list">
                                             <li><a href="/">Dashboard</a></li>
-                                            <li class="active"><a href="{{ route('admin.products.index') }}">Sản phẩm</a>
+                                            <li class="active"><a href="{{ route('admin.accounts.index') }}">Tài khoản Admin</a>
                                             </li>
                                         </ul>
                                     </div>

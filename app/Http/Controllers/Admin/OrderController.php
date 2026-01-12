@@ -46,7 +46,7 @@ class OrderController extends Controller
             'shipping'   => ['shipped', 'cancelled'],
 
             // ĐÃ GIAO: có thể sang HOÀN THÀNH hoặc HOÀN HÀNG
-            'shipped'    => ['completed', 'returned'],
+            'shipped' => ['completed', 'return_pending'], // 👈 chỉ cho yêu cầu hoàn
             'return_pending' => ['returned', 'cancelled'],
             // HOÀN THÀNH: trạng thái cuối (nếu muốn cho phép hoàn sau hoàn thành
             // thì đổi thành ['returned'])
@@ -89,7 +89,12 @@ class OrderController extends Controller
 
         // Chuẩn hoá from/to
         $from = $this->canonicalStatus($order->order_status);
-        $to   = $this->canonicalStatus($request->input('status'));
+        $to = $this->canonicalStatus($request->input('status'));
+
+        if ($to === 'completed') {
+            return back()->with('error', 'Không thể cập nhật thủ công sang trạng thái Hoàn thành. Hệ thống sẽ tự động xử lý.');
+        }
+
 
         $matrix = $this->statusMatrix();
         if (!in_array($to, $matrix[$from] ?? [], true)) {
@@ -108,30 +113,38 @@ class OrderController extends Controller
                 // 1) cập nhật thời gian đổi trạng thái
                 $order->status_changed_at = now();
 
-                // 2) lưu lịch sử trạng thái (phục vụ hiển thị trên các cột stepper)
+                // ✅ 1.1) set shipped_at CHỈ KHI chuyển sang shipped (lần đầu)
+                if ($to === 'shipped' && empty($order->shipped_at)) {
+                    $order->shipped_at = now();
+                }
+
+                // ✅ 1.2) nếu admin set completed thủ công
+                if ($to === 'completed' && empty($order->completed_at)) {
+                    $order->completed_at = now();
+                }
+
+                // 2) lưu lịch sử trạng thái (phục vụ hiển thị stepper)
                 if (method_exists($order, 'statusHistories')) {
                     $order->statusHistories()->create([
                         'status' => $to,
-                        // nếu có thêm cột khác thì bạn thêm vào:
                         // 'changed_from' => $oldStatus,
                         // 'changed_by'   => auth()->id(),
-                        // 'note'         => null,
                     ]);
                 }
             }
 
             // Nếu đơn đã giao hoặc hoàn thành thì coi như đã thanh toán
             if (in_array($to, ['shipped', 'completed'], true)) {
-                $order->payment_status = 'paid';  // đúng key mà view đang check
+                $order->payment_status = 'paid';
             }
 
             $order->save();
 
-            // Đồng bộ thanh toán khi đơn 'completed' (giữ nguyên logic cũ)
+            // Đồng bộ thanh toán khi đơn 'completed'
             if ($to === 'completed' && method_exists($order, 'payment') && $order->payment) {
                 $payment = $order->payment;
                 if (in_array($payment->status, ['pending', 'failed', 'canceled'], true)) {
-                    $payment->status = 'success';     // trạng thái ở bảng payments vẫn để 'success'
+                    $payment->status = 'success';
                 }
                 if (empty($payment->paid_at)) {
                     $payment->paid_at = now();
