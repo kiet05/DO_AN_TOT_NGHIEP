@@ -28,7 +28,8 @@
                                         <option value="">Tất cả trạng thái</option>
                                         <option value="0" @selected(request('status') == '0')>Chờ</option>
                                         <option value="1" @selected(request('status') == '1')>Duyệt</option>
-                                        <option value="2" @selected(request('status') == '2')>Từ chối</option>
+                                        <option value="2" @selected(request('status') == '2')>Ẩn</option>
+                                        <option value="3" @selected(request('status') == '3')>Hiện</option>
                                     </select>
 
                                     <input type="text" name="product_id" class="form-control w-auto" placeholder="ID sản phẩm"
@@ -67,8 +68,8 @@
                                                     <td class="text-truncate" style="max-width:300px">{{ $r->comment }}</td>
                                                     <td>
                                                         @php
-                                                            $statusLabels = [0 => 'Chờ', 1 => 'Duyệt', 2 => 'Từ chối'];
-                                                            $statusClasses = [0 => 'badge bg-secondary', 1 => 'badge bg-success', 2 => 'badge bg-danger'];
+                                                            $statusLabels = [0 => 'Chờ', 1 => 'Duyệt', 2 => 'Ẩn', 3 => 'Hiện'];
+                                                            $statusClasses = [0 => 'badge bg-secondary', 1 => 'badge bg-success', 2 => 'badge bg-danger', 3 => 'badge bg-info'];
                                                         @endphp
                                                         <span class="{{ $statusClasses[$r->status] ?? 'badge bg-secondary' }}">
                                                             {{ $statusLabels[$r->status] ?? $r->status }}

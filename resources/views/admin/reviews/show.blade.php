@@ -43,11 +43,12 @@
 
                             <p><strong>Trạng thái:</strong>
                                 @php
-                                    $labels = [0 => 'Chờ', 1 => 'Duyệt', 2 => 'Từ chối'];
+                                    $labels = [0 => 'Chờ', 1 => 'Duyệt', 2 => 'Ẩn', 3 => 'Hiện'];
                                     $classes = [
                                         0 => 'badge bg-secondary',
                                         1 => 'badge bg-success',
                                         2 => 'badge bg-danger',
+                                        3 => 'badge bg-info',
                                     ];
                                 @endphp
                                 <span
@@ -58,17 +59,29 @@
                                 <a href="{{ route('admin.reviews.index') }}" class="btn btn-secondary ms-2">
                                     <i class="fa fa-arrow-left me-1"></i> Trở về
                                 </a>
+                                @if($rev->status == 0)
                                 <form action="{{ route('admin.reviews.approve', $rev->id) }}" method="POST"
                                     style="display:inline">
                                     @csrf
                                     <button class="btn btn-success ms-2">Duyệt</button>
                                 </form>
+                                @endif
 
+                                @if(in_array($rev->status, [0,1,3]))
                                 <form action="{{ route('admin.reviews.reject', $rev->id) }}" method="POST"
                                     style="display:inline" class="ms-2">
                                     @csrf
-                                    <button class="btn btn-warning">Từ chối</button>
+                                    <button class="btn btn-warning">Ẩn</button>
                                 </form>
+                                @endif
+
+                                @if($rev->status == 2)
+                                <form action="{{ route('admin.reviews.unhide', $rev->id) }}" method="POST"
+                                    style="display:inline" class="ms-2">
+                                    @csrf
+                                    <button class="btn btn-info">Hiện</button>
+                                </form>
+                                @endif
 
                                 <form action="{{ route('admin.reviews.destroy', $rev->id) }}" method="POST"
                                     style="display:inline" class="ms-2">

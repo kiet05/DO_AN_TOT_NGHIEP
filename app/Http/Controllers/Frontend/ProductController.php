@@ -61,7 +61,7 @@ class ProductController extends Controller
 
     $reviews = Review::with('user')
             ->where('product_id', $product->id)
-            ->where('status', 1)
+            ->whereIn('status', [1, 3])
             ->latest()
             ->get();
 
