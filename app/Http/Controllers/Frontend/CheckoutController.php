@@ -13,6 +13,7 @@ use App\Models\ProductVariant;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
 use App\Services\VoucherService;
+use App\Services\VNPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,13 @@ use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
+    protected $vnpayService;
+
+    public function __construct(VNPayService $vnpayService)
+    {
+        $this->vnpayService = $vnpayService;
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -497,14 +505,41 @@ class CheckoutController extends Controller
             session(['checkout_order_id' => $order->id]);
             session()->save(); // Force save session
 
-            // 🔹 Redirect đến trang success
+            // 🔹 Check nếu là vnpay
+            if ($method->slug === 'vnpay') {
+                try {
+                    $paymentUrl = $this->vnpayService->createPaymentUrl([
+                        'order_id' => $order->id,
+                        'amount' => $finalAmount,
+                        'order_info' => 'Thanh toan don hang #' . $order->id,
+                        'order_type' => 'other',
+                        'locale' => 'vn',
+                    ]);
+
+                    $payment->update([
+                        'app_trans_id' => $order->vnp_txn_ref,
+                    ]);
+
+                    return redirect($paymentUrl);
+                } catch (\Throwable $e) {
+                    Log::error('VNPay redirect error', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()
+                        ->route('checkout.success')
+                        ->with('error', 'Lỗi khi tạo URL thanh toán VNPay. Vui lòng thử lại.');
+                }
+            }
+
             try {
                 return redirect()
                     ->route('checkout.success')
                     ->with('success', 'Đặt hàng thành công!');
             } catch (\Throwable $redirectError) {
                 // Nếu redirect lỗi, vẫn log nhưng không rollback vì đã commit
-                \Log::error('Checkout redirect error: ' . $redirectError->getMessage());
+                Log::error('Checkout redirect error: ' . $redirectError->getMessage());
                 // Fallback: redirect với query parameter
                 return redirect()
                     ->route('checkout.success', ['order_id' => $order->id])
@@ -513,7 +548,7 @@ class CheckoutController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            \Log::error('Checkout error', [
+            Log::error('Checkout error', [
                 'user_id' => $user->id,
                 'voucher_id' => $voucher ? $voucher->id : null,
                 'error' => $e->getMessage(),
@@ -693,6 +728,25 @@ class CheckoutController extends Controller
         session()->forget('checkout_order_id');
 
         return view('frontend.checkout.success', [
+            'order' => $order,
+        ]);
+    }
+
+    public function failed(Request $request)
+    {
+        $user = Auth::user();
+        $orderId = session('checkout_order_id') ?? $request->query('order_id');
+
+        $order = null;
+        if ($orderId) {
+            $order = Order::where('id', $orderId)
+                ->where('user_id', $user->id)
+                ->first();
+        }
+
+        session()->forget('checkout_order_id');
+
+        return view('frontend.checkout.failed', [
             'order' => $order,
         ]);
     }
