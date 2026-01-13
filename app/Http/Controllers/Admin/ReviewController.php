@@ -43,10 +43,19 @@ class ReviewController extends Controller
     public function reject($id)
     {
         $rev = Review::findOrFail($id);
-        $rev->status = 2; // 2 = Từ chối
+        $rev->status = 2; // 2 = Ẩn
         $rev->save();
 
-        return back()->with('success', 'Đã từ chối đánh giá.');
+        return back()->with('success', 'Đã ẩn đánh giá.');
+    }
+
+    public function showReview($id)
+    {
+        $rev = Review::findOrFail($id);
+        $rev->status = 3; // 3 = Hiện
+        $rev->save();
+
+        return back()->with('success', 'Đã hiện đánh giá.');
     }
 
     public function destroy($id)

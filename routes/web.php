@@ -233,6 +233,7 @@ Route::prefix('admin')
             Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [ReviewController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [ReviewController::class, 'reject'])->name('reject');
+            Route::post('/{id}/unhide', [ReviewController::class, 'showReview'])->name('unhide');
             Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
         });
 
