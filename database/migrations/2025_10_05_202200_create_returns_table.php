@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
 
             $table->text('reason');
+        $table->string('refund_account_number')->nullable()->after('refund_amount')->comment('Số tài khoản nhận tiền hoàn');
 
             $table->enum('action_type', [
                 'refund_full',

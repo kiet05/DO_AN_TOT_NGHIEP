@@ -163,30 +163,38 @@ class ReturnRequestController extends Controller
         return back()->with('success', 'Đã hoàn tiền vào ví. Đang chờ khách xác nhận đã nhận tiền.');
     }
 
-    public function refundManual($id)
-    {
-        $ret = ReturnModel::with('order')->findOrFail($id);
+    public function refundManual(Request $request, $id)
+{
+    $ret = ReturnModel::with('order')->findOrFail($id);
 
-        if (! in_array($ret->status, [ReturnModel::APPROVED, ReturnModel::REFUNDING], true)) {
-            return back()->with('error', 'Trạng thái không hợp lệ (chỉ hoàn khi ĐÃ DUYỆT hoặc ĐANG HOÀN).');
-        }
-
-        if ($ret->refund_method !== 'manual') {
-            return back()->with('error', 'Phương thức không phải hoàn thủ công.');
-        }
-
-        DB::transaction(function () use ($ret) {
-            $ret->status     = ReturnModel::WAITING_CUSTOMER_CONFIRM;
-            $ret->decided_at = now();
-            $ret->save();
-
-            $this->setOrderStatusOnWaitingCustomer($ret);
-        });
-
-        return back()->with('success', 'Đã đánh dấu đã hoàn tiền cho khách. Đang chờ khách xác nhận.');
+    if (! in_array($ret->status, [ReturnModel::APPROVED, ReturnModel::REFUNDING], true)) {
+        return back()->with('error', 'Trạng thái không hợp lệ.');
     }
 
+    if ($ret->refund_method !== 'manual') {
+        return back()->with('error', 'Phương thức không phải hoàn thủ công.');
+    }
+
+    if ($request->hasFile('refund_proof_image')) {
+        $path = $request->file('refund_proof_image')
+            ->store('refunds', 'public');
+
+        $ret->refund_proof_image = $path;
+    }
+
+    $ret->approved_by_name = $request->approved_by_name;
+    $ret->status = ReturnModel::WAITING_CUSTOMER_CONFIRM;
+    $ret->decided_at = now();
+    $ret->save();
+
+    $this->setOrderStatusOnWaitingCustomer($ret);
+
+    return back()->with('success', 'Đã xác nhận hoàn tiền thủ công, chờ khách xác nhận.');
+}
+
+
     private function computeRefundAmountWithVoucher(ReturnModel $ret): float
+
     {
         $order = $ret->order;
         if (! $order) return 0;
@@ -197,6 +205,7 @@ class ReturnRequestController extends Controller
         $originalTotal = 0;
         foreach ($orderItems as $oi) {
             $originalTotal += ((float)($oi->price ?? 0)) * ((int)($oi->quantity ?? 0));
+
         }
 
         $hasLineFinal = false;
@@ -274,4 +283,5 @@ class ReturnRequestController extends Controller
             'status_changed_at' => now(),
         ]);
     }
+    
 }

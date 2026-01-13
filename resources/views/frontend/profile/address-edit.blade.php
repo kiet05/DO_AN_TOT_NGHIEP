@@ -77,11 +77,11 @@
                             @enderror
                         </div>
 
-                        
+
 
                         {{-- QUẬN / HUYỆN --}}
                         <div>
-                            <label class="label">Quận / Huyện *</label>
+                            <label class="label">Phường / Xã *</label>
                             <input type="text" name="receiver_district" class="input-field"
                                 value="{{ old('receiver_district', $address->receiver_district) }}" required>
                             @error('receiver_district')

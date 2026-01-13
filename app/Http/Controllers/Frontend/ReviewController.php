@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Review;
-use App\Models\OrderItem; // nhớ import thêm model này
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,31 +13,46 @@ class ReviewController extends Controller
 {
     public function store(Request $request, $productId)
     {
-        $product = Product::findOrFail($productId);
+        if (!$request->expectsJson()) {
+            abort(404);
+        }
 
         $validated = $request->validate([
-            'rating'  => 'required|integer|min:1|max:5',
-            'comment' => 'required|string',
-            'image'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'rating'        => 'required|integer|min:1|max:5',
+            'comment'       => 'required|string',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'order_item_id' => 'required|exists:order_items,id',
         ]);
 
-        // Tìm 1 dòng OrderItem mà user hiện tại đã mua sản phẩm này
-        $orderItem = OrderItem::where('product_id', $product->id)
-            ->whereHas('order', function ($q) {
-                $q->where('user_id', Auth::id());
-            })
-            ->latest()
+        $product = Product::findOrFail($productId);
+
+        // Kiểm tra quyền sở hữu
+        $orderItem = OrderItem::where('id', $validated['order_item_id'])
+            ->where('product_id', $product->id)
+            ->whereHas('order', fn($q) => $q->where('user_id', Auth::id()))
             ->first();
 
-        // Nếu chưa từng mua, không cho đánh giá
-        if (! $orderItem) {
-            return redirect()->back()->with('error', 'Bạn chỉ có thể đánh giá những sản phẩm đã mua.');
+        if (!$orderItem) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bạn chỉ có thể đánh giá sản phẩm đã mua.'
+            ], 403);
         }
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('reviews', 'public');
+        // Đã đánh giá chưa
+        if (Review::where('user_id', Auth::id())
+            ->where('order_item_id', $orderItem->id)
+            ->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sản phẩm này đã được đánh giá.'
+            ], 422);
         }
+
+        // Upload ảnh
+        $imagePath = $request->hasFile('image')
+            ? $request->file('image')->store('reviews', 'public')
+            : null;
 
         Review::create([
             'user_id'       => Auth::id(),
@@ -47,10 +62,24 @@ class ReviewController extends Controller
             'rating'        => $validated['rating'],
             'comment'       => $validated['comment'],
             'image'         => $imagePath,
-            // Lưu trạng thái = 0 (chờ duyệt) — admin sẽ duyệt sau
             'status'        => 0,
         ]);
 
-        return redirect()->back()->with('success', 'Cảm ơn bạn đã đánh giá sản phẩm, đánh giá đang chờ được duyệt!');
+        // Kiểm tra đã đánh giá hết đơn
+        $order = $orderItem->order;
+
+        $totalItems = $order->items()->count();
+        $reviewedItems = Review::where('user_id', Auth::id())
+            ->whereIn('order_item_id', $order->items->pluck('id'))
+            ->count();
+
+        if ($totalItems === $reviewedItems) {
+            $order->update(['is_reviewed' => true]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cảm ơn bạn đã đánh giá! Đánh giá đang chờ duyệt.'
+        ]);
     }
 }

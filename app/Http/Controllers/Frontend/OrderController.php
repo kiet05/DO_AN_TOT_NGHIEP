@@ -8,11 +8,13 @@ use App\Models\ReturnItem;
 use App\Models\ReturnModel;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Frontend\CartController;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -24,31 +26,41 @@ class OrderController extends Controller
 
         $statusTabs = [
             'all'        => 'Tất cả',
-            'pending'    => 'Chờ xác nhận',
-            'confirmed'  => 'Chờ chuẩn bị',
-            'processing' => 'Đang chuẩn bị',
+            'pending'    => 'Chờ xác nhận',   // khách vừa đặt
+            //  'confirmed'  => 'Chờ chuẩn bị',   // shop đã xác nhận
+            'processing' => 'Đang chuẩn bị',  // đang đóng gói
+
             'shipping'   => 'Đang giao',
             'shipped'    => 'Đã giao',
             'returned'   => 'Hoàn / Trả hàng',
             'return_waiting_customer' => 'Chờ xác nhận hoàn hàng',
             'cancelled'  => 'Đã hủy',
+            //'completed'  => 'Hoàn thành',
         ];
 
         $query = Order::where('user_id', $userId)
             ->with(['items.product', 'items.productVariant', 'returns'])
             ->latest('created_at');
 
-        if ($status === 'confirmed') {
-            $query->where('order_status', 'confirmed');
+        // Lọc theo tab trạng thái
+        if ($status === 'processing') {
+            $query->whereIn('order_status', ['processing', 'confirmed']);
+
         } elseif ($status === 'returned') {
             $query->whereIn('order_status', ['return_pending', 'returned']);
+        } elseif ($status === 'shipped') {
+            // Hiển thị cả shipped + completed trong tab "Đã giao"
+            $query->whereIn('order_status', ['shipped', 'completed']);
         } elseif ($status !== 'all') {
             $query->where('order_status', $status);
         }
 
         if ($status === 'return_waiting_customer') {
             $query->whereHas('returns', function ($q) {
-                $q->where('status', \App\Models\ReturnModel::WAITING_CUSTOMER_CONFIRM);
+                $q->whereIn('status', [
+                    ReturnModel::PENDING,
+                    ReturnModel::WAITING_CUSTOMER_CONFIRM
+                ]);
             });
         }
 
@@ -135,6 +147,14 @@ class OrderController extends Controller
             $order->order_status  = 'cancelled';
             $order->status_changed_at = now();
             $order->save();
+            // ✅ Cộng lại số lượng vào kho
+            foreach ($order->items as $item) {
+                $variantId = $item->product_variant_id ?? $item->variant_id ?? null;
+                if ($variantId) {
+                    ProductVariant::whereKey($variantId)
+                        ->increment('quantity', (int) $item->quantity);
+                }
+            }
 
             if (method_exists($order, 'statusHistories')) {
                 $order->statusHistories()->create([
@@ -203,17 +223,89 @@ class OrderController extends Controller
                 ->with('error', 'Đơn hàng hiện không thể yêu cầu trả hàng / hoàn tiền.');
         }
 
-        $data = $request->validate([
-            'return_action'         => 'required|in:refund_full,refund_partial,exchange_product,exchange_variant',
-            'return_reason'         => 'required|string|max:1000',
-            'return_image'          => 'nullable|image|max:2048',
-            'refund_account_number' => 'nullable|string|max:255',
+      $data = $request->validate(
+    [
+        // 1. Hình thức xử lý
+        'return_action'
+            => 'required|in:refund_full,refund_partial,exchange_product,exchange_variant',
 
-            // ✅ thêm validate cho mảng sản phẩm trả
-            'return_items'                      => 'nullable|array',
-            'return_items.*.checked'            => 'nullable',
-            'return_items.*.quantity'           => 'nullable|integer|min:0',
-        ]);
+        // 2. Lý do trả hàng / hoàn tiền (được build từ JS)
+        'return_reason'
+            => 'required|string|max:2000',
+
+        // 3. Ảnh minh chứng (khuyến khích)
+        'return_image'
+            => 'nullable|image|max:2048',
+
+        // 4. Phương thức hoàn tiền
+        'refund_method'
+            => 'required|in:wallet,manual',
+
+        // 5. Số tài khoản (chỉ bắt buộc khi hoàn thủ công)
+        'refund_account_number'
+            => 'required_if:refund_method,manual|string|max:255',
+
+        // 6. Sản phẩm muốn trả
+        'return_items'
+            => 'nullable|array',
+
+        'return_items.*.checked'
+            => 'nullable',
+
+        'return_items.*.quantity'
+            => 'nullable|integer|min:1',
+    ],
+    [
+        // ===== MESSAGE TIẾNG VIỆT =====
+
+        'return_action.required'
+            => 'Vui lòng chọn hình thức xử lý.',
+        'return_action.in'
+            => 'Hình thức xử lý không hợp lệ.',
+
+        'return_reason.required'
+            => 'Vui lòng chọn lý do trả hàng / hoàn tiền.',
+        'return_reason.string'
+            => 'Nội dung lý do trả hàng không hợp lệ.',
+        'return_reason.max'
+            => 'Lý do trả hàng không được vượt quá :max ký tự.',
+
+        'return_image.image'
+            => 'Ảnh minh chứng phải là hình ảnh.',
+        'return_image.max'
+            => 'Ảnh minh chứng không được vượt quá 2MB.',
+
+        'refund_method.required'
+            => 'Vui lòng chọn phương thức hoàn tiền.',
+        'refund_method.in'
+            => 'Phương thức hoàn tiền không hợp lệ.',
+
+        'refund_account_number.required_if'
+            => 'Vui lòng nhập số tài khoản nhận tiền hoàn.',
+        'refund_account_number.string'
+            => 'Số tài khoản hoàn tiền không hợp lệ.',
+        'refund_account_number.max'
+            => 'Số tài khoản hoàn tiền không được vượt quá :max ký tự.',
+
+        'return_items.array'
+            => 'Danh sách sản phẩm trả không hợp lệ.',
+        'return_items.*.quantity.integer'
+            => 'Số lượng trả phải là số.',
+        'return_items.*.quantity.min'
+            => 'Số lượng trả phải lớn hơn 0.',
+    ],
+    [
+        // ===== TÊN FIELD TIẾNG VIỆT =====
+        'return_action'         => 'hình thức xử lý',
+        'return_reason'         => 'lý do trả hàng / hoàn tiền',
+        'return_image'          => 'ảnh minh chứng',
+        'refund_method'         => 'phương thức hoàn tiền',
+        'refund_account_number' => 'số tài khoản hoàn tiền',
+        'return_items'          => 'sản phẩm trả',
+        'return_items.*.quantity' => 'số lượng trả',
+    ]
+);
+
 
         $path = null;
         if ($request->hasFile('return_image')) {
@@ -274,6 +366,7 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($order, $data, $path, $selected) {
 
+
             // 1) Tạo returns
             $ret = ReturnModel::create([
                 'order_id'      => $order->id,
@@ -282,8 +375,10 @@ class OrderController extends Controller
                 'proof_image'   => $path,
                 'evidence_urls' => null,
                 'status'        => ReturnModel::PENDING,
-                'refund_method' => null,
-                'refund_amount' => 0,
+                // ✅ hoàn tiền
+    'refund_method'         => $data['refund_method'],
+    'refund_account_number' => $data['refund_account_number'] ?? null,
+    'refund_amount'         => 0,
                 'action_type'   => $data['return_action'],
             ]);
 
@@ -387,7 +482,7 @@ class OrderController extends Controller
             if ($ret->order_id) {
                 Order::whereKey($ret->order_id)
                     ->update([
-                        'order_status'      => Order::STATUS_RETURNED_COMPLETED,
+                        'order_status'      => Order::STATUS_RETURNED,
                         'status_changed_at' => now(),
                     ]);
             }
@@ -404,5 +499,41 @@ class OrderController extends Controller
         return redirect()
             ->route('order.index')
             ->with('success', 'Bạn đã xác nhận đã nhận tiền hoàn. Cảm ơn bạn!');
+    }
+    public function complete(Order $order)
+    {
+        // chỉ cho chủ đơn xác nhận
+        if ($order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // chỉ cho phép xác nhận khi đã giao
+        if ($order->order_status !== 'shipped') {
+            return back()->with('error', 'Đơn hàng chưa thể hoàn thành.');
+        }
+
+        $order->update([
+            'order_status' => 'completed',
+            'completed_at' => now(), // nếu có cột
+        ]);
+
+        return back()->with('success', 'Đơn hàng đã được hoàn thành.');
+    }
+    public function track(Order $order)
+    {
+        // Chỉ chủ đơn mới xem được
+        abort_if($order->user_id !== Auth::id(), 403);
+
+        $return = $order->returns()
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->first();
+
+        if (!$return) {
+            abort(404, 'Không tìm thấy yêu cầu hoàn hàng');
+        }
+
+
+        return view('frontend.order.return_track', compact('order', 'return'));
     }
 }

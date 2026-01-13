@@ -5,6 +5,7 @@
 @section('content')
     <div class="return-page py-5">
         <div class="container">
+
             <div class="row justify-content-center">
                 <div class="col-lg-9 col-xl-8">
                     <div class="card border-0 shadow-sm">
@@ -16,6 +17,16 @@
                                 <strong>{{ $order->code ?? 'DH' . str_pad($order->id, 6, '0', STR_PAD_LEFT) }}</strong><br>
                                 Ngày đặt: {{ $order->created_at?->format('d/m/Y H:i') }}<br>
                             </p>
+                            @if ($errors->any())
+                                <div class="alert alert-danger mt-3">
+                                    <ul class="mb-0">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
 
                             <form id="return-form" action="{{ route('order.return', $order) }}" method="POST"
                                 enctype="multipart/form-data">
@@ -35,8 +46,8 @@
                                         $actions = [
                                             'refund_full' => 'Hoàn tiền toàn bộ đơn hàng',
                                             'refund_partial' => 'Hoàn tiền một phần (một vài sản phẩm)',
-                                            'exchange_product' => 'Đổi sang sản phẩm khác',
-                                            'exchange_variant' => 'Đổi size / màu',
+                                            // 'exchange_product' => 'Đổi sang sản phẩm khác',
+                                            // 'exchange_variant' => 'Đổi size / màu',
                                         ];
                                     @endphp
 
@@ -209,11 +220,40 @@
 
                                                             {{-- Trả lại --}}
                                                             <td>
-                                                                <input type="number"
-                                                                    class="form-control form-control-sm js-return-qty"
-                                                                    name="return_items[{{ $item->id }}][quantity]"
-                                                                    value="0" min="0"
-                                                                    max="{{ $item->quantity }}" disabled>
+                                                                <div class="input-group input-group-sm"
+                                                                    style="max-width: 130px;">
+                                                                    {{-- Nút giảm --}}
+                                                                    <button type="button" class="btn btn-outline-secondary"
+                                                                        onclick="
+                let input = this.nextElementSibling;
+                let min = parseInt(input.min);
+                let val = parseInt(input.value || min);
+                if (val > min) input.value = val - 1;
+            ">
+                                                                        −
+                                                                    </button>
+
+                                                                    {{-- Input số lượng --}}
+                                                                    <input type="number"
+                                                                        name="return_items[{{ $item->id }}][quantity]"
+                                                                        class="form-control text-center" min="1"
+                                                                        max="{{ $item->quantity }}"
+                                                                        value="{{ old("return_items.$item->id.quantity", 1) }}"
+                                                                        oninvalid="this.setCustomValidity('Số lượng trả không được vượt quá {{ $item->quantity }}')"
+                                                                        oninput="this.setCustomValidity('')">
+
+                                                                    {{-- Nút tăng --}}
+                                                                    <button type="button" class="btn btn-outline-secondary"
+                                                                        onclick="
+                let input = this.previousElementSibling;
+                let max = parseInt(input.max);
+                let val = parseInt(input.value || 1);
+                if (val < max) input.value = val + 1;
+            ">
+                                                                        +
+                                                                    </button>
+                                                                </div>
+
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -341,46 +381,45 @@
                                     </div>
 
                                     {{-- 4. Thông tin nhận tiền hoàn (chỉ hiện nếu đơn COD) --}}
-                                    @php
-                                        // Tuỳ field thực tế của bạn: payment_method / payment_method_code / ...
-                                        $methodRaw = strtolower(
-                                            (string) ($order->payment_method ??
-                                                ($order->payment_method_code ?? ($order->payment_method_slug ?? ''))),
-                                        );
-                                        $isCod = in_array($methodRaw, [
-                                            'cod',
-                                            'cash_on_delivery',
-                                            'thanh_toan_khi_nhan_hang',
-                                        ]);
-                                    @endphp
-
-                                    @if ($isCod)
-                                        <div class="return-section mb-4">
-                                            <div class="d-flex align-items-center mb-2">
-                                                <span class="section-dot me-2"></span>
-                                                <h6 class="mb-0">
-                                                    Thông tin nhận tiền hoàn (COD)
-                                                </h6>
-                                            </div>
-                                            <p class="text-muted small mb-2">
-                                                Vui lòng nhập số tài khoản ngân hàng mà bạn muốn nhận tiền hoàn.
-                                            </p>
-
-                                            <input type="text" name="refund_account_number"
-                                                class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
-                                                value="{{ old('refund_account_number') }}"
-                                                placeholder="Ví dụ: 0123456789 - MB Bank - NGUYEN VAN A">
-
-                                            @error('refund_account_number')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-
-                                            <small class="text-muted d-block mt-1">
-                                                Nếu bạn không cung cấp, CSKH sẽ liên hệ lại để xác nhận phương thức hoàn
-                                                tiền.
-                                            </small>
+                                    {{-- 4. Phương thức hoàn tiền --}}
+                                    <div class="return-section mb-4">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="section-dot me-2"></span>
+                                            <h6 class="mb-0">Phương thức hoàn tiền</h6>
                                         </div>
-                                    @endif
+
+                                        <p class="text-muted small mb-3">
+                                            Chọn cách bạn muốn nhận tiền hoàn.
+                                        </p>
+
+                                        <select name="refund_method" class="form-select form-select-sm mb-2">
+                                            <option value="manual"
+                                                {{ old('refund_method', 'manual') === 'manual' ? 'selected' : '' }}>
+                                                ⭐ Hoàn thủ công (chuyển khoản) – Khuyến nghị
+                                            </option>
+
+                                            <option value="wallet"
+                                                {{ old('refund_method') === 'wallet' ? 'selected' : '' }}>
+                                                Hoàn vào ví nội bộ
+                                            </option>
+                                        </select>
+
+
+                                        <label class="form-label small fw-semibold mt-2">
+                                            Số tài khoản nhận tiền hoàn
+                                            <span class="text-muted">(chỉ cần khi hoàn thủ công)</span>
+                                        </label>
+
+                                        <input type="text" name="refund_account_number"
+                                            class="form-control form-control-sm @error('refund_account_number') is-invalid @enderror"
+                                            placeholder="VD: 0123456789 | MB Bank | NGUYEN VAN A"
+                                            value="{{ old('refund_account_number') }}">
+
+                                        @error('refund_account_number')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
 
                                     {{-- 5. Ghi chú cho shop (không bắt buộc) --}}
                                     <div class="return-section mb-4">
@@ -508,35 +547,32 @@
             function buildReasonText() {
                 const parts = [];
 
-                const chosenAction = Array.from(actionRadios).find(r => r.checked);
-                if (chosenAction) {
-                    parts.push('Hình thức xử lý: ' + chosenAction.value);
-                }
-
                 const reasons = Array.from(reasonCheckbox)
                     .filter(cb => cb.checked)
                     .map(cb => cb.value);
+
                 if (reasons.length > 0) {
                     parts.push('Lý do: ' + reasons.join('; '));
                 }
 
-                const otherText = otherTextarea && otherTextarea.value.trim();
+                const otherText = otherTextarea?.value.trim();
                 if (otherText) {
                     parts.push('Lý do khác: ' + otherText);
                 }
 
-                const detailText = detailNote && detailNote.value.trim();
+                const detailText = detailNote?.value.trim();
                 if (detailText) {
                     parts.push('Mô tả chi tiết: ' + detailText);
                 }
 
-                const extraText = extraNote && extraNote.value.trim();
+                const extraText = extraNote?.value.trim();
                 if (extraText) {
                     parts.push('Ghi chú cho shop: ' + extraText);
                 }
 
                 hiddenInput.value = parts.join(' | ');
             }
+
 
             reasonCheckbox.forEach(cb => cb.addEventListener('change', buildReasonText));
             actionRadios.forEach(r => r.addEventListener('change', buildReasonText));
@@ -564,7 +600,7 @@
 
                 if (!hiddenInput.value.trim()) {
                     e.preventDefault();
-                    alert('Vui lòng chọn ít nhất một lý do hoặc nhập mô tả chi tiết để gửi yêu cầu.');
+                    alert('Vui lòng chọn ít nhất một yêu cầu hoặc lý do hoàn/trả để gửi yêu cầu.');
                 }
             });
         });

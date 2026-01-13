@@ -54,19 +54,24 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Vai trò</label>
-                                    <select name="role_id" class="form-select">
-                                        <option value="">-- Chọn vai trò --</option>
-                                        @foreach($roles as $role)
-                                            <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
-                                                {{ $role->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('role_id')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
+    <label class="form-label">Vai trò</label>
+    <select name="role_id" class="form-select">
+        {{-- <option value="1" {{ old('role_id', $user->role_id ?? '') == 1 ? 'selected' : '' }}>
+            Quản trị viên
+        </option> --}}
+        <option value="2" {{ old('role_id', $user->role_id ?? '') == 2 ? 'selected' : '' }}>
+            Nhân viên
+        </option>
+        <option value="6" {{ old('role_id', $user->role_id ?? '') == 4 ? 'selected' : '' }}>
+            Biên tập viên
+        </option>
+    </select>
+
+    @error('role_id')
+        <small class="text-danger">{{ $message }}</small>
+    @enderror
+</div>
+
 
                                 <div class="mb-3">
                                     <label class="form-label">Trạng thái</label>

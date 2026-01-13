@@ -75,14 +75,35 @@ class PaymentController extends Controller
         $result = $this->vnpayService->verifyPayment($request->all());
 
         if (!$result['success']) {
-            Log::warning('VNPay: Verification failed', [
+
+            Log::warning('VNPay: Payment not successful', [
                 'message' => $result['message'],
                 'data' => $request->all()
             ]);
 
-            if (isset($result['order_id']) && $result['order_id']) {
+            if (!empty($result['order_id'])) {
+
                 $order = Order::find($result['order_id']);
+
                 if ($order) {
+
+                    // LẤY MÃ RESPONSE TỪ VNPAY
+                    $responseCode = $request->input('vnp_ResponseCode');
+
+                    if ($responseCode === '24') {
+                        // 👉 KHÁCH HÀNG HỦY → CHO PHÉP THANH TOÁN LẠI
+                        $order->update([
+                            'payment_status' => 'unpaid',
+                            'order_status' => 'pending',
+                            'vnp_response' => $request->all(),
+                        ]);
+
+                        return redirect()
+                            ->route('checkout.store', $order->id)
+                            ->with('warning', 'Bạn đã hủy thanh toán. Bạn có thể thanh toán lại.');
+                    }
+
+                    // 👉 CÁC LỖI KHÁC
                     $order->update([
                         'payment_status' => 'failed',
                         'vnp_response' => $request->all(),
@@ -90,9 +111,11 @@ class PaymentController extends Controller
                 }
             }
 
-            return redirect()->route('checkout.failed')
+            return redirect()
+                ->route('checkout.failed')
                 ->with('error', $result['message']);
         }
+
 
         $order = Order::findOrFail($result['order_id']);
 
@@ -160,5 +183,50 @@ class PaymentController extends Controller
         ];
 
         return $messages[$code] ?? "Mã lỗi: {$code}";
+    }
+    public function repay(Order $order): Redirector|RedirectResponse
+    {
+        if (
+            $order->payment_method !== 'vnpay'
+            || $order->payment_status === 'paid'
+            || $order->status === 'cancelled'
+        ) {
+            abort(403);
+        }
+
+        return $this->createPaymentFromOrder($order);
+    }
+
+    protected function createPaymentFromOrder(Order $order): Redirector|RedirectResponse
+    {
+        if ($order->user_id !== Auth::id()) {
+            return redirect()->back()->with('error', 'Bạn không có quyền thanh toán đơn hàng này');
+        }
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('orders.show', $order->id)
+                ->with('info', 'Đơn hàng này đã được thanh toán rồi.');
+        }
+
+        $paymentUrl = $this->vnpayService->createPaymentUrl([
+            'order_id' => $order->id,
+            'amount' => $order->final_amount,
+            'order_info' => 'Thanh toan don hang #' . $order->id,
+            'order_type' => 'other',
+            'locale' => 'vn',
+        ]);
+
+        $payment = Payment::where('order_id', $order->id)
+            ->where('gateway', 'vnpay')
+            ->first();
+
+        if ($payment) {
+            $payment->update([
+                'app_trans_id' => $order->vnp_txn_ref,
+                'status' => 'pending',
+            ]);
+        }
+
+        return redirect($paymentUrl);
     }
 }

@@ -3,6 +3,20 @@
 @section('content')
     <section class="sherah-adashboard sherah-show">
         <div class="container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-12">
                     <div class="sherah-body">
@@ -19,7 +33,8 @@
                                         </ul>
                                     </div>
                                     <!-- End Sherah Breadcrumb -->
-                                    <a href="{{ route('admin.categories.create') }}" class="sherah-btn sherah-gbcolor">Update danh mục</a>
+                                    <a href="{{ route('admin.categories.create') }}"
+                                        class="sherah-btn sherah-gbcolor">Update danh mục</a>
                                 </div>
                             </div>
                             <div class="sherah-table sherah-page-inner sherah-border sherah-default-bg mg-top-25">

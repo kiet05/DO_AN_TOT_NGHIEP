@@ -33,6 +33,7 @@ class Order extends Model
         'vnp_txn_ref',
         'vnp_response',
         'vnp_transaction_no',
+         'completed_at',
     ];
 
     protected $casts = [
@@ -55,7 +56,7 @@ class Order extends Model
     public const STATUS_RETURNED  = 'returned';   // Trả hàng
     public const STATUS_RETURN_PENDING  = 'return_pending';   // chờ Trả hàng
     public const STATUS_RETURN_WAITING_CUSTOMER = 'return_waiting_customer'; // Chờ xác nhận hoàn hàng
-    public const STATUS_RETURNED_COMPLETED = 'returned_completed'; // Hoàn thành trả hàng
+    //public const STATUS_RETURNED_COMPLETED = 'returned_completed'; // Hoàn thành trả hàng
     public const STATUS_CANCELLED = 'cancelled';  // Đã hủy
 
     /**
@@ -74,7 +75,7 @@ class Order extends Model
             self::STATUS_RETURNED  => 'Trả hàng',
             self::STATUS_RETURN_PENDING  => 'Chờ hoàn hàng',
             self::STATUS_RETURN_WAITING_CUSTOMER => 'Chờ xác nhận hoàn hàng',
-            self::STATUS_RETURNED_COMPLETED => 'Đã hoàn thành hoàn hàng',
+            //self::STATUS_RETURNED_COMPLETED => 'Đã hoàn thành hoàn hàng',
             self::STATUS_CANCELLED => 'Đã hủy',
         ];
     }
@@ -87,8 +88,7 @@ class Order extends Model
     {
         return [
             self::STATUS_PENDING,
-            self::STATUS_CONFIRMED,
-            self::STATUS_PREPARING,
+
         ];
     }
 
@@ -223,8 +223,10 @@ class Order extends Model
     {
         $canon = $this->canonicalStatus();
 
-        return in_array($canon, ['pending', 'confirmed', 'processing', 'preparing'], true);
+        // ❗ CHỈ cho hủy khi còn chờ xác nhận
+        return $canon === self::STATUS_PENDING;
     }
+
 
     /**
      * KH được phép bấm "Đã nhận hàng" khi đơn đang giao

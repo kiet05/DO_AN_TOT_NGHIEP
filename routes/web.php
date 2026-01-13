@@ -22,28 +22,35 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Frontend\BlogController;
 use App\Http\Controllers\Frontend\CartController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Frontend\OrderController as FrontendOrderController;
 use App\Http\Controllers\Frontend\PaymentController as FrontendPaymentController;
-
 use App\Http\Controllers\Frontend\HomeController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController;
-
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Admin\ShopSettingController;
 use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Admin\AdminAccountController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ReturnRequestController;
-
+use App\Http\Controllers\AiChatController;
 use App\Http\Controllers\Frontend\ProductController as FrontendProductController;
 use App\Http\Controllers\Frontend\UserController;
 use App\Http\Controllers\Frontend\ContactController as FrontendContactController;
 use App\Http\Controllers\Admin\ContactController as AdminContactController;
 use App\Http\Controllers\Frontend\ReviewController as FrontendReviewController;
+use App\Http\Controllers\Admin\ProductVariantController;
+
+
+
+// ============================
+// 🔹 FRONTEND - TRANG KHÁCH HÀNG
+// ============================
+
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [FrontendProductController::class, 'index'])->name('products.index');
@@ -82,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/failed', [CheckoutController::class, 'failed'])->name('checkout.failed');
 });
+Route::post('/ai/chat', [AiChatController::class, 'chat'])->name('ai.chat');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', Login::class)->name('login');
@@ -103,11 +111,26 @@ Route::post('logout', Logout::class)
     ->middleware('auth')
     ->name('logout');
 
-Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+// ============================
+// 🔹 TRANG CHỦ & DASHBOARD
+// ============================
+
+Route::redirect('dashboard', '/')->middleware(['auth', 'verified'])->name('dashboard');
+
+
 
 Route::post('/ai/chat', [\App\Http\Controllers\AiChatController::class, 'chat'])->name('ai.chat');
+
+
+
+
+
+
+
+
+// ============================
+// 🔹 CÀI ĐẶT NGƯỜI DÙNG
+// ============================
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -140,16 +163,40 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/order', [FrontendOrderController::class, 'index'])->name('order.index');
     Route::get('/order/{order}', [FrontendOrderController::class, 'show'])->name('order.show');
+    // Hủy đơn – form + xử lý
+    Route::get('/my-orders/{order}/cancel', [FrontendOrderController::class, 'showCancelForm'])
+        ->name('order.cancel.form');
+    Route::post('/my-orders/{order}/cancel', [FrontendOrderController::class, 'cancel'])
+        ->name('order.cancel');
+    // Xác nhận đã nhận hàng
+    Route::post('/my-orders/{order}/received', [FrontendOrderController::class, 'received'])
+        ->name('order.received');
+    Route::post(
+        '/orders/{order}/complete',
+        [\App\Http\Controllers\Frontend\OrderController::class, 'complete']
+    )->name('order.complete');
 
-    Route::get('/my-orders/{order}/cancel', [FrontendOrderController::class, 'showCancelForm'])->name('order.cancel.form');
-    Route::post('/my-orders/{order}/cancel', [FrontendOrderController::class, 'cancel'])->name('order.cancel');
+    Route::post(
+        '/payment/vnpay/repay/{order}',
+        [FrontendPaymentController::class, 'repay']
+    )->name('vnpay.repay');
+    // 🔎 Theo dõi hoàn tiền
+    Route::get(
+        '/orders/{order}/return-track',
+        [\App\Http\Controllers\Frontend\OrderController::class, 'track']
+    )->name('order.return.track');
 
-    Route::post('/my-orders/{order}/received', [FrontendOrderController::class, 'received'])->name('order.received');
 
-    Route::get('/my-orders/{order}/return', [FrontendOrderController::class, 'showReturnForm'])->name('order.return.form');
-    Route::post('/my-orders/{order}/return', [FrontendOrderController::class, 'submitReturn'])->name('order.return');
 
-    Route::post('/my-orders/{order}/reorder', [FrontendOrderController::class, 'reorder'])->name('order.reorder');
+    // Trả hàng / hoàn tiền – form + xử lý
+    Route::get('/my-orders/{order}/return', [FrontendOrderController::class, 'showReturnForm'])
+        ->name('order.return.form');
+    Route::post('/my-orders/{order}/return', [FrontendOrderController::class, 'submitReturn'])
+        ->name('order.return');
+    // Mua lại
+    Route::post('/my-orders/{order}/reorder', [FrontendOrderController::class, 'reorder'])
+        ->name('order.reorder');
+
 
     Route::get('payment/vnpay', [FrontendPaymentController::class, 'createPayment'])->name('vnpay.creaate');
     Route::get('/payment/vnpay-return', [FrontendPaymentController::class, 'vnpayReturn'])->name('vnpay.return');
@@ -192,6 +239,11 @@ Route::prefix('admin')
             Route::put('/{id}/update', [ProductController::class, 'update'])->name('update');
             Route::delete('/{id}/delete', [ProductController::class, 'destroy'])->name('destroy');
         });
+        Route::patch('product-variants/{variant}', [ProductVariantController::class, 'update'])
+            ->name('variants.update');
+
+        Route::delete('product-variants/{variant}', [ProductVariantController::class, 'destroy'])
+            ->name('variants.destroy');
 
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/', [CategoryController::class, 'index'])->name('index');
@@ -246,6 +298,7 @@ Route::prefix('admin')
 
         Route::resource('vouchers', VoucherController::class);
         Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])->name('vouchers.report');
+        Route::post('vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
 
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
@@ -262,6 +315,9 @@ Route::prefix('admin')
         Route::get('returns/{id}', [ReturnRequestController::class, 'show'])->name('returns.show');
         Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
         Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
+        Route::post('returns/{id}/refunding', [ReturnRequestController::class, 'setRefunding'])->name('returns.refunding');
+        Route::post('returns/{id}/refund-auto', [ReturnRequestController::class, 'refundAuto'])->name('returns.refundAuto');
+        Route::post('returns/{id}/refund-manual', [ReturnRequestController::class, 'refundManual'])->name('returns.refundManual');
 
         Route::post('returns/{id}/refunding', [ReturnRequestController::class, 'setRefunding'])->name('returns.refunding');
         Route::post('returns/{id}/refund-auto', [ReturnRequestController::class, 'refundAuto'])->name('returns.refundAuto');
@@ -270,6 +326,162 @@ Route::prefix('admin')
         Route::get('shop-settings/edit', [ShopSettingController::class, 'edit'])->name('shop-settings.edit');
         Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
 
-        Route::get('contacts', [AdminContactController::class, 'index'])->name('contacts.index');
-        Route::get('contacts/{contact}', [AdminContactController::class, 'show'])->name('contacts.show');
+        // Contacts (admin xem yêu cầu hỗ trợ)
+        Route::get('contacts', [AdminContactController::class, 'index'])
+            ->name('contacts.index');
+        Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
+            ->name('contacts.show');
+
+        Route::resource('brands', BrandController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
+
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'verified', CheckRole::class . ':admin,staff'])
+    ->group(function () {
+
+        Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
+
+        Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
+
+        // ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
+        Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile.index');
+        Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+
+
+
+
+        // 🛍️ Products
+        Route::prefix('products')->name('products.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/store', [ProductController::class, 'store'])->name('store');
+            Route::get('/{id}/show', [ProductController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [ProductController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{id}/delete', [ProductController::class, 'destroy'])->name('destroy');
+        });
+        Route::patch('product-variants/{variant}', [ProductVariantController::class, 'update'])
+            ->name('variants.update');
+
+        Route::delete('product-variants/{variant}', [ProductVariantController::class, 'destroy'])
+            ->name('variants.destroy');
+
+        // 🗂️ Categories
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/', [CategoryController::class, 'index'])->name('index');
+            Route::get('/create', [CategoryController::class, 'create'])->name('create');
+            Route::post('/store', [CategoryController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [CategoryController::class, 'edit'])->name('edit');
+            Route::put('/{id}/update', [CategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}/delete', [CategoryController::class, 'destroy'])->name('destroy');
+        });
+
+        // 📦 Orders
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::get('/orders/{order}/invoice/pdf', [OrderController::class, 'downloadInvoice'])->name('orders.invoice.pdf');
+
+
+
+
+
+
+        // 🎟️ Vouchers
+        Route::resource('vouchers', VoucherController::class);
+        Route::get('vouchers/{voucher}/report', [VoucherController::class, 'report'])->name('vouchers.report');
+        Route::post('vouchers/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('vouchers.toggle');
+
+
+
+
+        // Returns
+        Route::get('returns', [ReturnRequestController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}', [ReturnRequestController::class, 'show'])->name('returns.show');
+        Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
+        Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
+        Route::post('returns/{id}/refunding', [ReturnRequestController::class, 'setRefunding'])->name('returns.refunding');
+        Route::post('returns/{id}/refund-auto', [ReturnRequestController::class, 'refundAuto'])->name('returns.refundAuto');
+        Route::post('returns/{id}/refund-manual', [ReturnRequestController::class, 'refundManual'])->name('returns.refundManual');
+
+
+        // Returns
+        Route::get('returns', [ReturnRequestController::class, 'index'])->name('returns.index');
+        Route::get('returns/{id}', [ReturnRequestController::class, 'show'])->name('returns.show');
+        Route::post('returns/{id}/approve', [ReturnRequestController::class, 'approve'])->name('returns.approve');
+        Route::post('returns/{id}/reject', [ReturnRequestController::class, 'reject'])->name('returns.reject');
+
+
+
+
+        Route::resource('brands', BrandController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    });
+
+
+
+
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth', 'verified', CheckRole::class . ':admin,staff,editor'])
+    ->group(function () {
+
+        Route::get('/', fn() => view('admin.dashboard'))->name('dashboard');
+
+        Route::resource('orders', \App\Http\Controllers\Admin\OrderController::class);
+
+        // ✅ KHẮC PHỤC LỖI: Loại bỏ /admin/ và admin.
+        Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile.index');
+        Route::put('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
+        // 🧱 Banners
+        Route::resource('banners', BannerController::class)->except(['show']);
+        Route::post('banners/{id}/restore', [BannerController::class, 'restore'])->name('banners.restore');
+        Route::delete('banners/{id}/force', [BannerController::class, 'forceDelete'])->name('banners.force');
+
+
+        // 📰 Posts
+        Route::prefix('posts')->name('posts.')->group(function () {
+            Route::get('/', [PostController::class, 'index'])->name('index');
+            Route::get('/create', [PostController::class, 'create'])->name('create');
+            Route::post('/', [PostController::class, 'store'])->name('store');
+            Route::get('/{post}/edit', [PostController::class, 'edit'])->name('edit');
+            Route::put('/{post}', [PostController::class, 'update'])->name('update');
+            Route::delete('/{post}', [PostController::class, 'destroy'])->name('destroy');
+        });
+
+
+
+
+        // 🔎 Reviews (Admin quản lý đánh giá)
+        Route::prefix('reviews')->name('reviews.')->group(function () {
+            Route::get('/', [ReviewController::class, 'index'])->name('index');
+            Route::get('/{id}', [ReviewController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [ReviewController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [ReviewController::class, 'reject'])->name('reject');
+            Route::delete('/{id}', [ReviewController::class, 'destroy'])->name('destroy');
+        });
+
+
+
+
+
+
+        // Contacts (admin xem yêu cầu hỗ trợ)
+        Route::get('contacts', [AdminContactController::class, 'index'])
+            ->name('contacts.index');
+        Route::get('contacts/{contact}', [AdminContactController::class, 'show'])
+            ->name('contacts.show');
+    });
+
+
+// Payment routes (outside admin)
+//Route::prefix('payment')->name('payment.')->group(function () {
+  //  Route::post('/process', [PaymentController::class, 'processPayment'])->name('process')->middleware('auth');
+   // Route::get('/vnpay/return', [PaymentController::class, 'vnpayReturn'])->name('vnpay.return');
+    //Route::get('/methods', [PaymentController::class, 'getPaymentMethods'])->name('methods');
+//});
+

@@ -37,12 +37,7 @@ class RoleSeeder extends Seeder
                 'slug' => 'editor',
                 'description' => 'Quản lý nội dung trang web'
             ],
-            [
-                'id' => 5,
-                'name' => 'Kế toán',
-                'slug' => 'accountant',
-                'description' => 'Quản lý doanh thu và hóa đơn'
-            ],
+           
         ]);
     }
 }

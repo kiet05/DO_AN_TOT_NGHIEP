@@ -377,7 +377,7 @@ class ProductController extends Controller
         });
 
         return redirect()
-            ->route('admin.products.edit', $product->id)
+            ->route('admin.products.index', $product->id)
             ->with('success', 'Cập nhật sản phẩm thành công!');
     }
 
@@ -388,6 +388,13 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
+        // Kiểm tra sản phẩm đã có trong đơn hàng chưa
+        if ($product->orders()->count() > 0) {
+            return redirect()->route('admin.products.index')
+                ->with('error', 'Không thể xóa sản phẩm vì đã có trong đơn hàng!');
+        }
+
+        // Nếu chưa có đơn hàng, mới được xóa
         $product->delete();
 
         return redirect()->route('admin.products.index')

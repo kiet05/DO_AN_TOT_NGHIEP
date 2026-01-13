@@ -131,7 +131,7 @@
                                 <i class="fas fa-map-marker-alt"></i>
                             </span>
                             <span>
-                                Địa chỉ: Tầng 8, tòa nhà Ford, số 313 Trường Chinh, quận Thanh Xuân, Hà Nội
+                                Địa chỉ: Trường Cao đẳng FPT Polytechnic – cơ sở Trịnh Văn Bô, quận Nam Từ Liêm, Hà Nội
                             </span>
                         </li>
                         <li>
@@ -139,7 +139,7 @@
                                 <i class="fas fa-phone-alt"></i>
                             </span>
                             <span>
-                                Số điện thoại: 0964 942 121
+                                Số điện thoại: 0123 456 789
                             </span>
                         </li>
                         <li>
@@ -237,11 +237,13 @@
 
                 {{-- Cột phải: bản đồ --}}
                 <div class="col-lg-6 contact-map">
-                    <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.644427634824!2d105.8229086760539!3d21.0070253885404!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab74b4d0d3f7%3A0x0000000000000000!2s313%20Tr%C6%B0%E1%BB%9Dng%20Chinh!5e0!3m2!1svi!2svi!4v1700000000000!5m2!1svi!2svi"
-                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+                    <iframe src="https://www.google.com/maps?q=Trường+Cao+đẳng+FPT+Polytechnic+Trịnh+Văn+Bô&output=embed"
+                        width="100%" height="450" style="border:0;" allowfullscreen loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
                     </iframe>
                 </div>
+
+
             </div>
         </div>
     </div>

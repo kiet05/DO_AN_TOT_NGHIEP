@@ -187,15 +187,20 @@
                                                             @endphp
 
                                                             <tr>
-                                                                <td>
-                                                                    @if ($variant?->image_url)
-                                                                        <img src="{{ asset('storage/' . $variant->image_url) }}"
-                                                                            style="width:50px;height:50px;object-fit:cover;">
-                                                                    @elseif ($product?->image_main)
-                                                                        <img src="{{ asset('storage/' . $product->image_main) }}"
-                                                                            style="width:50px;height:50px;object-fit:cover;">
-                                                                    @endif
+                                                                <td style="text-align:center;">
+                                                                    <div class="return-product-thumb">
+                                                                        @if ($variant?->image_url)
+                                                                            <img
+                                                                                src="{{ asset('storage/' . $variant->image_url) }}">
+                                                                        @elseif ($product?->image_main)
+                                                                            <img
+                                                                                src="{{ asset('storage/' . $product->image_main) }}">
+                                                                        @else
+                                                                            <span class="text-muted small">No image</span>
+                                                                        @endif
+                                                                    </div>
                                                                 </td>
+
                                                                 <td>
                                                                     {{ $product?->name ?? 'Sản phẩm #' . ($orderItem->product_id ?? '') }}
                                                                     @if ($variant)
@@ -301,9 +306,31 @@
                                                 </form>
 
                                                 <form action="{{ route('admin.returns.refundManual', $ret->id) }}"
-                                                    method="POST" class="mt-2">
+                                                    method="POST" enctype="multipart/form-data" class="mt-2">
                                                     @csrf
-                                                    <button class="btn btn-warning w-100">Đánh dấu đã hoàn thủ công</button>
+                                                    <div class="mb-2">
+                                                        <label class="form-label small">
+                                                            Ảnh chứng minh đã hoàn tiền
+                                                        </label>
+                                                        <input type="file" name="refund_proof_image" class="form-control"
+                                                            accept="image/*">
+                                                    </div>
+
+                                                    <div class="mb-2">
+                                                        <label class="form-label small">
+                                                            Người duyệt
+                                                        </label>
+                                                        <input type="text" name="approved_by_name"
+                                                            class="form-control" placeholder="Nhập tên người duyệt"
+                                                            value="{{ old('approved_by_name', auth()->user()->name ?? '') }}">
+                                                    </div>
+
+                                                    <button class="btn btn-warning w-100">
+                                                        Xác nhận đã hoàn thủ công
+                                                    </button>
+
+                                                    {{-- <button class="btn btn-warning w-100">Đánh dấu đã hoàn thủ công</button> --}}
+
                                                 </form>
                                             @endif
                                         </div>
@@ -332,11 +359,44 @@
                                                 @endphp
                                                 {{ $methodLabel }}
                                             </p>
+                                            @if ($ret->refund_method === 'manual')
+                                                <p class="mb-1">
+                                                    <strong>Số tài khoản hoàn tiền:</strong>
+                                                    @if ($ret->refund_account_number)
+                                                        <span class="text-dark">
+                                                            {{ $ret->refund_account_number }}
+                                                        </span>
+                                                    @else
+                                                        <span class="text-muted">Khách chưa cung cấp</span>
+                                                    @endif
+                                                </p>
+                                            @endif
+
+                                            @if ($ret->refund_proof_image)
+                                                <p class="mb-1">
+                                                    <strong>Ảnh chứng minh hoàn tiền:</strong>
+                                                </p>
+
+                                                <a href="{{ asset('storage/' . $ret->refund_proof_image) }}"
+                                                    target="_blank" class="btn btn-sm btn-outline-primary mb-2">
+                                                    Xem ảnh gốc
+                                                </a>
+
+                                                <div
+                                                    style="max-width:240px;
+                border:1px solid #eee;
+                padding:6px;
+                border-radius:8px;">
+                                                    <img src="{{ asset('storage/' . $ret->refund_proof_image) }}"
+                                                        style="width:100%; object-fit:contain;">
+                                                </div>
+                                            @endif
 
                                             <p class="mb-1">
                                                 <strong>Người duyệt:</strong>
-                                                {{ $ret->approver->name ?? '-' }}
+                                                {{ $ret->approved_by_name ?? '-' }}
                                             </p>
+
 
                                             <p class="mb-1">
                                                 <strong>Thời điểm:</strong>
@@ -391,4 +451,25 @@
             </div>
         </div>
     </section>
+    <style>
+        .return-product-thumb {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        .return-product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* ❗ quan trọng */
+        }
+    </style>
+
 @endsection

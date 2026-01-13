@@ -7,6 +7,7 @@ use App\Http\Requests\AdminAccountRequest;
 use App\Models\User;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class AdminAccountController extends Controller
 {
@@ -32,6 +33,8 @@ class AdminAccountController extends Controller
             'password' => Hash::make($request->password),
             'role_id' => $request->role_id,
             'status' => 1,
+                'email_verified_at' => Carbon::now(), // 🔥 QUAN TRỌNG
+
         ]);
 
         return redirect()->route('admin.accounts.index')->with('success', 'Thêm Admin mới thành công!');

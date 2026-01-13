@@ -3,6 +3,20 @@
 @section('content')
     <section class="sherah-adashboard sherah-show">
         <div class="container">
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-12">
                     <div class="sherah-body">
@@ -11,10 +25,11 @@
                                 <div class="col-12 sherah-flex-between">
                                     <!-- Sherah Breadcrumb -->
                                     <div class="sherah-breadcrumb">
-                                        <h2 class="sherah-breadcrumb__title">Sản phẩm</h2>
+                                        <h2 class="sherah-breadcrumb__title">Mã khuyến mãi</h2>
                                         <ul class="sherah-breadcrumb__list">
                                             <li><a href="/">Dashboard</a></li>
-                                            <li class="active"><a href="{{ route('admin.products.index') }}">Sản phẩm</a>
+                                            <li class="active"><a href="{{ route('admin.vouchers.index') }}">Mã khuyến
+                                                    mãi</a>
                                             </li>
                                         </ul>
                                     </div>
@@ -42,6 +57,8 @@
                                         <th>Kiểu</th>
                                         <th>Giá trị</th>
                                         <th>Áp dụng</th>
+                                        <th>Trạng thái</th>
+
                                         <th>Thời gian</th>
                                         <th>Lượt dùng</th>
                                         <th width="140">Hành động</th>
@@ -78,6 +95,13 @@
                                                 @endif
                                             </td>
                                             <td>
+                                                @if ($item->is_active)
+                                                    <span class="badge bg-success">Còn hiệu lực</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Vô hiệu</span>
+                                                @endif
+                                            </td>
+                                            <td>
                                                 @if ($item->start_at)
                                                     {{ $item->start_at->format('d/m/Y H:i') }}
                                                 @endif
@@ -92,14 +116,33 @@
                                                 {{ $item->used_count }}/{{ $item->usage_limit ?? '∞' }}
                                             </td>
                                             <td>
-                                                <a href="{{ route('admin.vouchers.edit', $item) }}"
-                                                    class="btn btn-sm btn-warning">Sửa</a>
+
+                                                @if ($item->used_count == 0)
+                                                    <a href="{{ route('admin.vouchers.edit', $item) }}"
+                                                        class="btn btn-sm btn-warning">Sửa</a>
+                                                @else
+                                                    <button class="btn btn-sm btn-secondary" disabled
+                                                        title="Mã đã được áp dụng, không thể sửa">Sửa</button>
+                                                @endif
+
+
                                                 <a href="{{ route('admin.vouchers.report', $item) }}"
                                                     class="btn btn-sm btn-info">BC</a>
+
+                                                <!-- Nút xóa -->
                                                 <form action="{{ route('admin.vouchers.destroy', $item) }}" method="POST"
                                                     class="d-inline" onsubmit="return confirm('Xóa mã này?')">
                                                     @csrf @method('DELETE')
                                                     <button class="btn btn-sm btn-danger">Xóa</button>
+                                                </form>
+                                                <!-- Nút vô hiệu hóa / kích hoạt -->
+                                                <form action="{{ route('admin.vouchers.toggle', $item) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    <button type="submit"
+                                                        class="btn btn-sm {{ $item->is_active ? 'btn-danger' : 'btn-secondary' }}">
+                                                        {{ $item->is_active ? 'Vô hiệu' : 'Kích hoạt' }}
+                                                    </button>
                                                 </form>
                                             </td>
                                         </tr>

@@ -265,9 +265,9 @@
 
 
                                         <div>
-                                            <label class="label">Quận / Huyện *</label>
+                                            <label class="label">Phường / Xã *</label>
                                             <input type="text" name="district" class="input-field"
-                                                placeholder="VD tên Quận: Cầu Giấy..." value="{{ old('district') }}"
+                                                placeholder="VD tên Phường: Cầu Giấy..." value="{{ old('district') }}"
                                                 required>
                                             @error('district')
                                                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>

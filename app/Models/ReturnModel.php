@@ -18,12 +18,18 @@ class ReturnModel extends Model
         'proof_image',
         'status',
         'refund_method',
+        // ✅ hoàn tiền
+        'refund_method',
+        'refund_account_number',
         'refund_amount',
+        'restocked_at',
         'approved_by',
         'decided_at',
         'evidence_urls',
         'action_type',
-        'restocked_at',
+        'refund_proof_image',
+        'approved_by_name',
+
     ];
 
     protected $casts = [
