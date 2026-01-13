@@ -194,6 +194,7 @@ class ReturnRequestController extends Controller
 
 
     private function computeRefundAmountWithVoucher(ReturnModel $ret): float
+
     {
         $order = $ret->order;
         if (! $order) return 0;
@@ -204,6 +205,7 @@ class ReturnRequestController extends Controller
         $originalTotal = 0;
         foreach ($orderItems as $oi) {
             $originalTotal += ((float)($oi->price ?? 0)) * ((int)($oi->quantity ?? 0));
+
         }
 
         $hasLineFinal = false;

@@ -12,23 +12,30 @@ use App\Models\Voucher;
 class VoucherFactory extends Factory
 {
     protected $model = Voucher::class;
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+
     public function definition(): array
     {
         $type = $this->faker->randomElement(['percentage', 'fixed']);
 
+        $discountValue = $type === 'percentage'
+            ? $this->faker->numberBetween(5, 50)
+            : $this->faker->randomFloat(2, 10000, 500000);
+
         return [
             'code' => strtoupper(Str::random(8)),
             'type' => $type,
-            'discount_value' => $type === 'percentage'
-                ? $this->faker->numberBetween(5, 50)   
-                : $this->faker->randomFloat(2, 10000, 500000),
+
+            // Seeder/DB đang dùng discount_value
+            'discount_value' => $discountValue,
+
+            // ✅ FIX LỖI: DB bắt buộc có value (NOT NULL) nên phải đổ value
+            'value' => $discountValue,
+
             'usage_limit' => $this->faker->numberBetween(10, 200),
-            'status' => $this->faker->boolean(90),
+
+            // nên để int 0/1 cho ổn định
+            'status' => 1,
+
             'expired_at' => $this->faker->dateTimeBetween('now', '+6 months'),
         ];
     }

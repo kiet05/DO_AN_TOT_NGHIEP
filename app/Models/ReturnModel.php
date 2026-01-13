@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReturnModel extends Model
 {
-    /** @use HasFactory<\Database\Factories\ReturnModelFactory> */
     use HasFactory;
 
     protected $table = 'returns';
+
     protected $fillable = [
         'order_id',
         'user_id',
@@ -29,6 +29,7 @@ class ReturnModel extends Model
         'action_type',
         'refund_proof_image',
         'approved_by_name',
+
     ];
 
     protected $casts = [
@@ -50,14 +51,17 @@ class ReturnModel extends Model
     {
         return $this->hasMany(ReturnItem::class, 'return_id');
     }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
     public function order()
     {
         return $this->belongsTo(Order::class, 'order_id');
     }
+
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
@@ -74,7 +78,6 @@ class ReturnModel extends Model
             self::WAITING_CUSTOMER_CONFIRM => 'waiting_customer_confirm',
         ][$this->status] ?? 'pending';
     }
-
 
     public function orderItem()
     {

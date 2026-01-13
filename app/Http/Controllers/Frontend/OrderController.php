@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ReturnItem;
 use App\Models\ReturnModel;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
@@ -15,26 +16,20 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Frontend\CartController;
 use Illuminate\Validation\ValidationException;
 
-
 class OrderController extends Controller
 {
-
-
-    /**
-     * Danh sách đơn hàng đã mua của user đang đăng nhập
-     */
     public function index(Request $request)
     {
         $userId  = auth()->id();
         $status  = $request->query('status', 'all');
         $keyword = trim((string) $request->query('q', ''));
 
-        // Tabs trạng thái cho KH xem
         $statusTabs = [
             'all'        => 'Tất cả',
             'pending'    => 'Chờ xác nhận',   // khách vừa đặt
             //  'confirmed'  => 'Chờ chuẩn bị',   // shop đã xác nhận
             'processing' => 'Đang chuẩn bị',  // đang đóng gói
+
             'shipping'   => 'Đang giao',
             'shipped'    => 'Đã giao',
             'returned'   => 'Hoàn / Trả hàng',
@@ -50,6 +45,7 @@ class OrderController extends Controller
         // Lọc theo tab trạng thái
         if ($status === 'processing') {
             $query->whereIn('order_status', ['processing', 'confirmed']);
+
         } elseif ($status === 'returned') {
             $query->whereIn('order_status', ['return_pending', 'returned']);
         } elseif ($status === 'shipped') {
@@ -58,6 +54,7 @@ class OrderController extends Controller
         } elseif ($status !== 'all') {
             $query->where('order_status', $status);
         }
+
         if ($status === 'return_waiting_customer') {
             $query->whereHas('returns', function ($q) {
                 $q->whereIn('status', [
@@ -66,31 +63,25 @@ class OrderController extends Controller
                 ]);
             });
         }
-        // 🔍 Tìm kiếm theo ID đơn + tên / ID sản phẩm
+
         if ($keyword !== '') {
             $isNumeric = ctype_digit($keyword);
 
             $query->where(function ($orderQ) use ($keyword, $isNumeric) {
-                // 1) Nếu là số -> ưu tiên tìm theo ID đơn
                 if ($isNumeric) {
                     $orderQ->where('id', (int) $keyword);
                 }
 
-                // 2) Tìm theo sản phẩm trong đơn
                 $orderQ->orWhereHas('items', function ($itemQ) use ($keyword, $isNumeric) {
-                    // theo bảng products
                     $itemQ->whereHas('product', function ($prodQ) use ($keyword, $isNumeric) {
-                        // ưu tiên trùng khớp tên
                         $prodQ->where('name', $keyword)
                             ->orWhere('name', 'LIKE', '%' . $keyword . '%');
 
-                        // nếu keyword là số thì có thể là ID sản phẩm
                         if ($isNumeric) {
                             $prodQ->orWhere('id', (int) $keyword);
                         }
                     });
 
-                    // nếu keyword là số thì cho phép match luôn product_id trên order_items
                     if ($isNumeric) {
                         $itemQ->orWhere('product_id', (int) $keyword);
                     }
@@ -103,38 +94,29 @@ class OrderController extends Controller
         return view('frontend.order.index', compact('orders', 'status', 'statusTabs'));
     }
 
-
-    /**
-     * Chi tiết 1 đơn hàng
-     */
     public function show(Order $order)
     {
-
-        // Không cho xem đơn của người khác
-        if ($order->user_id !== auth()->id()) { // đổi field nếu khác
+        if ($order->user_id !== auth()->id()) {
             abort(403);
         }
 
-        // Load thêm quan hệ nếu có
-        // ví dụ: items, product, histories...
         $order->load([
             'items.product',
-            'items.productVariant',   // 👈 thêm dòng này để lấy ảnh biến thể
+            'items.productVariant',
             'statusHistories',
-            'voucherUsage' // ✅ THÊM DÒNG NÀY
+            'voucherUsage'
         ]);
 
         return view('frontend.order.show', compact('order'));
     }
+
     protected function ensureOwner(Order $order): void
     {
-
         if ($order->user_id !== auth()->id()) {
             abort(403);
         }
     }
 
-    /** FORM HỦY ĐƠN */
     public function showCancelForm(Order $order)
     {
         $this->ensureOwner($order);
@@ -147,7 +129,6 @@ class OrderController extends Controller
         return view('frontend.order.cancel', compact('order'));
     }
 
-    /** XỬ LÝ HỦY ĐƠN */
     public function cancel(Request $request, Order $order)
     {
         $this->ensureOwner($order);
@@ -187,12 +168,10 @@ class OrderController extends Controller
             ->with('success', 'Đã hủy đơn hàng thành công.');
     }
 
-    /** KHÁCH BẤM "ĐÃ NHẬN HÀNG" */
     public function received(Request $request, Order $order)
     {
         $this->ensureOwner($order);
 
-        // Chỉ cho xác nhận khi đơn đang giao
         if (!in_array($order->order_status, ['shipping', 'shipped'], true)) {
             return redirect()
                 ->route('order.index', $order)
@@ -200,18 +179,15 @@ class OrderController extends Controller
         }
 
         DB::transaction(function () use ($order) {
-            // Cập nhật trạng thái đơn
             $order->order_status      = 'shipped';
             $order->status_changed_at = now();
 
-            // Nếu thanh toán chưa xong (COD chưa thanh toán) -> đánh dấu đã thanh toán
             if ($order->payment_status !== 'paid') {
                 $order->payment_status = 'paid';
             }
 
             $order->save();
 
-            // Ghi log lịch sử trạng thái
             if (method_exists($order, 'statusHistories')) {
                 $order->statusHistories()->create([
                     'status'   => 'shipped',
@@ -226,8 +202,6 @@ class OrderController extends Controller
             ->with('success', 'Bạn đã xác nhận đã nhận được hàng. Đơn hàng đã chuyển sang trạng thái "Đã giao".');
     }
 
-
-    /** FORM TRẢ HÀNG / HOÀN TIỀN */
     public function showReturnForm(Order $order)
     {
         $this->ensureOwner($order);
@@ -240,7 +214,6 @@ class OrderController extends Controller
         return view('frontend.order.return', compact('order'));
     }
 
-    /** XỬ LÝ TRẢ HÀNG / HOÀN TIỀN */
     public function submitReturn(Request $request, Order $order)
     {
         $this->ensureOwner($order);
@@ -333,6 +306,7 @@ class OrderController extends Controller
     ]
 );
 
+
         $path = null;
         if ($request->hasFile('return_image')) {
             $path = $request->file('return_image')->store('order_returns', 'public');
@@ -392,6 +366,7 @@ class OrderController extends Controller
 
         DB::transaction(function () use ($order, $data, $path, $selected) {
 
+
             // 1) Tạo returns
             $ret = ReturnModel::create([
                 'order_id'      => $order->id,
@@ -441,11 +416,8 @@ class OrderController extends Controller
     }
 
 
-
-    /** MUA LẠI ĐƠN ĐÃ HỦY – THÊM LẠI VÀO GIỎ */
     public function reorder(Request $request, Order $order)
     {
-        // Không cho reorder đơn của người khác
         if ($order->user_id !== auth()->id()) {
             abort(403);
         }
@@ -454,24 +426,20 @@ class OrderController extends Controller
             return back()->with('error', 'Đơn này hiện không thể mua lại.');
         }
 
-        // Dùng lại CartController
         $cartController = app(CartController::class);
 
         foreach ($order->orderItems as $item) {
-            // tuỳ tên cột của bạn: product_variant_id / variant_id ...
             $variantId = $item->product_variant_id ?? $item->variant_id ?? null;
             if (! $variantId) {
                 continue;
             }
 
             $qty = (int) ($item->quantity ?? 1);
-
-            // ✅ GỌI LẠI LOGIC THÊM GIỎ
             $cartController->addItem($variantId, $qty);
         }
 
         return redirect()
-            ->route('cart.index')   // route hiển thị giỏ ở bước 1
+            ->route('cart.index')
             ->with('success', 'Đã thêm lại các sản phẩm trong đơn vào giỏ hàng.');
     }
 
@@ -564,6 +532,7 @@ class OrderController extends Controller
         if (!$return) {
             abort(404, 'Không tìm thấy yêu cầu hoàn hàng');
         }
+
 
         return view('frontend.order.return_track', compact('order', 'return'));
     }
